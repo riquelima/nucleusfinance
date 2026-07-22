@@ -72,7 +72,7 @@
                 </div>
             </section>
 
-            <!-- TAB 1: VISÃO GERAL (CONSOLIDADA COM DEEP ANALYSIS & DRE COMPLETO) -->
+            <!-- TAB 1: VISÃO GERAL (CONSOLIDADA COM EXECUTIVO DEEP ANALYSIS) -->
             <section id="view-overview" class="view-section">
                 <div class="container">
                     
@@ -82,7 +82,7 @@
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Nucleus Financial Control</h1>
-                                <p>Visão Geral Consolidada, DRE & Inteligência Financeira</p>
+                                <p>Visão Geral Consolidada, DRE & Inteligência Executiva</p>
                             </div>
                         </div>
                         <div class="header-actions">
@@ -95,14 +95,13 @@
                         </div>
                     </header>
 
-                    <!-- Overview Period Filter Controls Bar (Unified 38px Controls) -->
+                    <!-- Overview Period Filter Controls Bar -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
                             <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Período de Análise da Visão Geral
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <!-- Mode Toggle Buttons -->
                             <div class="period-mode-group">
                                 <button type="button" class="overview-mode-btn" data-mode="daily">📅 Dia</button>
                                 <button type="button" class="overview-mode-btn" data-mode="weekly">🗓️ Semana</button>
@@ -110,7 +109,6 @@
                                 <button type="button" class="overview-mode-btn active" data-mode="annual">🏆 Anual</button>
                             </div>
 
-                            <!-- Dynamic Custom Date/Month Selectors -->
                             <div id="overviewDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
@@ -133,10 +131,8 @@
                         </div>
                     </div>
 
-                    <!-- DRE & FINANCIAL KPI SUMMARY GRID (Single Line Titles Guaranteed) -->
+                    <!-- DRE & FINANCIAL KPI SUMMARY GRID -->
                     <div class="kpi-grid">
-                        
-                        <!-- 1. Faturamento Total -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Faturamento Total (Receita)">Faturamento Total (Receita)</span>
@@ -149,7 +145,6 @@
                             </div>
                         </div>
 
-                        <!-- 2. Despesas Operacionais Totais -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--accent-rose);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Despesas Operacionais Totais">Despesas Operacionais Totais</span>
@@ -164,7 +159,6 @@
                             </div>
                         </div>
 
-                        <!-- 3. Lucro Líquido Operacional -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--accent-emerald);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Lucro Líquido Operacional">Lucro Líquido Operacional</span>
@@ -179,7 +173,6 @@
                             </div>
                         </div>
 
-                        <!-- 4. Subtotal & Tips -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Subtotal & Gorjetas (Tips)">Subtotal & Gorjetas (Tips)</span>
@@ -191,10 +184,9 @@
                                 <span style="color: var(--accent-amber); font-weight: 700;">Gorjetas</span>
                             </div>
                         </div>
-
                     </div>
 
-                    <!-- SECONDARY KPIS (Uniform 4-Column Grid) -->
+                    <!-- SECONDARY KPIS -->
                     <div class="secondary-kpi-grid">
                         <div class="secondary-kpi-card glass-panel">
                             <div class="secondary-kpi-title">Ticket Médio por Serviço</div>
@@ -221,7 +213,7 @@
                         </div>
                     </div>
 
-                    <!-- CENTRO DE CUSTOS & ESTRUTURA DE DESPESAS PANEL (5 Uniform Columns) -->
+                    <!-- CENTRO DE CUSTOS PANEL -->
                     <div class="glass-panel" style="padding: 22px 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title">
@@ -231,8 +223,6 @@
                         </div>
 
                         <div class="expense-breakdown-grid">
-                            
-                            <!-- Payroll -->
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-user-group" style="color: var(--primary);"></i> Payroll</span>
@@ -247,7 +237,6 @@
                                 </div>
                             </div>
 
-                            <!-- Frota -->
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-car" style="color: var(--accent-amber);"></i> Frota (3 Veículos)</span>
@@ -262,7 +251,6 @@
                                 </div>
                             </div>
 
-                            <!-- Marketing -->
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent-cyan);"></i> Marketing</span>
@@ -277,7 +265,6 @@
                                 </div>
                             </div>
 
-                            <!-- Tech & Admin -->
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-laptop-code" style="color: #6366f1;"></i> Tech & CRM</span>
@@ -292,7 +279,6 @@
                                 </div>
                             </div>
 
-                            <!-- Operações -->
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-pump-soap" style="color: var(--accent-emerald);"></i> Operações</span>
@@ -306,11 +292,10 @@
                                     <span style="font-weight: 700;">1,79%</span>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
-                    <!-- Charts Grid (Equivalent Heights & Equal Top Alignment) -->
+                    <!-- Charts Grid -->
                     <div class="charts-grid">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
@@ -328,6 +313,253 @@
                             <div class="chart-container">
                                 <canvas id="chartTeamComparison"></canvas>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================================= -->
+                    <!-- 🚀 NOVAS SEÇÕES DE EXPANSÃO EXECUTIVA DA VISÃO GERAL (DEEP ANALYSIS) -->
+                    <!-- ========================================================================= -->
+
+                    <!-- SEÇÃO 8: RESUMO EXECUTIVO (SINTÉTICO EM LINGUAGEM NATURAL + IA MINIMAX) -->
+                    <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 28px;">
+                        <div class="chart-header" style="margin-bottom: 14px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> 📋 Resumo Executivo da Operação</h3>
+                            <button id="btnAiSummary" class="btn-primary" style="height: 34px; padding: 0 14px; font-size: 12px;" onclick="window.app.generateExecutiveSummaryAI()">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Gerar via MiniMax AI
+                            </button>
+                        </div>
+                        <div id="executiveSummaryContent" class="executive-summary-text">
+                            O negócio apresenta <strong>margem líquida saudável de 18,96% ($88.333,64/ano)</strong>, com alta retenção de clientes (<strong>10,91 atendimentos por cliente/ano</strong>) e excelente eficiência de marketing (ROAS ~38,8x). O principal ponto de atenção está na <strong>Equipe 5</strong>, cujo ticket médio ($164,31) é inferior aos demais times. Otimizar a precificação do Time 5 tem potencial de gerar <strong>+$13.435,00/ano em lucro adicional</strong> sem expansão operacional.
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 1: INDICADORES DE SAÚDE DO NEGÓCIO (MINI CARDS COMPACTOS STRIP) -->
+                    <div class="business-health-strip" style="margin-bottom: 28px;">
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Margem Líquida</span>
+                            <span class="health-val" style="color: var(--accent-emerald);" id="shMargemLiquida">18.96%</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Receita Média Mensal</span>
+                            <span class="health-val" id="shReceitaMensal">$38,818.42</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Despesa Média Mensal</span>
+                            <span class="health-val" style="color: var(--accent-rose);" id="shDespesaMensal">$31,457.28</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Receita por Equipe</span>
+                            <span class="health-val" id="shReceitaEquipe">$93,164.20</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Receita por Cliente</span>
+                            <span class="health-val" id="shReceitaCliente">$1,957.23</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Lucro por Atendimento</span>
+                            <span class="health-val" style="color: var(--accent-emerald);" id="shLucroAtendimento">$34.03</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label">Custo por Atendimento</span>
+                            <span class="health-val" style="color: var(--accent-rose);" id="shCustoAtendimento">$145.41</span>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 2 & 3: PERFORMANCE DAS EQUIPES & RANKING CLIENTES VIP GRID -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+                        
+                        <!-- PERFORMANCE DAS EQUIPES COM BADGES -->
+                        <div class="glass-panel" style="padding: 22px 24px;">
+                            <div class="chart-header" style="margin-bottom: 16px;">
+                                <h3 class="chart-title"><i class="fa-solid fa-users-viewfinder" style="color: var(--primary);"></i> 👥 Performance Detalhada das Equipes</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Equipe</th>
+                                            <th>Agendamentos</th>
+                                            <th>Receita Total ($)</th>
+                                            <th>Tips ($)</th>
+                                            <th>Ticket Médio ($)</th>
+                                            <th>Fat. Share (%)</th>
+                                            <th>Destaque</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ovTeamsTableBody">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 18px; height: 160px;">
+                                <canvas id="chartTeamsHorizontal"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- RANKING DOS CLIENTES VIP -->
+                        <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div class="chart-header" style="margin-bottom: 16px;">
+                                    <h3 class="chart-title"><i class="fa-solid fa-crown" style="color: var(--accent-amber);"></i> 👑 Top 5 Clientes VIP</h3>
+                                </div>
+                                <div id="vipClientsList" class="vip-clients-list">
+                                    <!-- Loaded dynamically -->
+                                </div>
+                            </div>
+                            
+                            <!-- Indicador de Concentração -->
+                            <div class="concentration-badge-card" style="margin-top: 14px; padding: 12px; background: rgba(37, 171, 183, 0.1); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 2px;">
+                                    <i class="fa-solid fa-chart-pie"></i> Concentração da Carteira
+                                </div>
+                                <div style="font-size: 12px; color: #0f172a; font-weight: 600;">
+                                    Os Top 10 Clientes representam <strong>16,51% ($76.900,00)</strong> da receita total.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SEÇÃO 4 & 5: FIDELIZAÇÃO DOS CLIENTES & BREAKDOWN DE DESPESAS GRID -->
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 28px;">
+                        
+                        <!-- FIDELIZAÇÃO DOS CLIENTES & GAUGE DE RETENÇÃO -->
+                        <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div class="chart-header" style="margin-bottom: 16px;">
+                                    <h3 class="chart-title"><i class="fa-solid fa-arrows-rotate" style="color: var(--accent-emerald);"></i> 🔄 Fidelização de Clientes</h3>
+                                </div>
+
+                                <!-- Retention Gauge Display -->
+                                <div class="gauge-wrapper" style="text-align: center; margin: 10px 0 20px 0;">
+                                    <div class="gauge-circle" style="position: relative; width: 140px; height: 140px; margin: 0 auto;">
+                                        <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="rgba(37, 171, 183, 0.15)" stroke-width="3.8"/>
+                                            <path class="circle-val" stroke-dasharray="91.2, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent-emerald)" stroke-width="3.8" stroke-linecap="round"/>
+                                        </svg>
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 800; color: #0f172a;">91,2%</span>
+                                            <span style="display: block; font-size: 10px; font-weight: 700; color: var(--accent-emerald); text-transform: uppercase;">Retenção</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span style="color: var(--text-muted);">Clientes Ativos:</span>
+                                    <span style="font-weight: 700; color: #0f172a;">238 únicos</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span style="color: var(--text-muted);">Frequência Anual:</span>
+                                    <span style="font-weight: 700; color: #0f172a;">10,91 serviços/ano</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                                    <span style="color: var(--text-muted);">Intervalo Médio:</span>
+                                    <span style="font-weight: 700; color: var(--primary);">~33 dias</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BREAKDOWN COMPLETO DAS DESPESAS (HIERÁRQUICO DETALHADO) -->
+                        <div class="glass-panel" style="padding: 22px 24px;">
+                            <div class="chart-header" style="margin-bottom: 16px;">
+                                <h3 class="chart-title"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--accent-rose);"></i> 💸 Detalhamento Hierárquico das Despesas</h3>
+                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Total Mensal: $31.457,28</span>
+                            </div>
+
+                            <div id="detailedExpensesAccordion" class="detailed-expenses-accordion">
+                                <!-- Loaded dynamically via app.js -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SEÇÃO 6: GRÁFICOS COMPARATIVOS DE TENDÊNCIA & MARGEM -->
+                    <div class="charts-grid" style="margin-bottom: 28px;">
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-chart-line" style="color: var(--accent-emerald);"></i> Evolução Mensal da Margem de Lucro (%)</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartMarginTrend"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-arrow-trend-up" style="color: var(--primary);"></i> Evolução Mensal do Ticket Médio ($)</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartTicketTrend"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEÇÃO 7: INSIGHTS ESTRATÉGICOS DE NEGÓCIO (CARDS DE OPORTUNIDADES) -->
+                    <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
+                        <div class="chart-header" style="margin-bottom: 18px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> 💡 Insights & Oportunidades Estratégicas de Negócio</h3>
+                        </div>
+
+                        <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            
+                            <!-- Insight 1: Time 5 (Alta Prioridade) -->
+                            <div class="insight-card insight-high-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Otimização de Preço do Time 5</span>
+                                    <span class="status-pill status-unpaid">Alta Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    O Time 5 possui o menor ticket médio ($164,31 vs $188,39 do Time 4). Ajustar a precificação gera impacto líquido direto.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
+                                    Impacto Estimado: +$13.435,00 / ano
+                                </div>
+                            </div>
+
+                            <!-- Insight 2: Redução de Taxas (Média Prioridade) -->
+                            <div class="insight-card insight-med-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-piggy-bank" style="color: var(--accent-amber);"></i> Redução de Taxas de Pgto</span>
+                                    <span class="status-pill status-pending">Média Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    Custos de $200/mês ($2.4k/ano) em taxas Venmo/Apps. Incentivar pagamentos via Zelle ou ACH reduz despesas financeiras.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
+                                    Economia Estimada: -$1.500,00 / ano
+                                </div>
+                            </div>
+
+                            <!-- Insight 3: Cultura de Tips (Média Prioridade) -->
+                            <div class="insight-card insight-med-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Cultura de Gorjetas (Tips)</span>
+                                    <span class="status-pill status-pending">Média Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    76% das gorjetas estão concentradas no Time 4. Treinar equipes 1, 2, 3 e 5 aumenta o ganho dos helpers e retenção.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                    Impacto: Retenção & Motivação da Equipe
+                                </div>
+                            </div>
+
+                            <!-- Insight 4: Escala de Marketing (Baixa Prioridade) -->
+                            <div class="insight-card insight-low-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-rocket" style="color: var(--primary);"></i> Escala de Marketing (ROAS)</span>
+                                    <span class="status-pill status-paid">Oportunidade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    Investimento de $1k/mês sustentou $38,8k/mês de faturamento (ROAS ~38,8x). Espaço para expandir anúncios no Thumbtack e Ads.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                    ROAS Atual: 38,8x
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 

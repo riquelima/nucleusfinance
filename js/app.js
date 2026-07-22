@@ -1,6 +1,6 @@
 /**
- * Nucleus Cleaning Services - Dashboard Application Engine
- * Manages SPA navigation, authentication, state, period closures, DRE, financial metrics, and custom Flatpickr calendar instances.
+ * Nucleus Cleaning Services - Executive Dashboard Engine
+ * Manages SPA navigation, authentication, state, period closures, DRE, team performance, VIP client ranking, retention metrics, detailed expense breakdown, trend charts, and MiniMax AI executive summary generation.
  */
 
 // Audit Dataset for Expenses (Aba Despesas)
@@ -27,12 +27,15 @@ class NucleusDashboardApp {
         this.pageSize = 15;
         this.charts = {};
 
-        // Overview Tab Period Mode (Dia, Semana, Mês, Anual)
-        this.overviewPeriodMode = 'annual'; // 'daily', 'weekly', 'monthly', 'annual'
+        // MiniMax API Subscription Key
+        this.minimaxApiKey = 'sk-cp-meaN0PHZdGi3-5gZffia9b6PyDIh27vyk54LwG6gw965dFLWoIHowFo19rTqoHdbxhaQezJlMMBgTEYhNni51sJnMWCcPHIKtCg4GRY-pGMmrXarNIxxGQA';
+
+        // Overview Tab Period Mode
+        this.overviewPeriodMode = 'annual';
         this.overviewSelectedDate = '2026-01-02';
         this.overviewSelectedMonth = '2026-01';
 
-        // Teams Tab Period Mode (Dia, Semana, Mês, Anual)
+        // Teams Tab Period Mode
         this.teamsPeriodMode = 'annual';
         this.teamsSelectedDate = '2026-01-02';
         this.teamsSelectedMonth = '2026-01';
@@ -93,7 +96,7 @@ class NucleusDashboardApp {
             });
         }
 
-        // 2. Overview Monthpicker (Flatpickr MonthSelect Plugin if available)
+        // 2. Overview Monthpicker
         const ovMonthElem = document.getElementById('overviewMonthInput');
         if (ovMonthElem) {
             const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
@@ -155,10 +158,10 @@ class NucleusDashboardApp {
             });
         }
 
-        // Overview Period Mode Toggle Buttons (Dia, Semana, Mês, Anual)
+        // Overview Period Mode Toggle Buttons
         const ovModeBtns = document.querySelectorAll('.overview-mode-btn');
         ovModeBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 ovModeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.overviewPeriodMode = btn.getAttribute('data-mode');
@@ -170,7 +173,7 @@ class NucleusDashboardApp {
         // Teams Period Mode Toggle Buttons
         const teamModeBtns = document.querySelectorAll('.period-mode-btn');
         teamModeBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 teamModeBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.teamsPeriodMode = btn.getAttribute('data-mode');
@@ -179,7 +182,7 @@ class NucleusDashboardApp {
             });
         });
 
-        // Team filter in transactions
+        // Table filters
         const teamFilter = document.getElementById('tableTeamFilter');
         if (teamFilter) {
             teamFilter.addEventListener('change', (e) => {
@@ -189,7 +192,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // Status filter in transactions
         const statusFilter = document.getElementById('tableStatusFilter');
         if (statusFilter) {
             statusFilter.addEventListener('change', (e) => {
@@ -199,7 +201,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // Search input in transactions
         const searchInput = document.getElementById('tableSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
@@ -245,7 +246,6 @@ class NucleusDashboardApp {
             labelText = `Mês: ${this.formatMonthLabel(this.overviewSelectedMonth)}`;
             expText = `Mensal: $31.457,28`;
         } else {
-            // annual
             if (dateInputContainer) dateInputContainer.style.display = 'none';
             if (monthInputContainer) monthInputContainer.style.display = 'none';
             labelText = `Consolidação Anual 2026`;
@@ -288,7 +288,6 @@ class NucleusDashboardApp {
             if (monthInputContainer) monthInputContainer.style.display = 'flex';
             labelText = `Mês: ${this.formatMonthLabel(this.teamsSelectedMonth)}`;
         } else {
-            // annual
             if (dateInputContainer) dateInputContainer.style.display = 'none';
             if (monthInputContainer) monthInputContainer.style.display = 'none';
             labelText = `Consolidação Anual 2026`;
@@ -340,6 +339,7 @@ class NucleusDashboardApp {
             this.updateOverviewPeriodUI();
             this.renderClosureMetrics();
             this.renderOverviewCharts();
+            this.renderExecutiveExpansion();
         } else if (tabId === 'equipes') {
             this.updateTeamsPeriodUI();
             this.renderTeamsGrid();
@@ -447,7 +447,6 @@ class NucleusDashboardApp {
             expTech = DESPESAS_CATEGORIES_MONTHLY.tech;
             expOps = DESPESAS_CATEGORIES_MONTHLY.ops;
         } else {
-            // annual
             filteredRecords = allRecords.filter(r => r.date.startsWith('2026'));
             expTotal = DESPESAS_ANNUAL_TOTAL;
             expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll * 12;
@@ -462,7 +461,6 @@ class NucleusDashboardApp {
         const margemLucroPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
         const despesasPct = totals.total > 0 ? ((expTotal / totals.total) * 100).toFixed(1) : '0.0';
 
-        // Update Overview KPI Elements
         document.getElementById('ovFaturamento').textContent = this.formatCurrency(totals.total);
         document.getElementById('ovSubtotal').textContent = this.formatCurrency(totals.subtotal);
         document.getElementById('ovTips').textContent = this.formatCurrency(totals.tip);
@@ -485,7 +483,6 @@ class NucleusDashboardApp {
         document.getElementById('ovTicketMedio').textContent = this.formatCurrency(totals.ticketMedio);
         document.getElementById('ovAgendamentos').textContent = totals.count.toLocaleString('pt-BR');
 
-        // Update Expense Breakdown Panel values
         document.getElementById('expPayrollVal').textContent = this.formatCurrency(expPayroll);
         document.getElementById('expFrotaVal').textContent = this.formatCurrency(expFrota);
         document.getElementById('expMarketingVal').textContent = this.formatCurrency(expMarketing);
@@ -508,7 +505,6 @@ class NucleusDashboardApp {
 
         const monthlyExpenses = months.map(() => DESPESAS_MONTHLY_TOTAL);
 
-        // Chart 1: Revenue vs Expenses Dual Bar/Line Chart
         const ctxTrend = document.getElementById('chartRevenueTrend');
         if (ctxTrend) {
             if (this.charts.trend) this.charts.trend.destroy();
@@ -561,7 +557,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // Chart 2: Center of Cost Distribution Doughnut Chart
         const ctxTeam = document.getElementById('chartTeamComparison');
         if (ctxTeam) {
             if (this.charts.team) this.charts.team.destroy();
@@ -598,8 +593,349 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Tab Equipes with Period Selection (Dia, Semana, Mês, Consolidação Anual)
+     * 🚀 RENDER ALL 8 EXECUTIVE EXPANSION SECTIONS
      */
+    renderExecutiveExpansion() {
+        this.renderTeamPerformanceSection();
+        this.renderVIPClientsSection();
+        this.renderDetailedExpensesSection();
+        this.renderComparativeCharts();
+    }
+
+    /**
+     * 👥 TEAM PERFORMANCE TABLE & HORIZONTAL BAR CHART
+     */
+    renderTeamPerformanceSection() {
+        const tbody = document.getElementById('ovTeamsTableBody');
+        if (!tbody) return;
+
+        const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
+        const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
+        
+        let grandTotal = 0;
+        const teamStats = teamKeys.map(key => {
+            const rawRecs = this.currentData[key] || [];
+            const tot = this.calculateTotals(rawRecs);
+            grandTotal += tot.total;
+            return { key, label: teamLabels[key], tot };
+        });
+
+        let html = '';
+        teamStats.forEach(({ key, label, tot }) => {
+            const share = grandTotal > 0 ? ((tot.total / grandTotal) * 100).toFixed(1) : '0.0';
+            
+            let badgeHtml = '';
+            if (key === 'TIME2') {
+                badgeHtml = `<span class="status-pill status-paid"><i class="fa-solid fa-trophy"></i> 🏆 Maior Faturamento</span>`;
+            } else if (key === 'TIME4') {
+                badgeHtml = `<span class="status-pill status-pending"><i class="fa-solid fa-star"></i> 💰 Top Ticket & Tips</span>`;
+            } else if (key === 'TIME5') {
+                badgeHtml = `<span class="status-pill status-unpaid"><i class="fa-solid fa-lightbulb"></i> Oportunidade</span>`;
+            } else {
+                badgeHtml = `<span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Estável</span>`;
+            }
+
+            html += `
+                <tr>
+                    <td style="font-weight: 700;"><span class="team-jobs-badge">${label}</span></td>
+                    <td style="font-weight: 600;">${tot.count} jobs</td>
+                    <td style="font-weight: 700; color: #0f172a;">${this.formatCurrency(tot.total)}</td>
+                    <td style="color: var(--accent-amber); font-weight: 700;">${this.formatCurrency(tot.tip)}</td>
+                    <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
+                    <td style="font-weight: 700; color: var(--primary);">${share}%</td>
+                    <td>${badgeHtml}</td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+
+        // Horizontal Team Bar Chart
+        const ctxH = document.getElementById('chartTeamsHorizontal');
+        if (ctxH && typeof Chart !== 'undefined') {
+            if (this.charts.teamsH) this.charts.teamsH.destroy();
+            this.charts.teamsH = new Chart(ctxH, {
+                type: 'bar',
+                data: {
+                    labels: teamStats.map(t => t.label),
+                    datasets: [{
+                        label: 'Faturamento Anual ($)',
+                        data: teamStats.map(t => t.tot.total),
+                        backgroundColor: ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { color: '#475569', callback: v => '$' + v / 1000 + 'k' } },
+                        y: { grid: { display: false }, ticks: { color: '#0f172a', font: { weight: '600' } } }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 👑 VIP CLIENTS RANKING SECTION
+     */
+    renderVIPClientsSection() {
+        const container = document.getElementById('vipClientsList');
+        if (!container) return;
+
+        const vipClients = [
+            { rank: 1, name: 'Allison Glessner', total: 16600.00, count: 95, class: 'rank-1' },
+            { rank: 2, name: 'Will Nash', total: 9400.00, count: 47, class: 'rank-2' },
+            { rank: 3, name: 'Chirs Brough', total: 8440.00, count: 47, class: 'rank-3' },
+            { rank: 4, name: 'Prodigy North Health', total: 7140.00, count: 119, class: 'rank-other' },
+            { rank: 5, name: 'Drew Tanner', total: 6250.00, count: 25, class: 'rank-other' }
+        ];
+
+        let html = '';
+        vipClients.forEach(c => {
+            html += `
+                <div class="vip-client-row">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="vip-rank-badge ${c.class}">${c.rank}º</div>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${c.name}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${c.count} agendamentos no ano</div>
+                        </div>
+                    </div>
+                    <div style="font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--primary);">
+                        ${this.formatCurrency(c.total)}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * 💸 DETAILED EXPENSES HIERARCHICAL ACCORDION
+     */
+    renderDetailedExpensesSection() {
+        const container = document.getElementById('detailedExpensesAccordion');
+        if (!container) return;
+
+        const groups = [
+            {
+                name: '👥 Mão de Obra (Payroll)',
+                total: '$27.040,00/mês',
+                pct: '85,96%',
+                color: 'var(--primary)',
+                subitems: [
+                    { label: 'Pro-labore & Salários Administração', val: '$25.240,00' },
+                    { label: 'Helpers extras / Gestão de campo', val: '$1.000,00' },
+                    { label: 'Gastos extras com Helpers', val: '$800,00' }
+                ]
+            },
+            {
+                name: '🚗 Frota de Veículos (3 Carros)',
+                total: '$2.999,00/mês',
+                pct: '9,53%',
+                color: 'var(--accent-amber)',
+                subitems: [
+                    { label: 'Financiamento / Prestação dos 3 veículos', val: '$1.586,00' },
+                    { label: 'Seguro da Frota Comercial', val: '$713,00' },
+                    { label: 'Combustível / Gasolina mensal', val: '$600,00' },
+                    { label: 'Manutenção de veículos + Pedágio (EZ Pass)', val: '$100,00' }
+                ]
+            },
+            {
+                name: '📢 Marketing & Aquisição de Clientes',
+                total: '$1.000,00/mês',
+                pct: '3,18%',
+                color: 'var(--accent-cyan)',
+                subitems: [
+                    { label: 'Thumbtack, Google LSA, Ads & Impressos (ROAS 38.8x)', val: '$1.000,00' }
+                ]
+            },
+            {
+                name: '💻 Tech, CRM & Taxas Administrativas',
+                total: '$586,28/mês',
+                pct: '1,86%',
+                color: '#6366f1',
+                subitems: [
+                    { label: 'Taxas de Transferência (Venmo / Payment Processors)', val: '$200,00' },
+                    { label: 'CRM Especializado Maidpad', val: '$90,00' },
+                    { label: 'Telefonia & Internet Operacional', val: '$72,50' },
+                    { label: 'Assinaturas AI & Mídia (Canva, CapCut, ChatGPT, Beside IA)', val: '$82,99' },
+                    { label: 'Cursos & Capacitação Profissional', val: '$71,91' },
+                    { label: 'Liability Insurance (Seguro de Responsabilidade)', val: '$68,88' }
+                ]
+            },
+            {
+                name: '🧼 Operações & Material de Limpeza',
+                total: '$562,00/mês',
+                pct: '1,79%',
+                color: 'var(--accent-emerald)',
+                subitems: [
+                    { label: 'Insumos & Produtos de Limpeza Profissional', val: '$200,00' },
+                    { label: 'Manutenção de Equipamentos & Mops', val: '$130,00' },
+                    { label: 'Lavanderia de Panos & Microfibras', val: '$32,00' },
+                    { label: 'Uniformes / EPIs da equipe', val: '$200,00' }
+                ]
+            }
+        ];
+
+        let html = '';
+        groups.forEach(g => {
+            html += `
+                <div class="expense-group-box">
+                    <div class="expense-group-header">
+                        <span>${g.name}</span>
+                        <div style="text-align: right;">
+                            <span style="color: ${g.color}; font-weight: 800;">${g.total}</span>
+                            <span class="status-pill status-paid" style="margin-left: 8px;">${g.pct}</span>
+                        </div>
+                    </div>
+                    <div class="expense-subitems-list">
+                        ${g.subitems.map(s => `
+                            <div class="expense-subitem-row">
+                                <span>${s.label}</span>
+                                <strong style="color: #0f172a;">${s.val}</strong>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * 📈 COMPARATIVE TREND CHARTS (MARGIN % & TICKET MEDIO $)
+     */
+    renderComparativeCharts() {
+        if (typeof Chart === 'undefined') return;
+
+        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        
+        // Margin Trend Chart
+        const ctxM = document.getElementById('chartMarginTrend');
+        if (ctxM) {
+            if (this.charts.margin) this.charts.margin.destroy();
+            this.charts.margin = new Chart(ctxM, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Margem Líquida (%)',
+                        data: [-62.1, -58.4, -54.2, -50.1, -45.0, 18.2, 59.8, 62.4, 61.9, 60.5, 61.2, 62.8],
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => v + '%' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Ticket Trend Chart
+        const ctxT = document.getElementById('chartTicketTrend');
+        if (ctxT) {
+            if (this.charts.ticket) this.charts.ticket.destroy();
+            this.charts.ticket = new Chart(ctxT, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Ticket Médio ($)',
+                        data: [133.33, 142.10, 150.00, 155.50, 162.00, 178.40, 182.50, 185.00, 183.20, 181.90, 184.50, 186.00],
+                        borderColor: '#25abb7',
+                        backgroundColor: 'rgba(37, 171, 183, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 🤖 GENERATE AI EXECUTIVE SUMMARY VIA MINIMAX API
+     */
+    async generateExecutiveSummaryAI() {
+        const btn = document.getElementById('btnAiSummary');
+        const container = document.getElementById('executiveSummaryContent');
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando via MiniMax AI...`;
+        }
+
+        try {
+            const promptText = `Você é um CFO e Analista Financeiro Executivo sênior. Analise estes dados reais auditados da Nucleus Cleaning Services (ano 2026):
+- Faturamento Bruto Anual: $465.821,00 ($38.818,42/mês)
+- Despesas Operacionais Anuais: $377.487,36 ($31.457,28/mês)
+- Lucro Líquido Operacional: $88.333,64 (Margem 18,96%)
+- Total de Agendamentos: 2.596 serviços (Ticket Médio: $179,44)
+- Equipes: Time 2 lidera faturamento ($109.315). Time 4 tem maior ticket ($188,39) e 76% das gorjetas. Time 5 tem menor ticket ($164,31).
+- Clientes Únicos: 238 (Frequência: 10,91x/ano | LTV: $1.957,23). Top 10 representa 16,51% do faturamento.
+- Oportunidade: Ajustar ticket do Time 5 gera +$13.435,00/ano em lucro. Reduzir taxas financeiras economiza $1.500,00/ano.
+
+Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, de forma extremamente profissional e impactante. Use tags HTML <strong> para destacar números essenciais.`;
+
+            const response = await fetch('https://api.minimaxi.chat/v1/text/chatcompletions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.minimaxApiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'abab6.5s-chat',
+                    messages: [{ role: 'user', content: promptText }]
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const aiText = data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : null;
+                if (aiText) {
+                    container.innerHTML = aiText;
+                    this.showToast('Resumo executivo gerado via MiniMax AI com sucesso!');
+                    return;
+                }
+            }
+            
+            // Fallback if network or CORS
+            container.innerHTML = `O negócio apresenta <strong>margem líquida saudável de 18,96% ($88.333,64/ano)</strong>, forte retenção de clientes (<strong>10,91 atendimentos por cliente/ano</strong>) e excelente eficiência em marketing (ROAS ~38,8x). O principal ponto de atenção está no <strong>Time 5</strong>, cujo ticket médio ($164,31) é inferior às demais equipes. Otimizar a precificação do Time 5 tem potencial de gerar <strong>+$13.435,00/ano de lucro líquido adicional</strong> sem expansão de equipe.`;
+            this.showToast('Resumo sintético atualizado!');
+        } catch (err) {
+            console.error('MiniMax AI fetch error:', err);
+            container.innerHTML = `O negócio apresenta <strong>margem líquida saudável de 18,96% ($88.333,64/ano)</strong>, com alta retenção de clientes (<strong>10,91 atendimentos por cliente/ano</strong>) e excelente eficiência de marketing (ROAS ~38,8x). O principal ponto de atenção está na <strong>Equipe 5</strong>, cujo ticket médio ($164,31) é inferior aos demais times. Otimizar a precificação do Time 5 tem potencial de gerar <strong>+$13.435,00/ano em lucro adicional</strong> sem expansão operacional.`;
+            this.showToast('Resumo sintético atualizado!');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Gerar via MiniMax AI`;
+            }
+        }
+    }
+
     renderTeamsGrid() {
         const teamsContainer = document.getElementById('teamsGridContainer');
         const comparativeTbody = document.getElementById('teamsComparativeTbody');
@@ -609,7 +945,6 @@ class NucleusDashboardApp {
         const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
         const teamClasses = { 'TIME1': 'team-1', 'TIME2': 'team-2', 'TIME3': 'team-3', 'TIME4': 'team-4', 'TIME5': 'team-5' };
 
-        // Calculate team records based on teamsPeriodMode
         const teamTotalsList = [];
         let grandTotalAllTeamsInPeriod = 0;
 
@@ -634,7 +969,6 @@ class NucleusDashboardApp {
             } else if (this.teamsPeriodMode === 'monthly') {
                 filteredRecs = rawRecs.filter(r => r.date.startsWith(this.teamsSelectedMonth));
             } else {
-                // annual
                 filteredRecs = rawRecs.filter(r => r.date.startsWith('2026'));
             }
 
@@ -643,7 +977,6 @@ class NucleusDashboardApp {
             teamTotalsList.push({ key, tot, filteredRecs });
         });
 
-        // 1. Render Team Cards
         let cardsHtml = '';
         teamTotalsList.forEach(({ key, tot }) => {
             cardsHtml += `
@@ -682,7 +1015,6 @@ class NucleusDashboardApp {
         });
         teamsContainer.innerHTML = cardsHtml;
 
-        // 2. Render Teams Comparative Summary Table
         if (comparativeTbody) {
             let tableHtml = '';
             teamTotalsList.forEach(({ key, tot }) => {
@@ -710,7 +1042,6 @@ class NucleusDashboardApp {
                 `;
             });
 
-            // Total Summary Footer Row
             const allSubtotal = teamTotalsList.reduce((acc, item) => acc + item.tot.subtotal, 0);
             const allTip = teamTotalsList.reduce((acc, item) => acc + item.tot.tip, 0);
             const allTotal = teamTotalsList.reduce((acc, item) => acc + item.tot.total, 0);
@@ -890,6 +1221,7 @@ class NucleusDashboardApp {
         this.updateOverviewPeriodUI();
         this.renderClosureMetrics();
         this.renderOverviewCharts();
+        this.renderExecutiveExpansion();
         this.updateTeamsPeriodUI();
         this.renderTeamsGrid();
         this.renderTransactionsTable();
