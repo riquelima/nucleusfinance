@@ -29,6 +29,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Flatpickr Custom Calendar Picker Assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -103,15 +110,21 @@
                                 <button type="button" class="overview-mode-btn active" data-mode="annual">🏆 Anual</button>
                             </div>
 
-                            <!-- Dynamic Date/Month Selectors -->
+                            <!-- Dynamic Custom Date/Month Selectors -->
                             <div id="overviewDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted);">Data:</label>
-                                <input type="date" id="overviewDateInput" class="input-date" value="2026-01-02">
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <input type="text" id="overviewDateInput" class="input-date custom-flatpickr-input" placeholder="Selecionar data...">
+                                </div>
                             </div>
 
                             <div id="overviewMonthInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted);">Mês:</label>
-                                <input type="month" id="overviewMonthInput" class="input-date" value="2026-01">
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <input type="text" id="overviewMonthInput" class="input-date custom-flatpickr-input" placeholder="Selecionar mês...">
+                                </div>
                             </div>
 
                             <div id="overviewPeriodSubtitle" style="font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(37, 171, 183, 0.1); padding: 6px 14px; border-radius: var(--radius-full);">
@@ -120,7 +133,7 @@
                         </div>
                     </div>
 
-                    <!-- DRE & FINANCIAL KPI SUMMARY GRID (Recalculado Dinamicamente por Período) -->
+                    <!-- DRE & FINANCIAL KPI SUMMARY GRID -->
                     <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
                         
                         <!-- 1. Faturamento Total -->
@@ -208,7 +221,7 @@
                         </div>
                     </div>
 
-                    <!-- CENTRO DE CUSTOS & ESTRUTURA DE DESPESAS PANEL (DEEP ANALYSIS FINDINGS) -->
+                    <!-- CENTRO DE CUSTOS & ESTRUTURA DE DESPESAS PANEL -->
                     <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
                         <div class="chart-header" style="margin-bottom: 18px;">
                             <h3 class="chart-title">
@@ -360,12 +373,18 @@
                             <!-- Dynamic Inputs for Day/Week/Month -->
                             <div id="teamsDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted);">Data:</label>
-                                <input type="date" id="teamsDateInput" class="input-date" value="2026-01-02">
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <input type="text" id="teamsDateInput" class="input-date custom-flatpickr-input" placeholder="Selecionar data...">
+                                </div>
                             </div>
 
                             <div id="teamsMonthInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted);">Mês:</label>
-                                <input type="month" id="teamsMonthInput" class="input-date" value="2026-01">
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <input type="text" id="teamsMonthInput" class="input-date custom-flatpickr-input" placeholder="Selecionar mês...">
+                                </div>
                             </div>
 
                             <div id="teamsPeriodSubtitle" style="font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(37, 171, 183, 0.1); padding: 6px 14px; border-radius: var(--radius-full);">

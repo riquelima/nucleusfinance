@@ -1,6 +1,6 @@
 /**
  * Nucleus Cleaning Services - Dashboard Application Engine
- * Manages SPA navigation, authentication, state, period closures, DRE, financial metrics, and charts.
+ * Manages SPA navigation, authentication, state, period closures, DRE, financial metrics, and custom Flatpickr calendar instances.
  */
 
 // Audit Dataset for Expenses (Aba Despesas)
@@ -37,11 +37,15 @@ class NucleusDashboardApp {
         this.teamsSelectedDate = '2026-01-02';
         this.teamsSelectedMonth = '2026-01';
 
+        // Flatpickr instances
+        this.flatpickrs = {};
+
         this.init();
     }
 
     init() {
         this.checkAuthSession();
+        this.initFlatpickrs();
         this.bindEvents();
         this.renderAllViews();
         
@@ -67,6 +71,80 @@ class NucleusDashboardApp {
         this.applySliderTransform(this.activeTab);
     }
 
+    initFlatpickrs() {
+        if (typeof flatpickr === 'undefined') return;
+
+        const localePt = flatpickr.l10ns && flatpickr.l10ns.pt ? flatpickr.l10ns.pt : 'default';
+
+        // 1. Overview Datepicker
+        const ovDateElem = document.getElementById('overviewDateInput');
+        if (ovDateElem) {
+            this.flatpickrs.ovDate = flatpickr(ovDateElem, {
+                locale: localePt,
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: this.overviewSelectedDate,
+                onChange: (selectedDates, dateStr) => {
+                    this.overviewSelectedDate = dateStr;
+                    this.updateOverviewPeriodUI();
+                    this.renderClosureMetrics();
+                }
+            });
+        }
+
+        // 2. Overview Monthpicker (Flatpickr MonthSelect Plugin if available)
+        const ovMonthElem = document.getElementById('overviewMonthInput');
+        if (ovMonthElem) {
+            const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
+            this.flatpickrs.ovMonth = flatpickr(ovMonthElem, {
+                locale: localePt,
+                dateFormat: 'Y-m',
+                defaultDate: this.overviewSelectedMonth,
+                plugins: plugins,
+                onChange: (selectedDates, dateStr) => {
+                    this.overviewSelectedMonth = dateStr;
+                    this.updateOverviewPeriodUI();
+                    this.renderClosureMetrics();
+                }
+            });
+        }
+
+        // 3. Teams Datepicker
+        const teamsDateElem = document.getElementById('teamsDateInput');
+        if (teamsDateElem) {
+            this.flatpickrs.teamsDate = flatpickr(teamsDateElem, {
+                locale: localePt,
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: this.teamsSelectedDate,
+                onChange: (selectedDates, dateStr) => {
+                    this.teamsSelectedDate = dateStr;
+                    this.updateTeamsPeriodUI();
+                    this.renderTeamsGrid();
+                }
+            });
+        }
+
+        // 4. Teams Monthpicker
+        const teamsMonthElem = document.getElementById('teamsMonthInput');
+        if (teamsMonthElem) {
+            const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
+            this.flatpickrs.teamsMonth = flatpickr(teamsMonthElem, {
+                locale: localePt,
+                dateFormat: 'Y-m',
+                defaultDate: this.teamsSelectedMonth,
+                plugins: plugins,
+                onChange: (selectedDates, dateStr) => {
+                    this.teamsSelectedMonth = dateStr;
+                    this.updateTeamsPeriodUI();
+                    this.renderTeamsGrid();
+                }
+            });
+        }
+    }
+
     bindEvents() {
         // Login form
         const loginForm = document.getElementById('loginForm');
@@ -89,25 +167,6 @@ class NucleusDashboardApp {
             });
         });
 
-        // Overview Date / Month Selectors
-        const ovDateInput = document.getElementById('overviewDateInput');
-        if (ovDateInput) {
-            ovDateInput.addEventListener('change', (e) => {
-                this.overviewSelectedDate = e.target.value;
-                this.updateOverviewPeriodUI();
-                this.renderClosureMetrics();
-            });
-        }
-
-        const ovMonthInput = document.getElementById('overviewMonthInput');
-        if (ovMonthInput) {
-            ovMonthInput.addEventListener('change', (e) => {
-                this.overviewSelectedMonth = e.target.value;
-                this.updateOverviewPeriodUI();
-                this.renderClosureMetrics();
-            });
-        }
-
         // Teams Period Mode Toggle Buttons
         const teamModeBtns = document.querySelectorAll('.period-mode-btn');
         teamModeBtns.forEach(btn => {
@@ -119,25 +178,6 @@ class NucleusDashboardApp {
                 this.renderTeamsGrid();
             });
         });
-
-        // Teams Date / Month inputs
-        const teamsDateInput = document.getElementById('teamsDateInput');
-        if (teamsDateInput) {
-            teamsDateInput.addEventListener('change', (e) => {
-                this.teamsSelectedDate = e.target.value;
-                this.updateTeamsPeriodUI();
-                this.renderTeamsGrid();
-            });
-        }
-
-        const teamsMonthInput = document.getElementById('teamsMonthInput');
-        if (teamsMonthInput) {
-            teamsMonthInput.addEventListener('change', (e) => {
-                this.teamsSelectedMonth = e.target.value;
-                this.updateTeamsPeriodUI();
-                this.renderTeamsGrid();
-            });
-        }
 
         // Team filter in transactions
         const teamFilter = document.getElementById('tableTeamFilter');
@@ -361,9 +401,6 @@ class NucleusDashboardApp {
         return { subtotal, tip, total, count, ticketMedio, tipPercent };
     }
 
-    /**
-     * Render Visão Geral DRE & Financial Metrics based on overviewPeriodMode
-     */
     renderClosureMetrics() {
         const allRecords = this.getAllRecords();
 
@@ -687,7 +724,7 @@ class NucleusDashboardApp {
                     <td>${this.formatCurrency(allSubtotal)}</td>
                     <td style="color: var(--accent-amber);">${this.formatCurrency(allTip)}</td>
                     <td>${this.formatCurrency(avgTicket)}</td>
-                    <td style="color: var(--primary); font-size: 15px;">${this.formatCurrency(allTotal)}</td>
+                    <td><span style="color: var(--primary); font-size: 15px;">${this.formatCurrency(allTotal)}</span></td>
                     <td>100.0%</td>
                 </tr>
             `;
