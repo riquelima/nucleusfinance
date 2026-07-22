@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nucleus Cleaning Services - Dashboard Financeiro</title>
     
-    <!-- Google Fonts -->
+    <!-- Favicon & OpenGraph Meta Tags for Social Media Sharing -->
+    <link rel="icon" type="image/jpeg" href="nucleusLogo.jpg">
+    <link rel="shortcut icon" type="image/jpeg" href="nucleusLogo.jpg">
+    <link rel="apple-touch-icon" href="nucleusLogo.jpg">
+    
+    <meta property="og:title" content="Nucleus Cleaning Services - Dashboard Financeiro">
+    <meta property="og:description" content="Sistema de gestão financeira e fechamento por equipes da Nucleus Cleaning Services">
+    <meta property="og:image" content="nucleusLogo.jpg">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Nucleus Cleaning Services - Dashboard Financeiro">
+    <meta name="twitter:image" content="nucleusLogo.jpg">
+
+    <!-- Official Brand Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Poppins:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,7 +34,7 @@
 </head>
 <body>
 
-    <!-- SPA Viewport & Slider Architecture -->
+    <!-- SPA Viewport & Slider Architecture [SPA_HORIZONTAL_MANDATE] -->
     <div id="view-viewport">
         <div id="view-slider">
 
@@ -29,9 +42,7 @@
             <section id="view-login" class="view-section">
                 <div class="login-wrapper">
                     <div class="login-card">
-                        <div class="login-icon">
-                            <i class="fa-solid fa-broom"></i>
-                        </div>
+                        <img src="nucleusLogo.jpg" alt="Nucleus Cleaning Services Logo" class="brand-logo-img login-logo-img">
                         <h2 class="login-title">Nucleus Cleaning</h2>
                         <p class="login-subtitle">Sistema de Gestão & Dashboard Financeiro</p>
 
@@ -61,9 +72,7 @@
                     <!-- Header Top Bar -->
                     <header class="top-header glass-panel">
                         <div class="brand-title">
-                            <div class="brand-icon">
-                                <i class="fa-solid fa-chart-line"></i>
-                            </div>
+                            <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Nucleus Financial Control</h1>
                                 <p>Dashboard e Fechamento Financeiro por Equipes</p>
@@ -261,7 +270,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-emerald);"></i> Distribuição por Equipes</h3>
+                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-cyan);"></i> Distribuição por Equipes</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartTeamComparison"></canvas>
@@ -277,9 +286,7 @@
                 <div class="container">
                     <header class="top-header glass-panel">
                         <div class="brand-title">
-                            <div class="brand-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                                <i class="fa-solid fa-users"></i>
-                            </div>
+                            <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Fechamento Individual de Equipes</h1>
                                 <p>Detalhamento de faturamento das abas TIME1, TIME2, TIME3, TIME4 e TIME5</p>
@@ -299,9 +306,7 @@
                 <div class="container">
                     <header class="top-header glass-panel">
                         <div class="brand-title">
-                            <div class="brand-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                                <i class="fa-solid fa-list-check"></i>
-                            </div>
+                            <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Agendamentos & Transações Auditadas</h1>
                                 <p>Mapeamento completo dos dados extraídos do Google Sheets</p>
@@ -381,9 +386,7 @@
                 <div class="container">
                     <header class="top-header glass-panel">
                         <div class="brand-title">
-                            <div class="brand-icon" style="background: linear-gradient(135deg, #ec4899, #be185d);">
-                                <i class="fa-solid fa-chart-column"></i>
-                            </div>
+                            <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Relatórios Avançados & Ranking</h1>
                                 <p>Análise estratégica de faturamento, gorjetas e top clientes</p>
@@ -421,7 +424,7 @@
         <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
             <i class="fa-solid fa-chart-bar"></i> Relatórios
         </button>
-        <div style="width: 1px; height: 20px; background: rgba(255, 255, 255, 0.15); margin: 0 4px;"></div>
+        <div style="width: 1px; height: 20px; background: rgba(37, 171, 183, 0.2); margin: 0 4px;"></div>
         <button class="nav-item" onclick="window.app.syncGoogleSheets()" title="Sincronizar Google Sheets">
             <i class="fa-solid fa-rotate"></i> Sync
         </button>

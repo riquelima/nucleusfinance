@@ -122,7 +122,7 @@ class NucleusDashboardApp {
             
             document.getElementById('bottomNavBar').style.display = 'flex';
             this.switchTab('overview');
-            this.showToast('Login realizado com sucesso! Bem-vindo, Admin.');
+            this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
         } else {
             if (alertBox) {
                 alertBox.textContent = 'E-mail ou senha incorretos. Utilize nucleus@admin.com / nucleus2026';
@@ -196,9 +196,6 @@ class NucleusDashboardApp {
         });
     }
 
-    /**
-     * Get combined array of all records across teams
-     */
     getAllRecords() {
         let records = [];
         for (const [teamName, teamRecords] of Object.entries(this.currentData)) {
@@ -209,9 +206,6 @@ class NucleusDashboardApp {
         return records;
     }
 
-    /**
-     * Calculate financial totals for a given record set
-     */
     calculateTotals(records) {
         const subtotal = records.reduce((acc, r) => acc + (r.subtotal || 0), 0);
         const tip = records.reduce((acc, r) => acc + (r.tip || 0), 0);
@@ -227,7 +221,6 @@ class NucleusDashboardApp {
         const allRecords = this.getAllRecords();
         if (allRecords.length === 0) return;
 
-        // Set default date input value if available
         const dateInput = document.getElementById('filterDateInput');
         if (dateInput && !dateInput.value) {
             dateInput.value = this.selectedDate;
@@ -250,7 +243,7 @@ class NucleusDashboardApp {
         const dailyTot = this.calculateTotals(dailyRecords);
         this.updateClosureCard('daily', dailyTot, `Data: ${this.formatDateBR(this.selectedDate)}`);
 
-        // 2. Fechamento Semanal (7 dias em torno da data selecionada)
+        // 2. Fechamento Semanal
         const selDateObj = new Date(this.selectedDate);
         const dayOfWeek = selDateObj.getDay();
         const firstDayOfWeek = new Date(selDateObj);
@@ -276,7 +269,7 @@ class NucleusDashboardApp {
         const annualTot = this.calculateTotals(annualRecords);
         this.updateClosureCard('annual', annualTot, `Ano: ${this.selectedYear}`);
 
-        // 5. Global Top KPI Cards
+        // Global KPI Cards
         const overall = this.calculateTotals(records);
         document.getElementById('kpiTotalFaturamento').textContent = this.formatCurrency(overall.total);
         document.getElementById('kpiTotalSubtotal').textContent = this.formatCurrency(overall.subtotal);
@@ -296,7 +289,7 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Overview Charts using Chart.js
+     * Render Overview Charts using Nucleus Palette
      */
     renderOverviewCharts() {
         if (typeof Chart === 'undefined') return;
@@ -322,13 +315,14 @@ class NucleusDashboardApp {
                     datasets: [{
                         label: 'Faturamento Total ($)',
                         data: monthlyData,
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        borderColor: '#25abb7',
+                        backgroundColor: 'rgba(37, 171, 183, 0.18)',
                         fill: true,
                         tension: 0.35,
-                        pointBackgroundColor: '#6366f1',
-                        pointRadius: 4,
-                        pointHoverRadius: 7
+                        pointBackgroundColor: '#ffdb42',
+                        pointBorderColor: '#25abb7',
+                        pointRadius: 5,
+                        pointHoverRadius: 8
                     }]
                 },
                 options: {
@@ -339,21 +333,21 @@ class NucleusDashboardApp {
                     },
                     scales: {
                         y: {
-                            grid: { color: 'rgba(255, 255, 255, 0.06)' },
-                            ticks: { color: '#94a3b8', callback: (v) => '$' + v.toLocaleString() }
+                            grid: { color: 'rgba(37, 171, 183, 0.1)' },
+                            ticks: { color: '#a0aec0', callback: (v) => '$' + v.toLocaleString() }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { color: '#94a3b8' }
+                            ticks: { color: '#a0aec0' }
                         }
                     }
                 }
             });
         }
 
-        // 2. Team Comparison Doughnut / Bar Chart
+        // 2. Team Comparison Doughnut Chart (Official Nucleus Palette Colors)
         const teamNames = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
-        const teamColors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'];
+        const teamColors = ['#25abb7', '#10b981', '#ffdb42', '#ec4899', '#75d3cd'];
         const teamTotals = teamNames.map(t => {
             const recs = this.currentData[t] || [];
             return recs.reduce((acc, r) => acc + r.total, 0);
@@ -379,7 +373,7 @@ class NucleusDashboardApp {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#f8fafc', padding: 16, font: { size: 12 } }
+                            labels: { color: '#ffffff', padding: 16, font: { size: 12, family: 'Poppins' } }
                         }
                     },
                     cutout: '70%'
@@ -389,7 +383,7 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Tab Equipes (Time 1 a Time 5 breakdown)
+     * Render Tab Equipes
      */
     renderTeamsGrid() {
         const teamsContainer = document.getElementById('teamsGridContainer');
@@ -443,7 +437,7 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Transactions Table with filtering & pagination
+     * Render Transactions Table
      */
     renderTransactionsTable() {
         const tbody = document.getElementById('transactionsTbody');
@@ -451,17 +445,14 @@ class NucleusDashboardApp {
 
         let records = this.getAllRecords();
 
-        // Filter by team
         if (this.selectedTeamFilter !== 'ALL') {
             records = records.filter(r => r.team === this.selectedTeamFilter);
         }
 
-        // Filter by status
         if (this.selectedStatusFilter !== 'ALL') {
             records = records.filter(r => (r.status || 'PAID').toUpperCase() === this.selectedStatusFilter.toUpperCase());
         }
 
-        // Search query filter
         if (this.searchQuery) {
             records = records.filter(r => 
                 (r.client && r.client.toLowerCase().includes(this.searchQuery)) ||
@@ -471,7 +462,6 @@ class NucleusDashboardApp {
             );
         }
 
-        // Pagination calculation
         const totalItems = records.length;
         const totalPages = Math.ceil(totalItems / this.pageSize) || 1;
         if (this.currentPage > totalPages) this.currentPage = totalPages;
@@ -479,7 +469,6 @@ class NucleusDashboardApp {
         const startIndex = (this.currentPage - 1) * this.pageSize;
         const paginatedRecords = records.slice(startIndex, startIndex + this.pageSize);
 
-        // Build HTML
         if (paginatedRecords.length === 0) {
             tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhum agendamento encontrado com os filtros selecionados.</td></tr>`;
         } else {
@@ -491,12 +480,12 @@ class NucleusDashboardApp {
                 html += `
                     <tr>
                         <td style="font-weight: 600;">${this.formatDateBR(r.date)}</td>
-                        <td><span class="team-jobs-badge" style="background: rgba(99, 102, 241, 0.15); color: var(--primary); font-weight: 700;">${r.team}</span></td>
+                        <td><span class="team-jobs-badge">${r.team}</span></td>
                         <td style="font-weight: 700; color: #fff;">${r.client}</td>
                         <td>${r.trans_type || 'Cleaning'}</td>
                         <td style="font-weight: 600;">${this.formatCurrency(r.subtotal)}</td>
                         <td style="color: var(--accent-amber); font-weight: 600;">${this.formatCurrency(r.tip)}</td>
-                        <td style="color: var(--accent-emerald); font-weight: 800;">${this.formatCurrency(r.total)}</td>
+                        <td style="color: var(--accent-cyan); font-weight: 800;">${this.formatCurrency(r.total)}</td>
                         <td><span class="status-pill ${statusClass}">${r.status || 'PAID'}</span></td>
                         <td style="color: var(--text-muted);">${r.paid_by || 'Dinheiro/Cartão'}</td>
                     </tr>
@@ -505,7 +494,6 @@ class NucleusDashboardApp {
             tbody.innerHTML = html;
         }
 
-        // Pagination controls update
         document.getElementById('tablePaginationInfo').textContent = `Exibindo ${startIndex + 1} - ${Math.min(startIndex + this.pageSize, totalItems)} de ${totalItems} agendamentos`;
         document.getElementById('btnPrevPage').disabled = this.currentPage <= 1;
         document.getElementById('btnNextPage').disabled = this.currentPage >= totalPages;
@@ -517,9 +505,6 @@ class NucleusDashboardApp {
         this.renderTransactionsTable();
     }
 
-    /**
-     * Export table data as CSV
-     */
     exportCSV() {
         const records = this.getAllRecords();
         let csv = 'Data,Equipe,Cliente,Tipo,Subtotal,Tip,Total,Status,FormaPagamento\n';
@@ -536,15 +521,11 @@ class NucleusDashboardApp {
         this.showToast('Relatório CSV exportado com sucesso!');
     }
 
-    /**
-     * Render Reports View (Tab Relatórios)
-     */
     renderReportsView() {
         if (typeof Chart === 'undefined') return;
 
         const records = this.getAllRecords();
 
-        // 1. Top 10 Clients Chart
         const clientTotals = {};
         records.forEach(r => {
             clientTotals[r.client] = (clientTotals[r.client] || 0) + r.total;
@@ -564,7 +545,7 @@ class NucleusDashboardApp {
                     datasets: [{
                         label: 'Total Pago ($)',
                         data: sortedClients.map(c => c[1]),
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        backgroundColor: '#25abb7',
                         borderRadius: 6
                     }]
                 },
@@ -575,12 +556,12 @@ class NucleusDashboardApp {
                     plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(255, 255, 255, 0.06)' },
-                            ticks: { color: '#94a3b8', callback: v => '$' + v }
+                            grid: { color: 'rgba(37, 171, 183, 0.1)' },
+                            ticks: { color: '#a0aec0', callback: v => '$' + v }
                         },
                         y: {
                             grid: { display: false },
-                            ticks: { color: '#f8fafc', font: { size: 11 } }
+                            ticks: { color: '#ffffff', font: { size: 11, family: 'Poppins' } }
                         }
                     }
                 }
@@ -588,9 +569,6 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * Live Sync Action with Google Sheets API
-     */
     async syncGoogleSheets() {
         const syncBtn = document.getElementById('btnSyncSheets');
         if (syncBtn) {
@@ -622,7 +600,6 @@ class NucleusDashboardApp {
         this.renderReportsView();
     }
 
-    // Formatting utilities
     formatCurrency(val) {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
     }
@@ -656,7 +633,7 @@ class NucleusDashboardApp {
                 z-index: 10000;
                 padding: 14px 20px;
                 border-radius: 12px;
-                color: #fff;
+                color: #ffffff;
                 font-weight: 600;
                 font-size: 13px;
                 box-shadow: 0 10px 25px rgba(0,0,0,0.5);
@@ -666,7 +643,7 @@ class NucleusDashboardApp {
             document.body.appendChild(toast);
         }
 
-        toast.style.background = type === 'error' ? 'rgba(244, 63, 94, 0.9)' : 'rgba(16, 185, 129, 0.9)';
+        toast.style.background = type === 'error' ? 'rgba(244, 63, 94, 0.95)' : 'rgba(37, 171, 183, 0.95)';
         toast.textContent = message;
         toast.style.opacity = '1';
 
@@ -676,7 +653,6 @@ class NucleusDashboardApp {
     }
 }
 
-// Global App Instance Initializer
 window.addEventListener('DOMContentLoaded', () => {
     window.app = new NucleusDashboardApp();
 });
