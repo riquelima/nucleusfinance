@@ -281,7 +281,7 @@
                 </div>
             </section>
 
-            <!-- TAB 2: EQUIPES (FECHAMENTO POR TIME 1 A TIME 5) -->
+            <!-- TAB 2: EQUIPES (FECHAMENTO POR TIME 1 A TIME 5 COM SELEÇÃO POR PERÍODO) -->
             <section id="view-equipes" class="view-section">
                 <div class="container">
                     <header class="top-header glass-panel">
@@ -289,15 +289,75 @@
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Fechamento Individual de Equipes</h1>
-                                <p>Detalhamento de faturamento das abas TIME1, TIME2, TIME3, TIME4 e TIME5</p>
+                                <p>Faturamento, tips e ticket médio por time com seleção por período</p>
                             </div>
                         </div>
                     </header>
+
+                    <!-- Teams Period Filter Controls Bar -->
+                    <div class="period-bar glass-panel" style="margin-bottom: 24px;">
+                        <div class="period-title">
+                            <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Período de Análise por Equipe
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <!-- Period Mode Toggle Buttons -->
+                            <div class="period-mode-group">
+                                <button type="button" class="period-mode-btn" data-mode="daily">📅 Dia</button>
+                                <button type="button" class="period-mode-btn" data-mode="weekly">🗓️ Semana</button>
+                                <button type="button" class="period-mode-btn" data-mode="monthly">📆 Mês</button>
+                                <button type="button" class="period-mode-btn active" data-mode="annual">🏆 Anual</button>
+                            </div>
+
+                            <!-- Dynamic Inputs for Day/Week/Month -->
+                            <div id="teamsDateInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted);">Data:</label>
+                                <input type="date" id="teamsDateInput" class="input-date" value="2026-01-02">
+                            </div>
+
+                            <div id="teamsMonthInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted);">Mês:</label>
+                                <input type="month" id="teamsMonthInput" class="input-date" value="2026-01">
+                            </div>
+
+                            <div id="teamsPeriodSubtitle" style="font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(37, 171, 183, 0.1); padding: 6px 14px; border-radius: var(--radius-full);">
+                                Consolidação Anual 2026
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Teams Cards Grid -->
                     <div id="teamsGridContainer" class="teams-grid">
                         <!-- Loaded dynamically via app.js -->
                     </div>
+
+                    <!-- Teams Comparative Table Panel -->
+                    <div class="table-panel glass-panel" style="margin-top: 28px;">
+                        <div class="chart-header" style="margin-bottom: 16px;">
+                            <h3 class="chart-title">
+                                <i class="fa-solid fa-table-list" style="color: var(--primary);"></i> Quadro Comparativo por Equipes (<span id="teamsTablePeriodLabel">Anual 2026</span>)
+                            </h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Equipe</th>
+                                        <th>Agendamentos</th>
+                                        <th>Subtotal Serviços (Col G)</th>
+                                        <th>Gorjetas / Tips (Col J)</th>
+                                        <th>Ticket Médio</th>
+                                        <th>Total Pago Cliente (Col L)</th>
+                                        <th>Participação (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamsComparativeTbody">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 

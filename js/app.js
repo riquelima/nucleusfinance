@@ -16,10 +16,15 @@ class NucleusDashboardApp {
         this.pageSize = 15;
         this.charts = {};
 
-        // Period filter selections
+        // Period filter selections for Overview Tab
         this.selectedDate = '2026-01-02'; // default sample date
         this.selectedMonth = '2026-01'; // YYYY-MM
         this.selectedYear = '2026';
+
+        // Period filter selections for Teams Tab (Dia, Semana, Mês, Anual)
+        this.teamsPeriodMode = 'annual'; // 'daily', 'weekly', 'monthly', 'annual'
+        this.teamsSelectedDate = '2026-01-02';
+        this.teamsSelectedMonth = '2026-01';
 
         this.init();
     }
@@ -62,7 +67,7 @@ class NucleusDashboardApp {
             });
         }
 
-        // Date / Period filters
+        // Overview Date / Period filters
         const dateInput = document.getElementById('filterDateInput');
         if (dateInput) {
             dateInput.addEventListener('change', (e) => {
@@ -76,6 +81,37 @@ class NucleusDashboardApp {
             monthInput.addEventListener('change', (e) => {
                 this.selectedMonth = e.target.value;
                 this.renderClosureMetrics();
+            });
+        }
+
+        // Teams Period Mode Toggle Buttons (Dia, Semana, Mês, Anual)
+        const teamModeBtns = document.querySelectorAll('.period-mode-btn');
+        teamModeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                teamModeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.teamsPeriodMode = btn.getAttribute('data-mode');
+                this.updateTeamsPeriodUI();
+                this.renderTeamsGrid();
+            });
+        });
+
+        // Teams Date / Month inputs
+        const teamsDateInput = document.getElementById('teamsDateInput');
+        if (teamsDateInput) {
+            teamsDateInput.addEventListener('change', (e) => {
+                this.teamsSelectedDate = e.target.value;
+                this.updateTeamsPeriodUI();
+                this.renderTeamsGrid();
+            });
+        }
+
+        const teamsMonthInput = document.getElementById('teamsMonthInput');
+        if (teamsMonthInput) {
+            teamsMonthInput.addEventListener('change', (e) => {
+                this.teamsSelectedMonth = e.target.value;
+                this.updateTeamsPeriodUI();
+                this.renderTeamsGrid();
             });
         }
 
@@ -110,6 +146,47 @@ class NucleusDashboardApp {
         }
     }
 
+    updateTeamsPeriodUI() {
+        const dateInputContainer = document.getElementById('teamsDateInputContainer');
+        const monthInputContainer = document.getElementById('teamsMonthInputContainer');
+        const subtitleLabel = document.getElementById('teamsPeriodSubtitle');
+        const tableLabel = document.getElementById('teamsTablePeriodLabel');
+
+        let labelText = '';
+
+        if (this.teamsPeriodMode === 'daily') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `Dia: ${this.formatDateBR(this.teamsSelectedDate)}`;
+        } else if (this.teamsPeriodMode === 'weekly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+
+            const selDateObj = new Date(this.teamsSelectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+
+            const startStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endStr = lastDayOfWeek.toISOString().split('T')[0];
+            labelText = `Semana: ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
+        } else if (this.teamsPeriodMode === 'monthly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'flex';
+            labelText = `Mês: ${this.formatMonthLabel(this.teamsSelectedMonth)}`;
+        } else {
+            // annual
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `Consolidação Anual 2026`;
+        }
+
+        if (subtitleLabel) subtitleLabel.textContent = labelText;
+        if (tableLabel) tableLabel.textContent = labelText;
+    }
+
     handleLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -139,10 +216,6 @@ class NucleusDashboardApp {
         this.showToast('Sessão encerrada.');
     }
 
-    /**
-     * SPA Horizontal Slider Navigation Switcher
-     * [NO_PHYSICAL_REDIRECTS] & [SPA_HORIZONTAL_MANDATE]
-     */
     switchTab(tabId) {
         if (!this.isAuthenticated && tabId !== 'login') {
             tabId = 'login';
@@ -152,11 +225,11 @@ class NucleusDashboardApp {
         this.applySliderTransform(tabId);
         this.updateNavButtons(tabId);
 
-        // Render tab specific components when active
         if (tabId === 'overview') {
             this.renderClosureMetrics();
             this.renderOverviewCharts();
         } else if (tabId === 'equipes') {
+            this.updateTeamsPeriodUI();
             this.renderTeamsGrid();
         } else if (tabId === 'transacoes') {
             this.renderTransactionsTable();
@@ -180,7 +253,6 @@ class NucleusDashboardApp {
         const index = tabIndexMap[tabId] !== undefined ? tabIndexMap[tabId] : 1;
         const offsetPercent = -(index * 100);
         
-        // Hardware accelerated translate3d
         slider.style.transform = `translate3d(${offsetPercent}vw, 0, 0)`;
     }
 
@@ -232,9 +304,6 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * Render Fechamento por Equipe & Período (Diário, Semanal, Mensal, Anual)
-     */
     renderClosureMetrics() {
         const records = this.getAllRecords();
 
@@ -288,15 +357,11 @@ class NucleusDashboardApp {
         if (subElem) subElem.textContent = subtitle;
     }
 
-    /**
-     * Render Overview Charts using Light Background Theme
-     */
     renderOverviewCharts() {
         if (typeof Chart === 'undefined') return;
 
         const records = this.getAllRecords();
 
-        // 1. Monthly Revenue Trend Line Chart
         const months = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12'];
         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
@@ -345,7 +410,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // 2. Team Comparison Doughnut Chart
         const teamNames = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
         const teamColors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
         const teamTotals = teamNames.map(t => {
@@ -383,22 +447,55 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Tab Equipes
+     * Render Tab Equipes with Period Selection (Dia, Semana, Mês, Consolidação Anual)
      */
     renderTeamsGrid() {
         const teamsContainer = document.getElementById('teamsGridContainer');
+        const comparativeTbody = document.getElementById('teamsComparativeTbody');
         if (!teamsContainer) return;
 
         const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
         const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
         const teamClasses = { 'TIME1': 'team-1', 'TIME2': 'team-2', 'TIME3': 'team-3', 'TIME4': 'team-4', 'TIME5': 'team-5' };
 
-        let html = '';
-        teamKeys.forEach(key => {
-            const recs = this.currentData[key] || [];
-            const tot = this.calculateTotals(recs);
+        // Calculate team records based on teamsPeriodMode
+        const teamTotalsList = [];
+        let grandTotalAllTeamsInPeriod = 0;
 
-            html += `
+        teamKeys.forEach(key => {
+            const rawRecs = this.currentData[key] || [];
+            let filteredRecs = [];
+
+            if (this.teamsPeriodMode === 'daily') {
+                filteredRecs = rawRecs.filter(r => r.date === this.teamsSelectedDate);
+            } else if (this.teamsPeriodMode === 'weekly') {
+                const selDateObj = new Date(this.teamsSelectedDate);
+                const dayOfWeek = selDateObj.getDay();
+                const firstDayOfWeek = new Date(selDateObj);
+                firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+
+                const startStr = firstDayOfWeek.toISOString().split('T')[0];
+                const endStr = lastDayOfWeek.toISOString().split('T')[0];
+
+                filteredRecs = rawRecs.filter(r => r.date >= startStr && r.date <= endStr);
+            } else if (this.teamsPeriodMode === 'monthly') {
+                filteredRecs = rawRecs.filter(r => r.date.startsWith(this.teamsSelectedMonth));
+            } else {
+                // annual
+                filteredRecs = rawRecs.filter(r => r.date.startsWith('2026'));
+            }
+
+            const tot = this.calculateTotals(filteredRecs);
+            grandTotalAllTeamsInPeriod += tot.total;
+            teamTotalsList.push({ key, tot, filteredRecs });
+        });
+
+        // 1. Render Team Cards
+        let cardsHtml = '';
+        teamTotalsList.forEach(({ key, tot }) => {
+            cardsHtml += `
                 <div class="team-card glass-panel animate-fade-in">
                     <div class="team-card-header">
                         <div style="display: flex; align-items: center; gap: 12px;">
@@ -432,13 +529,59 @@ class NucleusDashboardApp {
                 </div>
             `;
         });
+        teamsContainer.innerHTML = cardsHtml;
 
-        teamsContainer.innerHTML = html;
+        // 2. Render Teams Comparative Summary Table
+        if (comparativeTbody) {
+            let tableHtml = '';
+            teamTotalsList.forEach(({ key, tot }) => {
+                const sharePct = grandTotalAllTeamsInPeriod > 0 ? ((tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
+
+                tableHtml += `
+                    <tr>
+                        <td style="font-weight: 700;">
+                            <span class="team-jobs-badge">${teamLabels[key]}</span>
+                        </td>
+                        <td style="font-weight: 600;">${tot.count} serviços</td>
+                        <td style="font-weight: 600;">${this.formatCurrency(tot.subtotal)}</td>
+                        <td style="color: var(--accent-amber); font-weight: 700;">${this.formatCurrency(tot.tip)}</td>
+                        <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
+                        <td style="color: var(--primary); font-weight: 800; font-size: 14px;">${this.formatCurrency(tot.total)}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; height: 8px; background: rgba(37, 171, 183, 0.15); border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${sharePct}%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
+                                </div>
+                                <span style="font-weight: 700; font-size: 11px; min-width: 40px;">${sharePct}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Total Summary Footer Row
+            const allSubtotal = teamTotalsList.reduce((acc, item) => acc + item.tot.subtotal, 0);
+            const allTip = teamTotalsList.reduce((acc, item) => acc + item.tot.tip, 0);
+            const allTotal = teamTotalsList.reduce((acc, item) => acc + item.tot.total, 0);
+            const allCount = teamTotalsList.reduce((acc, item) => acc + item.tot.count, 0);
+            const avgTicket = allCount > 0 ? (allTotal / allCount) : 0;
+
+            tableHtml += `
+                <tr style="background: rgba(37, 171, 183, 0.1); font-weight: 800; border-top: 2px solid var(--primary);">
+                    <td>TOTAL CONSOLIDADOS</td>
+                    <td>${allCount} serviços</td>
+                    <td>${this.formatCurrency(allSubtotal)}</td>
+                    <td style="color: var(--accent-amber);">${this.formatCurrency(allTip)}</td>
+                    <td>${this.formatCurrency(avgTicket)}</td>
+                    <td style="color: var(--primary); font-size: 15px;">${this.formatCurrency(allTotal)}</td>
+                    <td>100.0%</td>
+                </tr>
+            `;
+
+            comparativeTbody.innerHTML = tableHtml;
+        }
     }
 
-    /**
-     * Render Transactions Table
-     */
     renderTransactionsTable() {
         const tbody = document.getElementById('transactionsTbody');
         if (!tbody) return;
@@ -595,6 +738,7 @@ class NucleusDashboardApp {
     renderAllViews() {
         this.renderClosureMetrics();
         this.renderOverviewCharts();
+        this.updateTeamsPeriodUI();
         this.renderTeamsGrid();
         this.renderTransactionsTable();
         this.renderReportsView();
