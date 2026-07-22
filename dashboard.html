@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nucleus Cleaning Services - Dashboard Financeiro</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- SPA Viewport & Slider Architecture -->
+    <div id="view-viewport">
+        <div id="view-slider">
+
+            <!-- TAB 0: LOGIN VIEW (nucleus@admin.com / nucleus2026) -->
+            <section id="view-login" class="view-section">
+                <div class="login-wrapper">
+                    <div class="login-card">
+                        <div class="login-icon">
+                            <i class="fa-solid fa-broom"></i>
+                        </div>
+                        <h2 class="login-title">Nucleus Cleaning</h2>
+                        <p class="login-subtitle">Sistema de Gestão & Dashboard Financeiro</p>
+
+                        <div id="loginAlert" class="alert-box alert-danger"></div>
+
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label" for="loginEmail">E-mail de Acesso</label>
+                                <input type="email" id="loginEmail" class="form-input" value="nucleus@admin.com" required placeholder="seu@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="loginPassword">Senha de Segurança</label>
+                                <input type="password" id="loginPassword" class="form-input" value="nucleus2026" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn-primary login-btn">
+                                <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 1: VISÃO GERAL (OVERVIEW & FECHAMENTOS) -->
+            <section id="view-overview" class="view-section">
+                <div class="container">
+                    
+                    <!-- Header Top Bar -->
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <div class="brand-icon">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div class="brand-text">
+                                <h1>Nucleus Financial Control</h1>
+                                <p>Dashboard e Fechamento Financeiro por Equipes</p>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <div class="badge-live">
+                                <span class="pulse-dot"></span> Planilha Conectada
+                            </div>
+                            <button id="btnSyncSheets" class="btn-secondary" onclick="window.app.syncGoogleSheets()">
+                                <i class="fa-solid fa-rotate"></i> Sincronizar Planilha
+                            </button>
+                            <button class="btn-secondary" onclick="window.app.logout()" title="Sair">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- Global KPI Summary Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Faturamento Total (Cliente)</span>
+                                <div class="kpi-icon-box"><i class="fa-solid fa-dollar-sign"></i></div>
+                            </div>
+                            <div class="kpi-value" id="kpiTotalFaturamento">$0.00</div>
+                            <div class="kpi-details">
+                                <span>Soma da Coluna L (Total)</span>
+                                <span style="color: var(--accent-emerald); font-weight: 700;">100% Auditado</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-cyan);">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Subtotal dos Serviços</span>
+                                <div class="kpi-icon-box"><i class="fa-solid fa-receipt"></i></div>
+                            </div>
+                            <div class="kpi-value" id="kpiTotalSubtotal">$0.00</div>
+                            <div class="kpi-details">
+                                <span>Soma da Coluna G (Subtotal)</span>
+                                <span>Valor base serviços</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Gorjetas Arrecadadas (Tips)</span>
+                                <div class="kpi-icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                            </div>
+                            <div class="kpi-value" id="kpiTotalTip">$0.00</div>
+                            <div class="kpi-details">
+                                <span>Soma da Coluna J (Tip)</span>
+                                <span style="color: var(--accent-amber); font-weight: 700;">Repasse Equipes</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-emerald);">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total de Agendamentos</span>
+                                <div class="kpi-icon-box"><i class="fa-solid fa-calendar-check"></i></div>
+                            </div>
+                            <div class="kpi-value" id="kpiTotalAgendamentos">0</div>
+                            <div class="kpi-details">
+                                <span>Ticket Médio: <strong id="kpiTicketMedio">$0.00</strong></span>
+                                <span>5 Equipes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Period Controls Bar -->
+                    <div class="period-bar glass-panel">
+                        <div class="period-title">
+                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Fechamento por Período & Equipes
+                        </div>
+                        <div class="filter-group">
+                            <label style="font-size: 12px; color: var(--text-muted);">Filtrar Data:</label>
+                            <input type="date" id="filterDateInput" class="input-date">
+
+                            <label style="font-size: 12px; color: var(--text-muted); margin-left: 10px;">Filtrar Mês:</label>
+                            <input type="month" id="filterMonthInput" class="input-date" value="2026-01">
+                        </div>
+                    </div>
+
+                    <!-- FECHAMENTO POR EQUIPE & PERÍODO GRID (Diário, Semanal, Mensal, Anual) -->
+                    <div class="closure-grid">
+                        
+                        <!-- DIÁRIO -->
+                        <div class="closure-card">
+                            <span class="closure-badge badge-diario">Diário</span>
+                            <div class="closure-title">
+                                <i class="fa-solid fa-sun" style="color: var(--accent-cyan);"></i> Fechamento Diário
+                            </div>
+                            <div class="closure-total" id="closureDailyTotal">$0.00</div>
+                            <div class="closure-row">
+                                <span>Subtotal Serviços:</span>
+                                <span id="closureDailySubtotal">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Gorjetas (Tip):</span>
+                                <span id="closureDailyTip" style="color: var(--accent-amber);">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Agendamentos:</span>
+                                <span id="closureDailyCount">0 serviços</span>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureDailySubtitle">
+                                Data selecionada
+                            </div>
+                        </div>
+
+                        <!-- SEMANAL -->
+                        <div class="closure-card">
+                            <span class="closure-badge badge-semanal">Semanal</span>
+                            <div class="closure-title">
+                                <i class="fa-solid fa-calendar-week" style="color: var(--primary);"></i> Fechamento Semanal
+                            </div>
+                            <div class="closure-total" id="closureWeeklyTotal">$0.00</div>
+                            <div class="closure-row">
+                                <span>Subtotal Serviços:</span>
+                                <span id="closureWeeklySubtotal">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Gorjetas (Tip):</span>
+                                <span id="closureWeeklyTip" style="color: var(--accent-amber);">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Agendamentos:</span>
+                                <span id="closureWeeklyCount">0 serviços</span>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureWeeklySubtitle">
+                                Semana ativa
+                            </div>
+                        </div>
+
+                        <!-- MENSAL -->
+                        <div class="closure-card">
+                            <span class="closure-badge badge-mensal">Mensal</span>
+                            <div class="closure-title">
+                                <i class="fa-solid fa-calendar-days" style="color: var(--accent-emerald);"></i> Fechamento Mensal
+                            </div>
+                            <div class="closure-total" id="closureMonthlyTotal">$0.00</div>
+                            <div class="closure-row">
+                                <span>Subtotal Serviços:</span>
+                                <span id="closureMonthlySubtotal">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Gorjetas (Tip):</span>
+                                <span id="closureMonthlyTip" style="color: var(--accent-amber);">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Agendamentos:</span>
+                                <span id="closureMonthlyCount">0 serviços</span>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureMonthlySubtitle">
+                                Mês selecionado
+                            </div>
+                        </div>
+
+                        <!-- ANUAL -->
+                        <div class="closure-card">
+                            <span class="closure-badge badge-anual">Anual</span>
+                            <div class="closure-title">
+                                <i class="fa-solid fa-calendar-check" style="color: var(--accent-amber);"></i> Fechamento Anual
+                            </div>
+                            <div class="closure-total" id="closureAnnualTotal">$0.00</div>
+                            <div class="closure-row">
+                                <span>Subtotal Serviços:</span>
+                                <span id="closureAnnualSubtotal">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Gorjetas (Tip):</span>
+                                <span id="closureAnnualTip" style="color: var(--accent-amber);">$0.00</span>
+                            </div>
+                            <div class="closure-row">
+                                <span>Agendamentos:</span>
+                                <span id="closureAnnualCount">0 serviços</span>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureAnnualSubtitle">
+                                Ano 2026
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="charts-grid">
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução Mensal do Faturamento</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartRevenueTrend"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-emerald);"></i> Distribuição por Equipes</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartTeamComparison"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 2: EQUIPES (FECHAMENTO POR TIME 1 A TIME 5) -->
+            <section id="view-equipes" class="view-section">
+                <div class="container">
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <div class="brand-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="brand-text">
+                                <h1>Fechamento Individual de Equipes</h1>
+                                <p>Detalhamento de faturamento das abas TIME1, TIME2, TIME3, TIME4 e TIME5</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Teams Cards Grid -->
+                    <div id="teamsGridContainer" class="teams-grid">
+                        <!-- Loaded dynamically via app.js -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: AGENDAMENTOS E TRANSAÇÕES (TABELA COMPLETA) -->
+            <section id="view-transacoes" class="view-section">
+                <div class="container">
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <div class="brand-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <div class="brand-text">
+                                <h1>Agendamentos & Transações Auditadas</h1>
+                                <p>Mapeamento completo dos dados extraídos do Google Sheets</p>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn-primary" onclick="window.app.exportCSV()">
+                                <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="table-panel glass-panel">
+                        <!-- Header Filters -->
+                        <div class="table-header-controls">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="tableSearchInput" placeholder="Buscar por cliente, tipo ou data...">
+                            </div>
+
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select id="tableTeamFilter" class="input-select">
+                                    <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
+                                    <option value="TIME1">Time 1</option>
+                                    <option value="TIME2">Time 2</option>
+                                    <option value="TIME3">Time 3</option>
+                                    <option value="TIME4">Time 4</option>
+                                    <option value="TIME5">Time 5</option>
+                                </select>
+
+                                <select id="tableStatusFilter" class="input-select">
+                                    <option value="ALL">Todos os Status</option>
+                                    <option value="PAID">PAID (Pago)</option>
+                                    <option value="UNPAID">UNPAID (Pendente)</option>
+                                    <option value="PENDING">PENDING</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Data Table -->
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data (Col A)</th>
+                                        <th>Equipe</th>
+                                        <th>Cliente (Col C)</th>
+                                        <th>Tipo Serviço</th>
+                                        <th>Subtotal (Col G)</th>
+                                        <th>Tip (Col J)</th>
+                                        <th>Total Pago (Col L)</th>
+                                        <th>Status (Col F)</th>
+                                        <th>Forma Pgto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsTbody">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="table-pagination">
+                            <span id="tablePaginationInfo">Exibindo 0 - 0 de 0</span>
+                            <div class="pagination-controls">
+                                <button id="btnPrevPage" class="page-btn" onclick="window.app.changePage(-1)"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+                                <span id="pageNumberDisplay" style="align-self: center; font-weight: 600; padding: 0 8px;">Página 1</span>
+                                <button id="btnNextPage" class="page-btn" onclick="window.app.changePage(1)">Próxima <i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: RELATÓRIOS & ANALYTICS -->
+            <section id="view-relatorios" class="view-section">
+                <div class="container">
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <div class="brand-icon" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+                                <i class="fa-solid fa-chart-column"></i>
+                            </div>
+                            <div class="brand-text">
+                                <h1>Relatórios Avançados & Ranking</h1>
+                                <p>Análise estratégica de faturamento, gorjetas e top clientes</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="charts-grid">
+                        <div class="chart-card glass-panel" style="grid-column: span 2;">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Top 10 Clientes em Faturamento</h3>
+                            </div>
+                            <div class="chart-container" style="height: 380px;">
+                                <canvas id="chartTopClients"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Floating Persistent Bottom Navigation Bar [BOTTOM_NAVBAR_PERSISTENCE] -->
+    <nav id="bottomNavBar" class="bottom-navbar" style="display: none;">
+        <button class="nav-item active" data-tab="overview" onclick="window.app.switchTab('overview')">
+            <i class="fa-solid fa-chart-pie"></i> Visão Geral
+        </button>
+        <button class="nav-item" data-tab="equipes" onclick="window.app.switchTab('equipes')">
+            <i class="fa-solid fa-users"></i> Equipes
+        </button>
+        <button class="nav-item" data-tab="transacoes" onclick="window.app.switchTab('transacoes')">
+            <i class="fa-solid fa-list"></i> Transações
+        </button>
+        <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
+            <i class="fa-solid fa-chart-bar"></i> Relatórios
+        </button>
+        <div style="width: 1px; height: 20px; background: rgba(255, 255, 255, 0.15); margin: 0 4px;"></div>
+        <button class="nav-item" onclick="window.app.syncGoogleSheets()" title="Sincronizar Google Sheets">
+            <i class="fa-solid fa-rotate"></i> Sync
+        </button>
+        <button class="nav-item" onclick="window.app.logout()" title="Sair do Sistema">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+        </button>
+    </nav>
+
+    <!-- Load JavaScript Assets -->
+    <script src="js/data.js"></script>
+    <script src="js/sheets-sync.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
