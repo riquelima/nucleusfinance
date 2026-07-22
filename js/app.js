@@ -101,6 +101,7 @@ class NucleusDashboardApp {
         if (targetTab && this.isAuthenticated) {
             this.switchTab(targetTab);
         }
+        this.initialized = true;
     }
 
     toggleTheme() {
@@ -120,13 +121,8 @@ class NucleusDashboardApp {
             toggleBtn.title = theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro';
         }
 
-        if (this.currentData && Object.keys(this.currentData).length > 0) {
-            this.renderOverviewCharts();
-            if (typeof this.renderReportsFinancialTrends === 'function') {
-                this.renderReportsFinancialTrends();
-                this.renderReportsExpensesSection();
-                this.renderReportsTeamsSection();
-            }
+        if (this.initialized && this.currentData && Object.keys(this.currentData).length > 0) {
+            this.renderAllViews();
         }
     }
 
