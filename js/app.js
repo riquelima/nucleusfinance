@@ -289,7 +289,7 @@ class NucleusDashboardApp {
     }
 
     /**
-     * Render Overview Charts using Nucleus Palette
+     * Render Overview Charts using Light Background Theme
      */
     renderOverviewCharts() {
         if (typeof Chart === 'undefined') return;
@@ -316,11 +316,11 @@ class NucleusDashboardApp {
                         label: 'Faturamento Total ($)',
                         data: monthlyData,
                         borderColor: '#25abb7',
-                        backgroundColor: 'rgba(37, 171, 183, 0.18)',
+                        backgroundColor: 'rgba(37, 171, 183, 0.15)',
                         fill: true,
                         tension: 0.35,
-                        pointBackgroundColor: '#ffdb42',
-                        pointBorderColor: '#25abb7',
+                        pointBackgroundColor: '#25abb7',
+                        pointBorderColor: '#ffffff',
                         pointRadius: 5,
                         pointHoverRadius: 8
                     }]
@@ -333,21 +333,21 @@ class NucleusDashboardApp {
                     },
                     scales: {
                         y: {
-                            grid: { color: 'rgba(37, 171, 183, 0.1)' },
-                            ticks: { color: '#a0aec0', callback: (v) => '$' + v.toLocaleString() }
+                            grid: { color: 'rgba(37, 171, 183, 0.12)' },
+                            ticks: { color: '#475569', callback: (v) => '$' + v.toLocaleString() }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { color: '#a0aec0' }
+                            ticks: { color: '#475569' }
                         }
                     }
                 }
             });
         }
 
-        // 2. Team Comparison Doughnut Chart (Official Nucleus Palette Colors)
+        // 2. Team Comparison Doughnut Chart
         const teamNames = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
-        const teamColors = ['#25abb7', '#10b981', '#ffdb42', '#ec4899', '#75d3cd'];
+        const teamColors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
         const teamTotals = teamNames.map(t => {
             const recs = this.currentData[t] || [];
             return recs.reduce((acc, r) => acc + r.total, 0);
@@ -373,7 +373,7 @@ class NucleusDashboardApp {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#ffffff', padding: 16, font: { size: 12, family: 'Poppins' } }
+                            labels: { color: '#0f172a', padding: 16, font: { size: 12, family: 'Poppins', weight: '600' } }
                         }
                     },
                     cutout: '70%'
@@ -481,11 +481,11 @@ class NucleusDashboardApp {
                     <tr>
                         <td style="font-weight: 600;">${this.formatDateBR(r.date)}</td>
                         <td><span class="team-jobs-badge">${r.team}</span></td>
-                        <td style="font-weight: 700; color: #fff;">${r.client}</td>
+                        <td style="font-weight: 700; color: #0f172a;">${r.client}</td>
                         <td>${r.trans_type || 'Cleaning'}</td>
                         <td style="font-weight: 600;">${this.formatCurrency(r.subtotal)}</td>
                         <td style="color: var(--accent-amber); font-weight: 600;">${this.formatCurrency(r.tip)}</td>
-                        <td style="color: var(--accent-cyan); font-weight: 800;">${this.formatCurrency(r.total)}</td>
+                        <td style="color: var(--primary); font-weight: 800;">${this.formatCurrency(r.total)}</td>
                         <td><span class="status-pill ${statusClass}">${r.status || 'PAID'}</span></td>
                         <td style="color: var(--text-muted);">${r.paid_by || 'Dinheiro/Cartão'}</td>
                     </tr>
@@ -556,12 +556,12 @@ class NucleusDashboardApp {
                     plugins: { legend: { display: false } },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(37, 171, 183, 0.1)' },
-                            ticks: { color: '#a0aec0', callback: v => '$' + v }
+                            grid: { color: 'rgba(37, 171, 183, 0.12)' },
+                            ticks: { color: '#475569', callback: v => '$' + v }
                         },
                         y: {
                             grid: { display: false },
-                            ticks: { color: '#ffffff', font: { size: 11, family: 'Poppins' } }
+                            ticks: { color: '#0f172a', font: { size: 11, family: 'Poppins', weight: '600' } }
                         }
                     }
                 }
@@ -636,14 +636,14 @@ class NucleusDashboardApp {
                 color: #ffffff;
                 font-weight: 600;
                 font-size: 13px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                box-shadow: 0 10px 25px rgba(37, 171, 183, 0.3);
                 transition: opacity 0.3s ease;
                 backdrop-filter: blur(12px);
             `;
             document.body.appendChild(toast);
         }
 
-        toast.style.background = type === 'error' ? 'rgba(244, 63, 94, 0.95)' : 'rgba(37, 171, 183, 0.95)';
+        toast.style.background = type === 'error' ? 'rgba(225, 29, 72, 0.95)' : 'rgba(37, 171, 183, 0.95)';
         toast.textContent = message;
         toast.style.opacity = '1';
 
