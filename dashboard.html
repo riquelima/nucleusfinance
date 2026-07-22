@@ -72,7 +72,7 @@
                 </div>
             </section>
 
-            <!-- TAB 1: VISÃO GERAL (CONSOLIDADA COM EXECUTIVO DEEP ANALYSIS) -->
+            <!-- TAB 1: VISÃO GERAL -->
             <section id="view-overview" class="view-section">
                 <div class="container">
                     
@@ -103,13 +103,13 @@
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <div class="period-mode-group">
-                                <button type="button" class="overview-mode-btn" data-mode="daily">📅 Dia</button>
+                                <button type="button" class="overview-mode-btn active" data-mode="daily">📅 Dia</button>
                                 <button type="button" class="overview-mode-btn" data-mode="weekly">🗓️ Semana</button>
                                 <button type="button" class="overview-mode-btn" data-mode="monthly">📆 Mês</button>
-                                <button type="button" class="overview-mode-btn active" data-mode="annual">🏆 Anual</button>
+                                <button type="button" class="overview-mode-btn" data-mode="annual">🏆 Anual</button>
                             </div>
 
-                            <div id="overviewDateInputContainer" class="filter-group" style="display: none;">
+                            <div id="overviewDateInputContainer" class="filter-group">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
                                     <i class="fa-regular fa-calendar-days datepicker-icon"></i>
@@ -126,7 +126,7 @@
                             </div>
 
                             <div id="overviewPeriodSubtitle" class="period-subtitle-badge">
-                                Consolidação Anual 2026
+                                Dia
                             </div>
                         </div>
                     </div>
@@ -202,13 +202,13 @@
 
                         <div class="secondary-kpi-card glass-panel">
                             <div class="secondary-kpi-title">Clientes Únicos Atendidos</div>
-                            <div class="secondary-kpi-val" id="ovClientesUnicos">238</div>
-                            <div class="secondary-kpi-sub">Recorrência média: ~11x/ano</div>
+                            <div class="secondary-kpi-val" id="ovClientesUnicos">0</div>
+                            <div class="secondary-kpi-sub">Clientes atendidos no dia</div>
                         </div>
 
                         <div class="secondary-kpi-card glass-panel">
                             <div class="secondary-kpi-title">LTV Médio por Cliente</div>
-                            <div class="secondary-kpi-val" id="ovLTVMedio">$1,957.23</div>
+                            <div class="secondary-kpi-val" id="ovLTVMedio">$0.00</div>
                             <div class="secondary-kpi-sub" style="color: var(--accent-emerald); font-weight: 700;">Valor de vida do cliente</div>
                         </div>
                     </div>
@@ -217,7 +217,7 @@
                     <div class="glass-panel" style="padding: 22px 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title">
-                                <i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Estrutura do Centro de Custos & Despesas (<span id="ovExpensePeriodLabel">Mensal $31.457,28</span>)
+                                <i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Estrutura do Centro de Custos & Despesas (<span id="ovExpensePeriodLabel">Pro-rata Diário</span>)
                             </h3>
                             <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Fonte: Aba Despesas Auditada</span>
                         </div>
@@ -226,7 +226,7 @@
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-user-group" style="color: var(--primary);"></i> Payroll</span>
-                                    <span class="expense-card-val" style="color: var(--primary);" id="expPayrollVal">$27,040.00</span>
+                                    <span class="expense-card-val" style="color: var(--primary);" id="expPayrollVal">$901.33</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(37, 171, 183, 0.2);">
                                     <div style="width: 85.96%; height: 100%; background: var(--primary);"></div>
@@ -240,7 +240,7 @@
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-car" style="color: var(--accent-amber);"></i> Frota (3 Veículos)</span>
-                                    <span class="expense-card-val" style="color: var(--accent-amber);" id="expFrotaVal">$2,999.00</span>
+                                    <span class="expense-card-val" style="color: var(--accent-amber);" id="expFrotaVal">$99.97</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(217, 119, 6, 0.2);">
                                     <div style="width: 9.53%; height: 100%; background: var(--accent-amber);"></div>
@@ -254,7 +254,7 @@
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent-cyan);"></i> Marketing</span>
-                                    <span class="expense-card-val" style="color: var(--accent-cyan);" id="expMarketingVal">$1,000.00</span>
+                                    <span class="expense-card-val" style="color: var(--accent-cyan);" id="expMarketingVal">$33.33</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(19, 137, 150, 0.2);">
                                     <div style="width: 3.18%; height: 100%; background: var(--accent-cyan);"></div>
@@ -268,7 +268,7 @@
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-laptop-code" style="color: #6366f1;"></i> Tech & CRM</span>
-                                    <span class="expense-card-val" style="color: #6366f1;" id="expTechVal">$586.28</span>
+                                    <span class="expense-card-val" style="color: #6366f1;" id="expTechVal">$19.54</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(99, 102, 241, 0.2);">
                                     <div style="width: 1.86%; height: 100%; background: #6366f1;"></div>
@@ -282,7 +282,7 @@
                             <div class="expense-card">
                                 <div class="expense-card-header">
                                     <span class="expense-card-title"><i class="fa-solid fa-pump-soap" style="color: var(--accent-emerald);"></i> Operações</span>
-                                    <span class="expense-card-val" style="color: var(--accent-emerald);" id="expOpsVal">$562.00</span>
+                                    <span class="expense-card-val" style="color: var(--accent-emerald);" id="expOpsVal">$18.73</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(5, 150, 105, 0.2);">
                                     <div style="width: 1.79%; height: 100%; background: var(--accent-emerald);"></div>
@@ -316,11 +316,7 @@
                         </div>
                     </div>
 
-                    <!-- ========================================================================= -->
-                    <!-- 🚀 NOVAS SEÇÕES DE EXPANSÃO EXECUTIVA DA VISÃO GERAL (DEEP ANALYSIS) -->
-                    <!-- ========================================================================= -->
-
-                    <!-- SEÇÃO 8: RESUMO EXECUTIVO (SINTÉTICO EM LINGUAGEM NATURAL + IA MINIMAX) -->
+                    <!-- RESUMO EXECUTIVO -->
                     <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 14px;">
                             <h3 class="chart-title"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> 📋 Resumo Executivo da Operação</h3>
@@ -329,46 +325,44 @@
                             </button>
                         </div>
                         <div id="executiveSummaryContent" class="executive-summary-text">
-                            O negócio apresenta <strong>margem líquida saudável de 18,96% ($88.333,64/ano)</strong>, com alta retenção de clientes (<strong>10,91 atendimentos por cliente/ano</strong>) e excelente eficiência de marketing (ROAS ~38,8x). O principal ponto de atenção está na <strong>Equipe 5</strong>, cujo ticket médio ($164,31) é inferior aos demais times. Otimizar a precificação do Time 5 tem potencial de gerar <strong>+$13.435,00/ano em lucro adicional</strong> sem expansão operacional.
+                            <!-- Loaded dynamically -->
                         </div>
                     </div>
 
-                    <!-- SEÇÃO 1: INDICADORES DE SAÚDE DO NEGÓCIO (MINI CARDS COMPACTOS STRIP) -->
+                    <!-- INDICADORES DE SAÚDE DO NEGÓCIO -->
                     <div class="business-health-strip" style="margin-bottom: 28px;">
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Margem Líquida</span>
-                            <span class="health-val" style="color: var(--accent-emerald);" id="shMargemLiquida">18.96%</span>
+                            <span class="health-val" style="color: var(--accent-emerald);" id="shMargemLiquida">0.0%</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Receita Média Mensal</span>
-                            <span class="health-val" id="shReceitaMensal">$38,818.42</span>
+                            <span class="health-val" id="shReceitaMensal">$0.00</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Despesa Média Mensal</span>
-                            <span class="health-val" style="color: var(--accent-rose);" id="shDespesaMensal">$31,457.28</span>
+                            <span class="health-val" style="color: var(--accent-rose);" id="shDespesaMensal">$0.00</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Receita por Equipe</span>
-                            <span class="health-val" id="shReceitaEquipe">$93,164.20</span>
+                            <span class="health-val" id="shReceitaEquipe">$0.00</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Receita por Cliente</span>
-                            <span class="health-val" id="shReceitaCliente">$1,957.23</span>
+                            <span class="health-val" id="shReceitaCliente">$0.00</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Lucro por Atendimento</span>
-                            <span class="health-val" style="color: var(--accent-emerald);" id="shLucroAtendimento">$34.03</span>
+                            <span class="health-val" style="color: var(--accent-emerald);" id="shLucroAtendimento">$0.00</span>
                         </div>
                         <div class="health-mini-card glass-panel">
                             <span class="health-label">Custo por Atendimento</span>
-                            <span class="health-val" style="color: var(--accent-rose);" id="shCustoAtendimento">$145.41</span>
+                            <span class="health-val" style="color: var(--accent-rose);" id="shCustoAtendimento">$0.00</span>
                         </div>
                     </div>
 
-                    <!-- SEÇÃO 2 & 3: PERFORMANCE DAS EQUIPES & RANKING CLIENTES VIP GRID -->
+                    <!-- PERFORMANCE DAS EQUIPES & RANKING CLIENTES VIP GRID -->
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
-                        
-                        <!-- PERFORMANCE DAS EQUIPES COM BADGES -->
                         <div class="glass-panel" style="padding: 22px 24px;">
                             <div class="chart-header" style="margin-bottom: 16px;">
                                 <h3 class="chart-title"><i class="fa-solid fa-users-viewfinder" style="color: var(--primary);"></i> 👥 Performance Detalhada das Equipes</h3>
@@ -396,7 +390,6 @@
                             </div>
                         </div>
 
-                        <!-- RANKING DOS CLIENTES VIP -->
                         <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <div class="chart-header" style="margin-bottom: 16px;">
@@ -407,30 +400,25 @@
                                 </div>
                             </div>
                             
-                            <!-- Indicador de Concentração -->
                             <div class="concentration-badge-card" style="margin-top: 14px; padding: 12px; background: rgba(37, 171, 183, 0.1); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                                 <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 2px;">
                                     <i class="fa-solid fa-chart-pie"></i> Concentração da Carteira
                                 </div>
                                 <div style="font-size: 12px; color: #0f172a; font-weight: 600;">
-                                    Os Top 10 Clientes representam <strong>16,51% ($76.900,00)</strong> da receita total.
+                                    Os Top 10 Clientes representam <strong>0,0%</strong> da receita do período.
                                 </div>
                             </div>
                         </div>
-
                     </div>
 
-                    <!-- SEÇÃO 4 & 5: FIDELIZAÇÃO DOS CLIENTES & BREAKDOWN DE DESPESAS GRID -->
+                    <!-- FIDELIZAÇÃO DOS CLIENTES & BREAKDOWN DE DESPESAS GRID -->
                     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-bottom: 28px;">
-                        
-                        <!-- FIDELIZAÇÃO DOS CLIENTES & GAUGE DE RETENÇÃO -->
                         <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <div class="chart-header" style="margin-bottom: 16px;">
                                     <h3 class="chart-title"><i class="fa-solid fa-arrows-rotate" style="color: var(--accent-emerald);"></i> 🔄 Fidelização de Clientes</h3>
                                 </div>
 
-                                <!-- Retention Gauge Display -->
                                 <div class="gauge-wrapper" style="text-align: center; margin: 10px 0 20px 0;">
                                     <div class="gauge-circle" style="position: relative; width: 140px; height: 140px; margin: 0 auto;">
                                         <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
@@ -461,21 +449,19 @@
                             </div>
                         </div>
 
-                        <!-- BREAKDOWN COMPLETO DAS DESPESAS (HIERÁRQUICO DETALHADO) -->
                         <div class="glass-panel" style="padding: 22px 24px;">
                             <div class="chart-header" style="margin-bottom: 16px;">
                                 <h3 class="chart-title"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--accent-rose);"></i> 💸 Detalhamento Hierárquico das Despesas</h3>
-                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Total Mensal: $31.457,28</span>
+                                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Total Pro-rata do Período</span>
                             </div>
 
                             <div id="detailedExpensesAccordion" class="detailed-expenses-accordion">
                                 <!-- Loaded dynamically via app.js -->
                             </div>
                         </div>
-
                     </div>
 
-                    <!-- SEÇÃO 6: GRÁFICOS COMPARATIVOS DE TENDÊNCIA & MARGEM -->
+                    <!-- GRÁFICOS COMPARATIVOS DE TENDÊNCIA -->
                     <div class="charts-grid" style="margin-bottom: 28px;">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
@@ -496,29 +482,26 @@
                         </div>
                     </div>
 
-                    <!-- SEÇÃO 7: INSIGHTS ESTRATÉGICOS DE NEGÓCIO (CARDS DE OPORTUNIDADES) -->
+                    <!-- INSIGHTS ESTRATÉGICOS -->
                     <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
                         <div class="chart-header" style="margin-bottom: 18px;">
                             <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> 💡 Insights & Oportunidades Estratégicas de Negócio</h3>
                         </div>
 
                         <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-                            
-                            <!-- Insight 1: Time 5 (Alta Prioridade) -->
                             <div class="insight-card insight-high-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Otimização de Preço do Time 5</span>
                                     <span class="status-pill status-unpaid">Alta Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                                    O Time 5 possui o menor ticket médio ($164,31 vs $188,39 do Time 4). Ajustar a precificação gera impacto líquido direto.
+                                    O Time 5 possui o menor ticket médio ($163,72 vs $188,39 do Time 4). Ajustar a precificação gera impacto líquido direto.
                                 </p>
                                 <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
-                                    Impacto Estimado: +$13.435,00 / ano
+                                    Impacto Estimado: +$13.815,00 / ano
                                 </div>
                             </div>
 
-                            <!-- Insight 2: Redução de Taxas (Média Prioridade) -->
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-piggy-bank" style="color: var(--accent-amber);"></i> Redução de Taxas de Pgto</span>
@@ -532,7 +515,6 @@
                                 </div>
                             </div>
 
-                            <!-- Insight 3: Cultura de Tips (Média Prioridade) -->
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Cultura de Gorjetas (Tips)</span>
@@ -546,7 +528,6 @@
                                 </div>
                             </div>
 
-                            <!-- Insight 4: Escala de Marketing (Baixa Prioridade) -->
                             <div class="insight-card insight-low-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                     <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-rocket" style="color: var(--primary);"></i> Escala de Marketing (ROAS)</span>
@@ -559,22 +540,23 @@
                                     ROAS Atual: 38,8x
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
                 </div>
             </section>
 
-            <!-- TAB 2: EQUIPES (FECHAMENTO POR TIME 1 A TIME 5 COM SELEÇÃO POR PERÍODO) -->
+            <!-- TAB 2: EQUIPES (PAINEL GERENCIAL EXECUTIVO DE BI EXPANDIDO) -->
             <section id="view-equipes" class="view-section">
                 <div class="container">
+                    
+                    <!-- Header Top Bar (Manter Intacto) -->
                     <header class="top-header glass-panel">
                         <div class="brand-title">
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Fechamento Individual de Equipes</h1>
-                                <p>Faturamento, tips e ticket médio por time com seleção por período</p>
+                                <p>Painel Gerencial de Performance, Analytics & Inteligência de Equipes</p>
                             </div>
                         </div>
                         <div class="header-actions">
@@ -587,14 +569,13 @@
                         </div>
                     </header>
 
-                    <!-- Teams Period Filter Controls Bar -->
+                    <!-- Teams Period Filter Controls Bar (Manter Intacto) -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
                             <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Período de Análise por Equipe
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <!-- Period Mode Toggle Buttons -->
                             <div class="period-mode-group">
                                 <button type="button" class="period-mode-btn" data-mode="daily">📅 Dia</button>
                                 <button type="button" class="period-mode-btn" data-mode="weekly">🗓️ Semana</button>
@@ -602,7 +583,6 @@
                                 <button type="button" class="period-mode-btn active" data-mode="annual">🏆 Anual</button>
                             </div>
 
-                            <!-- Dynamic Inputs for Day/Week/Month -->
                             <div id="teamsDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
@@ -625,13 +605,13 @@
                         </div>
                     </div>
 
-                    <!-- Teams Cards Grid -->
+                    <!-- Teams Cards Grid (Manter Intacto) -->
                     <div id="teamsGridContainer" class="teams-grid">
                         <!-- Loaded dynamically via app.js -->
                     </div>
 
-                    <!-- Teams Comparative Table Panel -->
-                    <div class="table-panel glass-panel" style="margin-top: 24px;">
+                    <!-- Teams Comparative Table Panel (Manter Intacto) -->
+                    <div class="table-panel glass-panel" style="margin-top: 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title">
                                 <i class="fa-solid fa-table-list" style="color: var(--primary);"></i> Quadro Comparativo por Equipes (<span id="teamsTablePeriodLabel">Anual 2026</span>)
@@ -657,10 +637,242 @@
                         </div>
                     </div>
 
+                    <!-- ========================================================================= -->
+                    <!-- 🚀 EXPANSÃO EXECUTIVA DE BI DA ABA EQUIPES (12 NOVAS SEÇÕES) -->
+                    <!-- ========================================================================= -->
+
+                    <!-- 1. RANKING DAS EQUIPES (OURO, PRATA, BRONZE) -->
+                    <div class="table-panel glass-panel" style="margin-bottom: 28px;">
+                        <div class="chart-header" style="margin-bottom: 16px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> 🏆 Ranking Oficial das Equipes</h3>
+                            <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Ordenado por Faturamento Bruto</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Posição</th>
+                                        <th>Equipe</th>
+                                        <th>Faturamento ($)</th>
+                                        <th>Participação (%)</th>
+                                        <th>Ticket Médio ($)</th>
+                                        <th>Agendamentos</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamsRankingTbody">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. INDICADORES DE PERFORMANCE (LINHA DE MINI CARDS) -->
+                    <div class="business-health-strip" style="margin-bottom: 28px;">
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Maior Faturamento</span>
+                            <span class="health-val" style="color: var(--primary);" id="biTopRevenue">Time 2 ($109.315)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-gem" style="color: #ec4899;"></i> Maior Ticket Médio</span>
+                            <span class="health-val" style="color: #ec4899;" id="biTopTicket">Time 4 ($188,39)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-boxes-stacked" style="color: var(--accent-emerald);"></i> Maior Volume</span>
+                            <span class="health-val" id="biTopVolume">Time 2 (594 jobs)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-heart" style="color: var(--accent-amber);"></i> Maior Vol. Gorjetas</span>
+                            <span class="health-val" style="color: var(--accent-amber);" id="biTopTips">Time 4 (76% Tips)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Maior Participação</span>
+                            <span class="health-val" id="biTopShare">Time 2 (23,5%)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose);"></i> Menor Ticket Médio</span>
+                            <span class="health-val" style="color: var(--accent-rose);" id="biLowestTicket">Time 5 ($163,72)</span>
+                        </div>
+                        <div class="health-mini-card glass-panel">
+                            <span class="health-label"><i class="fa-solid fa-calculator" style="color: var(--text-main);"></i> Média da Empresa</span>
+                            <span class="health-val" id="biCompanyAvg">$178,68 / job</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. PERFIL DAS EQUIPES & CLIENTE ÂNCORA (5 CARDS GRANDES) -->
+                    <div style="margin-bottom: 28px;">
+                        <div class="chart-header" style="margin-bottom: 16px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> 👤 Perfil Operacional & Cliente Âncora das 5 Equipes</h3>
+                        </div>
+                        <div id="teamProfileCardsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+                            <!-- Loaded dynamically via app.js -->
+                        </div>
+                    </div>
+
+                    <!-- 4. COMPARATIVO VISUAL (4 GRÁFICOS BI) & DISTRIBUIÇÃO DONUT -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-chart-bar" style="color: var(--primary);"></i> Receita por Equipe ($)</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartBIRevenueBar"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-arrow-right-arrow-left" style="color: var(--accent-amber);"></i> Ticket Médio por Equipe ($)</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartBITicketHorizontal"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-list-check" style="color: var(--accent-emerald);"></i> Volume de Agendamentos por Equipe</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartBIVolumeBar"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-coins" style="color: #ec4899;"></i> Gorjetas Arrecadadas (Destaque Time 4 76%)</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartBITipsBar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. RADAR DE PERFORMANCE & DONUT DE FATURAMENTO -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-compass-drafting" style="color: var(--primary);"></i> 🎯 Radar de Performance Multi-Eixos</h3>
+                                <select id="biRadarTeamSelect" class="input-select" style="height: 32px; font-size: 11px;" onchange="window.app.renderTeamsRadarChart()">
+                                    <option value="ALL">Todas as Equipes Simultâneas</option>
+                                    <option value="TIME1">Time 1</option>
+                                    <option value="TIME2">Time 2</option>
+                                    <option value="TIME3">Time 3</option>
+                                    <option value="TIME4">Time 4</option>
+                                    <option value="TIME5">Time 5</option>
+                                </select>
+                            </div>
+                            <div class="chart-container" style="height: 280px;">
+                                <canvas id="chartBIRadar"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card glass-panel">
+                            <div class="chart-header">
+                                <h3 class="chart-title"><i class="fa-solid fa-chart-pie" style="color: var(--accent-cyan);"></i> 🍩 Participação no Faturamento</h3>
+                            </div>
+                            <div class="chart-container" style="height: 280px;">
+                                <canvas id="chartBIDonut"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. COMPARAÇÃO COM A MÉDIA DA EMPRESA (BENCHMARK TABLE) -->
+                    <div class="table-panel glass-panel" style="margin-bottom: 28px;">
+                        <div class="chart-header" style="margin-bottom: 16px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i> 📉 Benchmark Comparativo vs Média Geral</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Equipe</th>
+                                        <th>Ticket Médio ($)</th>
+                                        <th>Diferença p/ Média ($)</th>
+                                        <th>Receita Total ($)</th>
+                                        <th>Diferença p/ Média ($)</th>
+                                        <th>Participação (%)</th>
+                                        <th>Status do Desempenho</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teamsBenchmarkTbody">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 7. EVOLUÇÃO TEMPORAL DAS EQUIPES (MENSAL LINE TREND CHART) -->
+                    <div class="chart-card glass-panel" style="min-height: 380px; max-height: 380px; margin-bottom: 28px;">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fa-solid fa-arrow-trend-up" style="color: var(--primary);"></i> 📈 Evolução Mensal da Receita das 5 Equipes (Jan-Dez)</h3>
+                        </div>
+                        <div class="chart-container" style="height: 290px;">
+                            <canvas id="chartBITrendLine"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 8. INSIGHTS ESTRATÉGICOS DAS EQUIPES -->
+                    <div class="glass-panel" style="padding: 24px; margin-bottom: 28px;">
+                        <div class="chart-header" style="margin-bottom: 18px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> 💡 Insights Estratégicos & Recomendações das Equipes</h3>
+                        </div>
+
+                        <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                            <div class="insight-card insight-high-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
+                                    <span class="status-pill status-unpaid">Alta Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    O Time 5 possui ticket médio de $163,72 vs $188,39 do Time 4. Elevar o ticket ao nível médio da empresa gera ganho financeiro direto.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
+                                    Estimativa: +$13.815,00 / ano em Lucro Líquido
+                                </div>
+                            </div>
+
+                            <div class="insight-card insight-med-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
+                                    <span class="status-pill status-pending">Média Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    O Time 4 concentrou 76% de todas as gorjetas. Replicar suas práticas de atendimento aumentará os ganhos dos helpers de todos os times.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                    Impacto: Retenção da Equipe & Atendimento Premium
+                                </div>
+                            </div>
+
+                            <div class="insight-card insight-med-priority">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Proteção dos Clientes Estratégicos</span>
+                                    <span class="status-pill status-pending">Média Prioridade</span>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                    Contas chave como Allison Glessner ($16,6k), Will Nash ($9,4k) e Prodigy ($7,1k) exigem SLA prioritário e acompanhamento quinzenal.
+                                </p>
+                                <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                    Impacto: Retenção de ~10% do Faturamento Global
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 9. RESUMO EXECUTIVO DA ABA EQUIPES -->
+                    <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 32px;">
+                        <div class="chart-header" style="margin-bottom: 14px;">
+                            <h3 class="chart-title"><i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i> 📋 Resumo Executivo das Equipes</h3>
+                        </div>
+                        <div id="teamsExecutiveSummaryContent" class="executive-summary-text">
+                            O <strong>Time 2</strong> permanece como principal motor financeiro da empresa, respondendo por aproximadamente <strong>23,5% do faturamento anual ($109.315,00)</strong>. O <strong>Time 4</strong> apresenta o maior ticket médio (<strong>$188,39</strong>) e concentra a maior parte das gorjetas (<strong>76% das tips</strong>), indicando elevado nível de satisfação dos clientes. Já o <strong>Time 5</strong> representa a maior oportunidade de crescimento, pois mantém um alto volume de atendimentos (560 jobs), porém com o menor ticket médio (<strong>$163,72</strong>). Ajustes na precificação podem elevar em <strong>+$13.815,00/ano</strong> a lucratividade sem necessidade de expansão operacional.
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
-            <!-- TAB 3: AGENDAMENTOS E TRANSAÇÕES (TABELA COMPLETA) -->
+            <!-- TAB 3: AGENDAMENTOS E TRANSAÇÕES -->
             <section id="view-transacoes" class="view-section">
                 <div class="container">
                     <header class="top-header glass-panel">
@@ -679,7 +891,6 @@
                     </header>
 
                     <div class="table-panel glass-panel">
-                        <!-- Header Filters -->
                         <div class="table-header-controls">
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -705,7 +916,6 @@
                             </div>
                         </div>
 
-                        <!-- Data Table -->
                         <div class="table-responsive">
                             <table class="custom-table">
                                 <thead>
@@ -727,7 +937,6 @@
                             </table>
                         </div>
 
-                        <!-- Pagination -->
                         <div class="table-pagination">
                             <span id="tablePaginationInfo">Exibindo 0 - 0 de 0</span>
                             <div class="pagination-controls">

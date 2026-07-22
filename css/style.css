@@ -1144,3 +1144,106 @@ body {
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ========================================================================= */
+/* STYLES PARA A EXPANSÃO EXECUTIVA DE BI DA ABA EQUIPES */
+/* ========================================================================= */
+
+.rank-medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.rank-medal-gold {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.rank-medal-silver {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    color: #ffffff;
+}
+
+.rank-medal-bronze {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff;
+}
+
+.rank-row-highlight {
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-left: 4px solid var(--accent-amber);
+}
+
+.team-profile-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-profile-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.team-profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.team-profile-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.profile-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+}
+
+.anchor-client-box {
+    background: #edf7f9;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    margin-top: 12px;
+}
+
+.status-above-avg {
+    background: rgba(5, 150, 105, 0.12);
+    color: var(--accent-emerald);
+    border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.status-on-avg {
+    background: rgba(37, 171, 183, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(37, 171, 183, 0.3);
+}
+
+.status-below-avg {
+    background: rgba(225, 29, 72, 0.12);
+    color: var(--accent-rose);
+    border: 1px solid rgba(225, 29, 72, 0.3);
+}
+

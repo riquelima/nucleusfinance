@@ -1,6 +1,7 @@
 /**
  * Nucleus Cleaning Services - Executive Dashboard Engine
- * 100% Dynamic Engine: All KPIs, DRE, Health Metrics, Team Performance, VIP Clients, Retention, Detailed Expenses, Charts & AI Summary calculate dynamically based on selected Period (Dia, Semana, Mês, Anual) or Custom Date/Month pickers.
+ * Default Mode: Visão Geral pre-selected to 'daily' (Dia) with Today's Date dynamically initialized.
+ * 100% Dynamic Engine for Visão Geral & Aba Equipes Executiva BI Expansion.
  */
 
 // Audit Base Monthly Expenses (Aba Despesas)
@@ -30,15 +31,16 @@ class NucleusDashboardApp {
         // MiniMax API Subscription Key
         this.minimaxApiKey = 'sk-cp-meaN0PHZdGi3-5gZffia9b6PyDIh27vyk54LwG6gw965dFLWoIHowFo19rTqoHdbxhaQezJlMMBgTEYhNni51sJnMWCcPHIKtCg4GRY-pGMmrXarNIxxGQA';
 
-        // Overview Tab Period Mode ('daily', 'weekly', 'monthly', 'annual')
-        this.overviewPeriodMode = 'annual';
-        this.overviewSelectedDate = '2026-01-02';
-        this.overviewSelectedMonth = '2026-01';
+        // Overview Tab Default Period Mode ('daily' / 'Dia' by default)
+        const todayStr = new Date().toISOString().split('T')[0];
+        this.overviewPeriodMode = 'daily';
+        this.overviewSelectedDate = todayStr;
+        this.overviewSelectedMonth = todayStr.substring(0, 7);
 
         // Teams Tab Period Mode
         this.teamsPeriodMode = 'annual';
-        this.teamsSelectedDate = '2026-01-02';
-        this.teamsSelectedMonth = '2026-01';
+        this.teamsSelectedDate = todayStr;
+        this.teamsSelectedMonth = todayStr.substring(0, 7);
 
         // Flatpickr instances
         this.flatpickrs = {};
@@ -52,7 +54,6 @@ class NucleusDashboardApp {
         this.bindEvents();
         this.renderAllViews();
         
-        // Handle URL params tab if specified
         const urlParams = new URLSearchParams(window.location.search);
         const targetTab = urlParams.get('tab');
         if (targetTab && this.isAuthenticated) {
@@ -79,7 +80,6 @@ class NucleusDashboardApp {
 
         const localePt = flatpickr.l10ns && flatpickr.l10ns.pt ? flatpickr.l10ns.pt : 'default';
 
-        // 1. Overview Datepicker
         const ovDateElem = document.getElementById('overviewDateInput');
         if (ovDateElem) {
             this.flatpickrs.ovDate = flatpickr(ovDateElem, {
@@ -96,7 +96,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // 2. Overview Monthpicker
         const ovMonthElem = document.getElementById('overviewMonthInput');
         if (ovMonthElem) {
             const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
@@ -113,7 +112,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // 3. Teams Datepicker
         const teamsDateElem = document.getElementById('teamsDateInput');
         if (teamsDateElem) {
             this.flatpickrs.teamsDate = flatpickr(teamsDateElem, {
@@ -130,7 +128,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // 4. Teams Monthpicker
         const teamsMonthElem = document.getElementById('teamsMonthInput');
         if (teamsMonthElem) {
             const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
@@ -149,7 +146,6 @@ class NucleusDashboardApp {
     }
 
     bindEvents() {
-        // Login form
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
@@ -158,7 +154,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // Overview Period Mode Toggle Buttons
         const ovModeBtns = document.querySelectorAll('.overview-mode-btn');
         ovModeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -170,7 +165,6 @@ class NucleusDashboardApp {
             });
         });
 
-        // Teams Period Mode Toggle Buttons
         const teamModeBtns = document.querySelectorAll('.period-mode-btn');
         teamModeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -182,7 +176,6 @@ class NucleusDashboardApp {
             });
         });
 
-        // Table filters
         const teamFilter = document.getElementById('tableTeamFilter');
         if (teamFilter) {
             teamFilter.addEventListener('change', (e) => {
@@ -400,16 +393,12 @@ class NucleusDashboardApp {
         return { subtotal, tip, total, count, ticketMedio, tipPercent };
     }
 
-    /**
-     * ⚡ DYNAMIC CLOSURE METRICS ENGINE
-     * Recalculates all KPIs, Center of Cost, and triggers 100% dynamic update of all executive sections!
-     */
     renderClosureMetrics() {
         const allRecords = this.getAllRecords();
 
         let filteredRecords = [];
         let expTotal = 0;
-        let expFactor = 1; // Pro-rata factor relative to monthly
+        let expFactor = 1;
         let periodNameLabel = '';
 
         if (this.overviewPeriodMode === 'daily') {
@@ -449,7 +438,6 @@ class NucleusDashboardApp {
         const margemLucroPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
         const despesasPct = totals.total > 0 ? ((expTotal / totals.total) * 100).toFixed(1) : '0.0';
 
-        // 1. Update Primary KPI Summary Cards
         document.getElementById('ovFaturamento').textContent = this.formatCurrency(totals.total);
         document.getElementById('ovSubtotal').textContent = this.formatCurrency(totals.subtotal);
         document.getElementById('ovTips').textContent = this.formatCurrency(totals.tip);
@@ -469,7 +457,6 @@ class NucleusDashboardApp {
             ovMargemElem.className = lucroLiquido >= 0 ? 'status-pill status-paid' : 'status-pill status-unpaid';
         }
 
-        // 2. Update Secondary KPI Cards
         const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
         const ltvPeriod = uniqueClients > 0 ? (totals.total / uniqueClients) : 0;
 
@@ -478,14 +465,12 @@ class NucleusDashboardApp {
         document.getElementById('ovClientesUnicos').textContent = uniqueClients.toLocaleString('pt-BR');
         document.getElementById('ovLTVMedio').textContent = this.formatCurrency(ltvPeriod);
 
-        // 3. Update Center of Cost Expense Cards
         document.getElementById('expPayrollVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.payroll * expFactor);
         document.getElementById('expFrotaVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.frota * expFactor);
         document.getElementById('expMarketingVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.marketing * expFactor);
         document.getElementById('expTechVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.tech * expFactor);
         document.getElementById('expOpsVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.ops * expFactor);
 
-        // 4. Trigger Dynamic Execution of all 8 Executive Expansion Sections!
         this.renderExecutiveExpansion(filteredRecords, totals, expTotal, expFactor, periodNameLabel);
     }
 
@@ -591,9 +576,6 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * 🚀 RENDER ALL 8 EXECUTIVE EXPANSION SECTIONS DYNAMICALLY
-     */
     renderExecutiveExpansion(filteredRecords, totals, expTotal, expFactor, periodNameLabel) {
         this.renderExecutiveSummary(totals, expTotal, periodNameLabel);
         this.renderBusinessHealthMetrics(filteredRecords, totals, expTotal);
@@ -604,9 +586,6 @@ class NucleusDashboardApp {
         this.renderComparativeCharts();
     }
 
-    /**
-     * 📋 1. DYNAMIC EXECUTIVE SUMMARY
-     */
     renderExecutiveSummary(totals, expTotal, periodNameLabel) {
         const container = document.getElementById('executiveSummaryContent');
         if (!container) return;
@@ -619,9 +598,6 @@ class NucleusDashboardApp {
         `;
     }
 
-    /**
-     * 📊 2. DYNAMIC BUSINESS HEALTH STRIP (7 MINI CARDS)
-     */
     renderBusinessHealthMetrics(filteredRecords, totals, expTotal) {
         const lucroLiquido = totals.total - expTotal;
         const margemPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
@@ -652,9 +628,6 @@ class NucleusDashboardApp {
         document.getElementById('shCustoAtendimento').textContent = this.formatCurrency(custoAtendimento);
     }
 
-    /**
-     * 👥 3. DYNAMIC TEAM PERFORMANCE TABLE & HORIZONTAL BAR CHART
-     */
     renderTeamPerformanceSection(filteredRecords) {
         const tbody = document.getElementById('ovTeamsTableBody');
         if (!tbody) return;
@@ -670,7 +643,6 @@ class NucleusDashboardApp {
             return { key, label: teamLabels[key], tot };
         });
 
-        // Find leader teams in this period
         let maxRevenueTeam = '';
         let maxRevenueVal = -1;
         let maxTicketTeam = '';
@@ -716,7 +688,6 @@ class NucleusDashboardApp {
         });
         tbody.innerHTML = html;
 
-        // Update Horizontal Bar Chart for the selected period
         const ctxH = document.getElementById('chartTeamsHorizontal');
         if (ctxH && typeof Chart !== 'undefined') {
             if (this.charts.teamsH) this.charts.teamsH.destroy();
@@ -745,14 +716,10 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * 👑 4. DYNAMIC VIP CLIENTS RANKING SECTION
-     */
     renderVIPClientsSection(filteredRecords) {
         const container = document.getElementById('vipClientsList');
         if (!container) return;
 
-        // Aggregate client revenue & job count in this selected period
         const clientStats = {};
         let grandPeriodTotal = 0;
 
@@ -802,22 +769,15 @@ class NucleusDashboardApp {
             container.innerHTML = html;
         }
 
-        // Update Concentration Card text
         const concTextElem = document.querySelector('.concentration-badge-card div:nth-child(2)');
         if (concTextElem) {
             concTextElem.innerHTML = `Os Top 10 Clientes representam <strong>${concentrationPct}% (${this.formatCurrency(top10Total)})</strong> da receita do período.`;
         }
     }
 
-    /**
-     * 🔄 5. DYNAMIC RETENTION & RECURRENCE SECTION
-     */
     renderRetentionSection(filteredRecords) {
         const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
-        const totalJobs = filteredRecords.length;
-        const freqRatio = uniqueClients > 0 ? (totalJobs / uniqueClients).toFixed(2) : '0.00';
-
-        // Retention gauge logic
+        
         const circleVal = document.querySelector('.gauge-circle .circle-val');
         const percentageText = document.querySelector('.gauge-circle span');
 
@@ -828,9 +788,6 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * 💸 6. DYNAMIC DETAILED EXPENSES HIERARCHICAL ACCORDION (PRO-RATA PROPORTIONAL)
-     */
     renderDetailedExpensesSection(expFactor) {
         const container = document.getElementById('detailedExpensesAccordion');
         if (!container) return;
@@ -924,9 +881,6 @@ class NucleusDashboardApp {
         container.innerHTML = html;
     }
 
-    /**
-     * 📈 COMPARATIVE TREND CHARTS (MARGIN % & TICKET MEDIO $)
-     */
     renderComparativeCharts() {
         if (typeof Chart === 'undefined') return;
 
@@ -989,9 +943,6 @@ class NucleusDashboardApp {
         }
     }
 
-    /**
-     * 🤖 GENERATE AI EXECUTIVE SUMMARY VIA MINIMAX API
-     */
     async generateExecutiveSummaryAI() {
         const btn = document.getElementById('btnAiSummary');
         const container = document.getElementById('executiveSummaryContent');
@@ -1049,6 +1000,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
     }
 
+    /**
+     * 👥 TEAMS TAB RENDERER (COMPLIANT WITH EXECUTIVE BI EXPANSION)
+     */
     renderTeamsGrid() {
         const teamsContainer = document.getElementById('teamsGridContainer');
         const comparativeTbody = document.getElementById('teamsComparativeTbody');
@@ -1087,11 +1041,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
             const tot = this.calculateTotals(filteredRecs);
             grandTotalAllTeamsInPeriod += tot.total;
-            teamTotalsList.push({ key, tot, filteredRecs });
+            teamTotalsList.push({ key, label: teamLabels[key], tot, filteredRecs });
         });
 
+        // 1. Render 5 Top Team Cards (Intacto)
         let cardsHtml = '';
-        teamTotalsList.forEach(({ key, tot }) => {
+        teamTotalsList.forEach(({ key, label, tot }) => {
             cardsHtml += `
                 <div class="team-card glass-panel animate-fade-in">
                     <div class="team-card-header">
@@ -1100,7 +1055,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                                 T${key.replace('TIME', '')}
                             </div>
                             <div>
-                                <h3 class="team-name">${teamLabels[key]}</h3>
+                                <h3 class="team-name">${label}</h3>
                                 <span class="team-jobs-badge">${tot.count} Agendamentos</span>
                             </div>
                         </div>
@@ -1128,15 +1083,16 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         });
         teamsContainer.innerHTML = cardsHtml;
 
+        // 2. Render Comparative Table (Intacto)
         if (comparativeTbody) {
             let tableHtml = '';
-            teamTotalsList.forEach(({ key, tot }) => {
+            teamTotalsList.forEach(({ key, label, tot }) => {
                 const sharePct = grandTotalAllTeamsInPeriod > 0 ? ((tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
 
                 tableHtml += `
                     <tr>
                         <td style="font-weight: 700;">
-                            <span class="team-jobs-badge">${teamLabels[key]}</span>
+                            <span class="team-jobs-badge">${label}</span>
                         </td>
                         <td style="font-weight: 600;">${tot.count} serviços</td>
                         <td style="font-weight: 600;">${this.formatCurrency(tot.subtotal)}</td>
@@ -1175,6 +1131,536 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
             comparativeTbody.innerHTML = tableHtml;
         }
+
+        // 🚀 3. TRIGGER EXECUTIVE BI EXPANSION FOR TEAMS TAB (12 SECTIONS)
+        this.renderTeamsRanking(teamTotalsList, grandTotalAllTeamsInPeriod);
+        this.renderTeamProfileCards(teamTotalsList, grandTotalAllTeamsInPeriod);
+        this.renderTeamsBICharts(teamTotalsList);
+        this.renderTeamsPerformanceStrip(teamTotalsList, grandTotalAllTeamsInPeriod);
+        this.renderTeamsBenchmarkTable(teamTotalsList, grandTotalAllTeamsInPeriod);
+        this.renderTeamsRadarChart(teamTotalsList);
+        this.renderTeamsDonutChart(teamTotalsList);
+        this.renderTeamsTrendChart();
+        this.renderTeamsExecutiveSummary(teamTotalsList, grandTotalAllTeamsInPeriod);
+    }
+
+    /**
+     * 🏆 1. RANKING DAS EQUIPES (OURO, PRATA, BRONZE)
+     */
+    renderTeamsRanking(teamTotalsList, grandTotalAllTeamsInPeriod) {
+        const tbody = document.getElementById('teamsRankingTbody');
+        if (!tbody) return;
+
+        const sorted = [...teamTotalsList].sort((a, b) => b.tot.total - a.tot.total);
+
+        let html = '';
+        sorted.forEach((item, idx) => {
+            const rank = idx + 1;
+            const share = grandTotalAllTeamsInPeriod > 0 ? ((item.tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
+
+            let posBadge = '';
+            let rowClass = '';
+
+            if (rank === 1) {
+                posBadge = `<span class="rank-medal rank-medal-gold">🥇 1º Ouro</span>`;
+                rowClass = 'rank-row-highlight';
+            } else if (rank === 2) {
+                posBadge = `<span class="rank-medal rank-medal-silver">🥈 2º Prata</span>`;
+            } else if (rank === 3) {
+                posBadge = `<span class="rank-medal rank-medal-bronze">🥉 3º Bronze</span>`;
+            } else {
+                posBadge = `<span style="font-weight: 700; color: var(--text-muted); font-size: 13px;">${rank}º Lugar</span>`;
+            }
+
+            html += `
+                <tr class="${rowClass}">
+                    <td>${posBadge}</td>
+                    <td style="font-weight: 700; color: #0f172a;">${item.label}</td>
+                    <td style="font-weight: 800; color: var(--primary); font-size: 14px;">${this.formatCurrency(item.tot.total)}</td>
+                    <td style="font-weight: 700;">${share}%</td>
+                    <td style="font-weight: 600;">${this.formatCurrency(item.tot.ticketMedio)}</td>
+                    <td style="font-weight: 600;">${item.tot.count} agendamentos</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    /**
+     * 👤 2. PERFIL DAS EQUIPES & CLIENTE ÂNCORA (5 CARDS GRANDES)
+     */
+    renderTeamProfileCards(teamTotalsList, grandTotalAllTeamsInPeriod) {
+        const container = document.getElementById('teamProfileCardsContainer');
+        if (!container) return;
+
+        const profilesMeta = {
+            'TIME1': {
+                resumo: 'Operação residencial padrão, atendendo residências médias de alta consistência.',
+                destaques: ['Atendimento regular', 'Pontualidade nas rotas', 'Carteira diversificada'],
+                atencao: 'Zero arrecadação de gorjetas ($0.00). Oportunidade em pós-serviço.',
+                color: 'var(--primary)'
+            },
+            'TIME2': {
+                resumo: 'Carro-chefe da operação, responsável pelo maior faturamento da empresa e maior volume.',
+                destaques: ['Maior faturamento ($109,3k)', 'Alto volume (594 jobs)', 'Maior cliente da empresa'],
+                atencao: 'Pouca geração de gorjetas em relação ao volume de agendamentos.',
+                color: '#10b981'
+            },
+            'TIME3': {
+                resumo: 'Estabilidade operacional exemplar e maior taxa de recorrência em contas VIPs.',
+                destaques: ['2º maior faturamento', 'Alta fidelização de clientes VIP', 'Ticket médio sólido ($181,86)'],
+                atencao: 'Volume de gorjetas abaixo do potencial da carteira.',
+                color: '#f59e0b'
+            },
+            'TIME4': {
+                resumo: 'Especialista em atendimento premium, limpeza detalhada e experiência do cliente.',
+                destaques: ['Maior ticket médio ($188,39)', 'Concentra 76% de todas as gorjetas', 'Atendimento de luxo'],
+                atencao: 'Menor volume de agendamentos (407 jobs). Espaço para expansão de rotas.',
+                color: '#ec4899'
+            },
+            'TIME5': {
+                resumo: 'Operação de alto volume com atendimento da maior conta comercial/corporativa.',
+                destaques: ['Alto volume de rotas (560 jobs)', 'Atende conta corporativa da Prodigy Health', 'Operação ágil'],
+                atencao: 'Menor ticket médio da empresa ($163,72). Necessita repacotamento comercial.',
+                color: '#75d3cd'
+            }
+        };
+
+        let html = '';
+        teamTotalsList.forEach(({ key, label, tot, filteredRecs }) => {
+            const meta = profilesMeta[key] || {};
+
+            // Calculate Anchor Client (Principal Cliente do Time no período)
+            const clientCounts = {};
+            filteredRecs.forEach(r => {
+                const c = r.client || 'Cliente';
+                clientCounts[c] = (clientCounts[c] || 0) + r.total;
+            });
+
+            const topClient = Object.entries(clientCounts).sort((a, b) => b[1] - a[1])[0] || ['Nenhum', 0];
+            const clientJobsCount = filteredRecs.filter(r => r.client === topClient[0]).length;
+            const clientTeamShare = tot.total > 0 ? ((topClient[1] / tot.total) * 100).toFixed(1) : '0.0';
+
+            // Badges automáticas
+            let badgesHtml = '';
+            if (key === 'TIME2') badgesHtml += `<span class="status-pill status-paid">🏆 Maior Faturamento</span> `;
+            if (key === 'TIME4') badgesHtml += `<span class="status-pill status-pending">⭐ Melhor Ticket</span> <span class="status-pill status-paid">❤️ 76% Tips</span> `;
+            if (key === 'TIME3') badgesHtml += `<span class="status-pill status-paid">💰 Alta Receita</span> `;
+            if (key === 'TIME5') badgesHtml += `<span class="status-pill status-unpaid">⚠ Menor Ticket</span> `;
+            if (key === 'TIME1') badgesHtml += `<span class="status-pill status-paid">🚀 Operação Estável</span> `;
+
+            html += `
+                <div class="team-profile-card">
+                    <div>
+                        <div class="team-profile-header">
+                            <span class="team-profile-title" style="color: ${meta.color};">${label}</span>
+                            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">
+                                ${tot.count} jobs | ${this.formatCurrency(tot.total)}
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 10px;">${badgesHtml}</div>
+
+                        <div class="profile-section-label">Resumo Executivo</div>
+                        <p style="font-size: 12px; color: #334155; line-height: 1.5; margin-bottom: 12px;">${meta.resumo}</p>
+
+                        <div class="profile-section-label">Destaques</div>
+                        <ul style="font-size: 11px; color: var(--text-muted); padding-left: 16px; margin-bottom: 10px;">
+                            ${meta.destaques.map(d => `<li>${d}</li>`).join('')}
+                        </ul>
+
+                        <div class="profile-section-label" style="color: var(--accent-rose);">Ponto de Atenção</div>
+                        <p style="font-size: 11px; color: var(--accent-rose); font-weight: 600; margin-bottom: 10px;">${meta.atencao}</p>
+                    </div>
+
+                    <div class="anchor-client-box">
+                        <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase;">
+                            <i class="fa-solid fa-crown"></i> Cliente Âncora do Time
+                        </div>
+                        <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px;">
+                            ${topClient[0]}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
+                            <span>${clientJobsCount} atendimentos</span>
+                            <strong style="color: var(--accent-emerald);">${this.formatCurrency(topClient[1])} (${clientTeamShare}%)</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * 📊 3. COMPARATIVO VISUAL ENTRE EQUIPES (4 GRÁFICOS BI)
+     */
+    renderTeamsBICharts(teamTotalsList) {
+        if (typeof Chart === 'undefined') return;
+
+        const labels = teamTotalsList.map(t => t.label);
+        const colors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
+
+        // Chart 1: Revenue Bar Chart
+        const ctxRev = document.getElementById('chartBIRevenueBar');
+        if (ctxRev) {
+            if (this.charts.biRev) this.charts.biRev.destroy();
+            this.charts.biRev = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Receita Total ($)',
+                        data: teamTotalsList.map(t => t.tot.total),
+                        backgroundColor: colors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Ticket Médio Horizontal Bar Chart
+        const ctxTicket = document.getElementById('chartBITicketHorizontal');
+        if (ctxTicket) {
+            if (this.charts.biTicket) this.charts.biTicket.destroy();
+            this.charts.biTicket = new Chart(ctxTicket, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ticket Médio ($)',
+                        data: teamTotalsList.map(t => t.tot.ticketMedio),
+                        backgroundColor: colors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Volume Bar Chart
+        const ctxVol = document.getElementById('chartBIVolumeBar');
+        if (ctxVol) {
+            if (this.charts.biVol) this.charts.biVol.destroy();
+            this.charts.biVol = new Chart(ctxVol, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Agendamentos (Jobs)',
+                        data: teamTotalsList.map(t => t.tot.count),
+                        backgroundColor: colors,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Chart 4: Tips Bar Chart (Destaque Time 4 76%)
+        const ctxTips = document.getElementById('chartBITipsBar');
+        if (ctxTips) {
+            if (this.charts.biTips) this.charts.biTips.destroy();
+            this.charts.biTips = new Chart(ctxTips, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Tips (Gorjetas $)',
+                        data: teamTotalsList.map(t => t.tot.tip),
+                        backgroundColor: ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * ⚡ 4. PERFORMANCE STRIP MINI CARDS
+     */
+    renderTeamsPerformanceStrip(teamTotalsList, grandTotalAllTeamsInPeriod) {
+        let topRev = teamTotalsList[0];
+        let topTicket = teamTotalsList[0];
+        let topVol = teamTotalsList[0];
+        let topTips = teamTotalsList[0];
+        let lowestTicket = teamTotalsList[0];
+
+        teamTotalsList.forEach(t => {
+            if (t.tot.total > topRev.tot.total) topRev = t;
+            if (t.tot.ticketMedio > topTicket.tot.ticketMedio) topTicket = t;
+            if (t.tot.count > topVol.tot.count) topVol = t;
+            if (t.tot.tip > topTips.tot.tip) topTips = t;
+            if (t.tot.ticketMedio < lowestTicket.tot.ticketMedio && t.tot.count > 0) lowestTicket = t;
+        });
+
+        const totalJobsAll = teamTotalsList.reduce((acc, t) => acc + t.tot.count, 0);
+        const avgCompanyTicket = totalJobsAll > 0 ? (grandTotalAllTeamsInPeriod / totalJobsAll) : 0;
+        const topSharePct = grandTotalAllTeamsInPeriod > 0 ? ((topRev.tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
+
+        document.getElementById('biTopRevenue').textContent = `${topRev.label} (${this.formatCurrency(topRev.tot.total)})`;
+        document.getElementById('biTopTicket').textContent = `${topTicket.label} (${this.formatCurrency(topTicket.tot.ticketMedio)})`;
+        document.getElementById('biTopVolume').textContent = `${topVol.label} (${topVol.tot.count} jobs)`;
+        document.getElementById('biTopTips').textContent = `${topTips.label} (${this.formatCurrency(topTips.tot.tip)})`;
+        document.getElementById('biTopShare').textContent = `${topRev.label} (${topSharePct}%)`;
+        document.getElementById('biLowestTicket').textContent = `${lowestTicket.label} (${this.formatCurrency(lowestTicket.tot.ticketMedio)})`;
+        document.getElementById('biCompanyAvg').textContent = `${this.formatCurrency(avgCompanyTicket)} / job`;
+    }
+
+    /**
+     * 📉 5. COMPARAÇÃO COM A MÉDIA DA EMPRESA (BENCHMARK TABLE)
+     */
+    renderTeamsBenchmarkTable(teamTotalsList, grandTotalAllTeamsInPeriod) {
+        const tbody = document.getElementById('teamsBenchmarkTbody');
+        if (!tbody) return;
+
+        const totalJobsAll = teamTotalsList.reduce((acc, t) => acc + t.tot.count, 0);
+        const avgCompanyTicket = totalJobsAll > 0 ? (grandTotalAllTeamsInPeriod / totalJobsAll) : 0;
+        const avgCompanyRevenuePerTeam = grandTotalAllTeamsInPeriod / 5;
+
+        let html = '';
+        teamTotalsList.forEach(({ label, tot }) => {
+            const ticketDiff = tot.ticketMedio - avgCompanyTicket;
+            const revDiff = tot.total - avgCompanyRevenuePerTeam;
+            const sharePct = grandTotalAllTeamsInPeriod > 0 ? ((tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
+
+            let statusBadge = '';
+            if (tot.ticketMedio >= avgCompanyTicket + 5) {
+                statusBadge = `<span class="status-pill status-above-avg">🟢 Acima da Média</span>`;
+            } else if (tot.ticketMedio >= avgCompanyTicket - 5) {
+                statusBadge = `<span class="status-pill status-on-avg">🟡 Na Média</span>`;
+            } else {
+                statusBadge = `<span class="status-pill status-below-avg">🔴 Abaixo da Média</span>`;
+            }
+
+            html += `
+                <tr>
+                    <td style="font-weight: 700; color: #0f172a;">${label}</td>
+                    <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
+                    <td style="font-weight: 700; color: ${ticketDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">
+                        ${ticketDiff >= 0 ? '+' : ''}${this.formatCurrency(ticketDiff)}
+                    </td>
+                    <td style="font-weight: 700;">${this.formatCurrency(tot.total)}</td>
+                    <td style="font-weight: 700; color: ${revDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">
+                        ${revDiff >= 0 ? '+' : ''}${this.formatCurrency(revDiff)}
+                    </td>
+                    <td style="font-weight: 700; color: var(--primary);">${sharePct}%</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    /**
+     * 🎯 6. RADAR DE PERFORMANCE MULTI-EIXOS
+     */
+    renderTeamsRadarChart(teamTotalsList) {
+        if (typeof Chart === 'undefined') return;
+
+        if (!teamTotalsList) {
+            const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
+            teamTotalsList = teamKeys.map(key => ({
+                key, label: key, tot: this.calculateTotals(this.currentData[key] || [])
+            }));
+        }
+
+        const selectElem = document.getElementById('biRadarTeamSelect');
+        const selectedKey = selectElem ? selectElem.value : 'ALL';
+
+        const ctxRadar = document.getElementById('chartBIRadar');
+        if (!ctxRadar) return;
+
+        const axes = ['Ticket Médio', 'Volume Jobs', 'Receita', 'Share %', 'Gorjetas', 'Produtividade'];
+        const colors = {
+            'TIME1': '#25abb7',
+            'TIME2': '#10b981',
+            'TIME3': '#f59e0b',
+            'TIME4': '#ec4899',
+            'TIME5': '#75d3cd'
+        };
+
+        let datasets = [];
+
+        teamTotalsList.forEach(({ key, label, tot }) => {
+            if (selectedKey !== 'ALL' && selectedKey !== key) return;
+
+            // Normalized scores 0 to 100 for radar rendering
+            const ticketScore = Math.min(100, (tot.ticketMedio / 200) * 100);
+            const volScore = Math.min(100, (tot.count / 600) * 100);
+            const revScore = Math.min(100, (tot.total / 110000) * 100);
+            const shareScore = Math.min(100, (tot.total / 465821) * 500);
+            const tipScore = Math.min(100, (tot.tip / 238) * 100);
+            const prodScore = Math.min(100, (tot.count / 600) * 100);
+
+            datasets.push({
+                label: label,
+                data: [ticketScore, volScore, revScore, shareScore, tipScore, prodScore],
+                borderColor: colors[key] || 'var(--primary)',
+                backgroundColor: (colors[key] || 'var(--primary)') + '25',
+                borderWidth: 2
+            });
+        });
+
+        if (this.charts.biRadar) this.charts.biRadar.destroy();
+        this.charts.biRadar = new Chart(ctxRadar, {
+            type: 'radar',
+            data: { labels: axes, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { r: { min: 0, max: 100, ticks: { display: false } } }
+            }
+        });
+    }
+
+    /**
+     * 🍩 7. DONUT DE FATURAMENTO DAS EQUIPES
+     */
+    renderTeamsDonutChart(teamTotalsList) {
+        if (typeof Chart === 'undefined') return;
+
+        const ctxDonut = document.getElementById('chartBIDonut');
+        if (!ctxDonut) return;
+
+        const labels = teamTotalsList.map(t => t.label);
+        const data = teamTotalsList.map(t => t.tot.total);
+        const colors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
+
+        if (this.charts.biDonut) this.charts.biDonut.destroy();
+        this.charts.biDonut = new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11, family: 'Poppins', weight: '600' }, padding: 12 } }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    /**
+     * 📈 8. EVOLUÇÃO TEMPORAL MENSAL DAS EQUIPES (LINE TREND CHART)
+     */
+    renderTeamsTrendChart() {
+        if (typeof Chart === 'undefined') return;
+
+        const ctxTrend = document.getElementById('chartBITrendLine');
+        if (!ctxTrend) return;
+
+        const months = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12'];
+        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
+        const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
+        const colors = { 'TIME1': '#25abb7', 'TIME2': '#10b981', 'TIME3': '#f59e0b', 'TIME4': '#ec4899', 'TIME5': '#75d3cd' };
+
+        const datasets = teamKeys.map(key => {
+            const rawRecs = this.currentData[key] || [];
+            const monthlyData = months.map(m => {
+                const recs = rawRecs.filter(r => r.date.startsWith(m));
+                return recs.reduce((acc, r) => acc + r.total, 0);
+            });
+
+            return {
+                label: teamLabels[key],
+                data: monthlyData,
+                borderColor: colors[key],
+                backgroundColor: colors[key] + '15',
+                fill: false,
+                tension: 0.3,
+                borderWidth: 2.5
+            };
+        });
+
+        if (this.charts.biTrendLine) this.charts.biTrendLine.destroy();
+        this.charts.biTrendLine = new Chart(ctxTrend, {
+            type: 'line',
+            data: { labels: monthNames, datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top', labels: { font: { size: 12, family: 'Poppins', weight: '600' } } } },
+                scales: {
+                    y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    /**
+     * 📋 9. RESUMO EXECUTIVO DINÂMICO DA ABA EQUIPES
+     */
+    renderTeamsExecutiveSummary(teamTotalsList, grandTotalAllTeamsInPeriod) {
+        const container = document.getElementById('teamsExecutiveSummaryContent');
+        if (!container) return;
+
+        let topRev = teamTotalsList[0];
+        let topTicket = teamTotalsList[0];
+        let topTips = teamTotalsList[0];
+        let lowestTicket = teamTotalsList[0];
+
+        teamTotalsList.forEach(t => {
+            if (t.tot.total > topRev.tot.total) topRev = t;
+            if (t.tot.ticketMedio > topTicket.tot.ticketMedio) topTicket = t;
+            if (t.tot.tip > topTips.tot.tip) topTips = t;
+            if (t.tot.ticketMedio < lowestTicket.tot.ticketMedio && t.tot.count > 0) lowestTicket = t;
+        });
+
+        const topSharePct = grandTotalAllTeamsInPeriod > 0 ? ((topRev.tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
+
+        container.innerHTML = `
+            O <strong>${topRev.label}</strong> permanece como principal motor financeiro da empresa, respondendo por aproximadamente <strong>${topSharePct}% do faturamento (${this.formatCurrency(topRev.tot.total)})</strong> no período selecionado. O <strong>${topTicket.label}</strong> apresenta o maior ticket médio (<strong>${this.formatCurrency(topTicket.tot.ticketMedio)}</strong>) e o <strong>${topTips.label}</strong> concentra a maior parte das gorjetas (<strong>${this.formatCurrency(topTips.tot.tip)} em tips</strong>), indicando elevado nível de satisfação dos clientes. Já o <strong>${lowestTicket.label}</strong> representa a maior oportunidade de crescimento, pois mantém um alto volume de atendimentos (${lowestTicket.tot.count} jobs), porém com o menor ticket médio (<strong>${this.formatCurrency(lowestTicket.tot.ticketMedio)}</strong>). Ajustes na precificação podem elevar significativamente a lucratividade sem necessidade de expansão operacional.
+        `;
     }
 
     renderTransactionsTable() {
