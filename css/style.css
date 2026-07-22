@@ -1413,6 +1413,31 @@ body {
     box-shadow: 0 4px 12px rgba(37, 171, 183, 0.25) !important;
 }
 
+/* Page-break avoidance for Executive A4 PDF export */
+.pdf-page-break-avoid,
+.pdf-only-header,
+.glass-panel,
+.chart-card,
+.table-panel,
+.kpi-card,
+.insight-card,
+.table-responsive,
+.kpi-grid,
+.secondary-kpi-grid,
+.executive-summary-panel,
+.vip-client-row,
+.expense-card,
+.team-card,
+.insights-grid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
+
+.custom-table tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
+
 /* @media print styles for A4 Executive PDF Export */
 @media print {
     body {
@@ -1431,8 +1456,11 @@ body {
     }
     .pdf-only-header {
         display: block !important;
+        margin-bottom: 24px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
     }
-    .glass-panel, .chart-card, .table-panel, .kpi-card {
+    .glass-panel, .chart-card, .table-panel, .kpi-card, .insight-card {
         box-shadow: none !important;
         border: 1px solid #cbd5e1 !important;
         break-inside: avoid !important;
@@ -1443,7 +1471,17 @@ body {
     }
     .chart-card {
         margin-bottom: 24px !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    .kpi-card {
+        padding: 12px 14px !important;
+    }
+    .kpi-value {
+        font-size: 20px !important;
+    }
+    .kpi-details {
+        font-size: 10px !important;
+        gap: 6px !important;
     }
 }
-
-

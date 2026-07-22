@@ -2479,11 +2479,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
         if (typeof html2pdf !== 'undefined') {
             const opt = {
-                margin:       [10, 10, 10, 10],
+                margin:       [8, 8, 8, 8],
                 filename:     `Nucleus_Relatorio_Executivo_${this.repStartDate}_a_${this.repEndDate}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
             // Temporary print header display
