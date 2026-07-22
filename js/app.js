@@ -1860,7 +1860,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
 
         if (this.transSelectedStatus !== 'ALL') {
-            tableRecords = tableRecords.filter(r => (r.status || 'PAID').toUpperCase() === this.transSelectedStatus.toUpperCase());
+            tableRecords = tableRecords.filter(r => (r.status || 'PAID').toString().trim().toUpperCase() === this.transSelectedStatus.toUpperCase());
         }
 
         if (this.transSearchQuery) {
@@ -1885,8 +1885,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         } else {
             let html = '';
             paginatedRecords.forEach(r => {
-                const statusClass = (r.status || 'PAID').toUpperCase() === 'PAID' ? 'status-paid' :
-                                    (r.status || 'PAID').toUpperCase() === 'UNPAID' ? 'status-unpaid' : 'status-pending';
+                const st = (r.status || 'PAID').toString().trim().toUpperCase();
+                const statusClass = st === 'PAID' ? 'status-paid' :
+                                    st === 'DUE' || st === 'UNPAID' ? 'status-unpaid' : 'status-pending';
 
                 html += `
                     <tr>
