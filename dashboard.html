@@ -752,14 +752,18 @@
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
                                 <h3 class="chart-title"><i class="fa-solid fa-compass-drafting" style="color: var(--primary);"></i> 🎯 Radar de Performance Multi-Eixos</h3>
-                                <select id="biRadarTeamSelect" class="input-select" style="height: 32px; font-size: 11px;" onchange="window.app.renderTeamsRadarChart()">
-                                    <option value="ALL">Todas as Equipes Simultâneas</option>
-                                    <option value="TIME1">Time 1</option>
-                                    <option value="TIME2">Time 2</option>
-                                    <option value="TIME3">Time 3</option>
-                                    <option value="TIME4">Time 4</option>
-                                    <option value="TIME5">Time 5</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <i class="fa-solid fa-users select-icon"></i>
+                                    <select id="biRadarTeamSelect" class="input-select" onchange="window.app.renderTeamsRadarChart()">
+                                        <option value="ALL">Todas as Equipes Simultâneas</option>
+                                        <option value="TIME1">Time 1</option>
+                                        <option value="TIME2">Time 2</option>
+                                        <option value="TIME3">Time 3</option>
+                                        <option value="TIME4">Time 4</option>
+                                        <option value="TIME5">Time 5</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                </div>
                             </div>
                             <div class="chart-container" style="height: 280px;">
                                 <canvas id="chartBIRadar"></canvas>
@@ -962,32 +966,44 @@
 
                             <!-- Dynamic Filter Dropdowns (Entradas vs Saídas) -->
                             <div id="entradasFilterGroup" style="display: flex; gap: 12px; align-items: center;">
-                                <select id="transTeamFilterSelect" class="input-select" style="height: 38px;">
-                                    <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
-                                    <option value="TIME1">Time 1</option>
-                                    <option value="TIME2">Time 2</option>
-                                    <option value="TIME3">Time 3</option>
-                                    <option value="TIME4">Time 4</option>
-                                    <option value="TIME5">Time 5</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <i class="fa-solid fa-users select-icon"></i>
+                                    <select id="transTeamFilterSelect" class="input-select">
+                                        <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
+                                        <option value="TIME1">Time 1</option>
+                                        <option value="TIME2">Time 2</option>
+                                        <option value="TIME3">Time 3</option>
+                                        <option value="TIME4">Time 4</option>
+                                        <option value="TIME5">Time 5</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                </div>
 
-                                <select id="transStatusFilterSelect" class="input-select" style="height: 38px;">
-                                    <option value="ALL">Todos os Status</option>
-                                    <option value="PAID">PAID (Pago)</option>
-                                    <option value="UNPAID">UNPAID (Pendente)</option>
-                                    <option value="PENDING">PENDING</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <i class="fa-solid fa-circle-check select-icon"></i>
+                                    <select id="transStatusFilterSelect" class="input-select">
+                                        <option value="ALL">Todos os Status</option>
+                                        <option value="PAID">PAID (Pago)</option>
+                                        <option value="UNPAID">UNPAID (Pendente)</option>
+                                        <option value="PENDING">PENDING</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                </div>
                             </div>
 
                             <div id="saidasFilterGroup" style="display: none; gap: 12px; align-items: center;">
-                                <select id="transCategoryFilterSelect" class="input-select" style="height: 38px;">
-                                    <option value="ALL">Todas as Categorias</option>
-                                    <option value="Payroll">Mão de Obra (Payroll)</option>
-                                    <option value="Frota">Frota de Veículos</option>
-                                    <option value="Marketing">Marketing & Aquisição</option>
-                                    <option value="Tech">Tech, CRM & Softwares</option>
-                                    <option value="Operações">Operações & Limpeza</option>
-                                </select>
+                                <div class="custom-select-wrapper">
+                                    <i class="fa-solid fa-tags select-icon"></i>
+                                    <select id="transCategoryFilterSelect" class="input-select">
+                                        <option value="ALL">Todas as Categorias</option>
+                                        <option value="Payroll">Mão de Obra (Payroll)</option>
+                                        <option value="Frota">Frota de Veículos</option>
+                                        <option value="Marketing">Marketing & Aquisição</option>
+                                        <option value="Tech">Tech, CRM & Softwares</option>
+                                        <option value="Operações">Operações & Limpeza</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                </div>
                             </div>
                         </div>
 

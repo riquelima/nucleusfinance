@@ -337,6 +337,72 @@ body {
     background: #ffffff !important;
 }
 
+/* Compact Custom Select Input Wrapper & Sleek Dropdown Styling */
+.custom-select-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 38px;
+}
+
+.select-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--primary);
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 12px;
+    color: var(--primary);
+    font-size: 11px;
+    pointer-events: none;
+    z-index: 2;
+    transition: transform 0.2s ease;
+}
+
+.input-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    height: 38px !important;
+    background-color: #edf7f9 !important;
+    border: 1px solid var(--border-color) !important;
+    color: #0f172a !important;
+    padding: 0 34px 0 34px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap;
+    box-shadow: none !important;
+}
+
+.custom-select-wrapper:hover .select-arrow,
+.input-select:focus + .select-arrow {
+    transform: translateY(1px);
+    color: var(--primary-hover);
+}
+
+.input-select:focus, .input-select:hover {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(37, 171, 183, 0.18) !important;
+    background-color: #ffffff !important;
+}
+
+.input-select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+}
+
 .period-subtitle-badge {
     height: 38px;
     display: inline-flex;
