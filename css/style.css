@@ -263,7 +263,7 @@ body {
     gap: 3px;
 }
 
-.period-mode-btn, .overview-mode-btn, .trans-mode-btn {
+.period-mode-btn, .overview-mode-btn, .trans-mode-btn, .rep-preset-btn {
     background: transparent;
     border: none;
     height: 32px;
@@ -280,11 +280,11 @@ body {
     white-space: nowrap;
 }
 
-.period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover {
+.period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover, .rep-preset-btn:hover {
     color: var(--primary);
 }
 
-.period-mode-btn.active, .overview-mode-btn.active, .trans-mode-btn.active {
+.period-mode-btn.active, .overview-mode-btn.active, .trans-mode-btn.active, .rep-preset-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
     box-shadow: 0 3px 10px rgba(37, 171, 183, 0.3);
@@ -1411,6 +1411,39 @@ body {
     background: rgba(37, 171, 183, 0.12) !important;
     border: 1px solid var(--primary) !important;
     box-shadow: 0 4px 12px rgba(37, 171, 183, 0.25) !important;
+}
+
+/* @media print styles for A4 Executive PDF Export */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+    }
+    #view-viewport, #view-slider, .view-section {
+        overflow: visible !important;
+        transform: none !important;
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+    }
+    .top-header, .period-bar, #bottomNavBar, .header-actions {
+        display: none !important;
+    }
+    .pdf-only-header {
+        display: block !important;
+    }
+    .glass-panel, .chart-card, .table-panel, .kpi-card {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+    }
+    .charts-grid {
+        display: block !important;
+    }
+    .chart-card {
+        margin-bottom: 24px !important;
+    }
 }
 
 

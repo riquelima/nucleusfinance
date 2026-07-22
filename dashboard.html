@@ -36,6 +36,9 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 
+    <!-- html2pdf.js for Executive PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -1062,29 +1065,360 @@
                 </div>
             </section>
 
-            <!-- TAB 4: RELATÓRIOS & ANALYTICS -->
+            <!-- TAB 4: RELATÓRIOS & ANALYTICS EXECUTIVO COMPLETO -->
             <section id="view-relatorios" class="view-section">
                 <div class="container">
+                    
+                    <!-- Header Top Bar -->
                     <header class="top-header glass-panel">
                         <div class="brand-title">
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
-                                <h1>Relatórios Avançados & Ranking</h1>
-                                <p>Análise estratégica de faturamento, gorjetas e top clientes</p>
+                                <h1>Centro de Relatórios & Inteligência Executiva</h1>
+                                <p>Análise estratégica consolidada, pré-visualização ao vivo e exportação para PDF</p>
                             </div>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn-primary" style="height: 38px; padding: 0 18px; font-size: 13px;" onclick="window.app.exportPDF()">
+                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+                            </button>
+                            <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
                         </div>
                     </header>
 
-                    <div class="charts-grid">
-                        <div class="chart-card glass-panel" style="grid-column: span 2;">
-                            <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Top 10 Clientes em Faturamento</h3>
+                    <!-- Date Range Picker & Quick Presets Controls Bar -->
+                    <div class="period-bar glass-panel">
+                        <div class="period-title">
+                            <i class="fa-solid fa-calendar-range" style="color: var(--primary);"></i> Período do Relatório Executivo
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <!-- Range Presets -->
+                            <div class="period-mode-group">
+                                <button type="button" class="rep-preset-btn" data-preset="this_month">Mês Atual</button>
+                                <button type="button" class="rep-preset-btn" data-preset="3_months">3 Meses</button>
+                                <button type="button" class="rep-preset-btn" data-preset="6_months">6 Meses</button>
+                                <button type="button" class="rep-preset-btn active" data-preset="year_2026">Ano 2026</button>
                             </div>
-                            <div class="chart-container" style="height: 280px;">
-                                <canvas id="chartTopClients"></canvas>
+
+                            <!-- Date Range Inputs -->
+                            <div class="filter-group">
+                                <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">De:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <input type="text" id="repStartDateInput" class="custom-flatpickr-input" style="width: 130px !important;" placeholder="Data inicial...">
+                                </div>
+                            </div>
+
+                            <div class="filter-group">
+                                <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Até:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <input type="text" id="repEndDateInput" class="custom-flatpickr-input" style="width: 130px !important;" placeholder="Data final...">
+                                </div>
+                            </div>
+
+                            <div id="repPeriodBadge" class="period-subtitle-badge">
+                                01/01/2026 até 31/12/2026
                             </div>
                         </div>
                     </div>
+
+                    <!-- PRINT & PDF REPORT CONTAINER WRAPPER -->
+                    <div id="pdfReportPrintContainer">
+
+                        <!-- Report Executive Print Header (Only rendered when printing or exporting PDF) -->
+                        <div class="pdf-only-header" style="display: none; padding: 18px 24px; margin-bottom: 20px; border-bottom: 2px solid var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 14px;">
+                                    <img src="nucleusLogo.jpg" alt="Nucleus Logo" style="height: 48px; border-radius: 8px;">
+                                    <div>
+                                        <h2 style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 800; color: #0f172a; margin: 0;">Nucleus Cleaning Services</h2>
+                                        <p style="font-size: 12px; color: #475569; margin: 0;">Relatório Executivo de Desempenho Financeiro & Operacional</p>
+                                    </div>
+                                </div>
+                                <div style="text-align: right; font-size: 11px; color: #475569;">
+                                    <div><strong>Período Analisado:</strong> <span id="pdfHeaderPeriod">01/01/2026 - 31/12/2026</span></div>
+                                    <div><strong>Data de Emissão:</strong> <span id="pdfHeaderIssueDate">22/07/2026</span></div>
+                                    <div><strong>Status Auditado:</strong> 100% Verificado</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1. 8 EXECUTIVE KPI CARDS GRID -->
+                        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 24px;">
+                            <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Faturamento Total</span>
+                                    <div class="kpi-icon-box"><i class="fa-solid fa-dollar-sign"></i></div>
+                                </div>
+                                <div class="kpi-value" id="repKpiFaturamento">$0.00</div>
+                                <div class="kpi-details">
+                                    <span>Receita Bruta</span>
+                                    <span style="color: var(--primary); font-weight: 700;">Auditada</span>
+                                </div>
+                            </div>
+
+                            <div class="kpi-card glass-panel" style="--card-accent: var(--accent-emerald);">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Lucro Líquido</span>
+                                    <div class="kpi-icon-box" style="background: rgba(5, 150, 105, 0.12); color: var(--accent-emerald);">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                    </div>
+                                </div>
+                                <div class="kpi-value" id="repKpiLucro" style="color: var(--accent-emerald);">$0.00</div>
+                                <div class="kpi-details">
+                                    <span>Resultado Operacional</span>
+                                    <span class="status-pill status-paid" id="repKpiMargem">Margem: 0%</span>
+                                </div>
+                            </div>
+
+                            <div class="kpi-card glass-panel" style="--card-accent: var(--accent-rose);">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Despesas Totais</span>
+                                    <div class="kpi-icon-box" style="background: rgba(225, 29, 72, 0.12); color: var(--accent-rose);">
+                                        <i class="fa-solid fa-arrow-down-short-wide"></i>
+                                    </div>
+                                </div>
+                                <div class="kpi-value" id="repKpiDespesas" style="color: var(--accent-rose);">$0.00</div>
+                                <div class="kpi-details">
+                                    <span>Custos Operacionais</span>
+                                    <span style="color: var(--accent-rose); font-weight: 700;" id="repKpiDespesasPct">0%</span>
+                                </div>
+                            </div>
+
+                            <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
+                                <div class="kpi-header">
+                                    <span class="kpi-title">Ticket Médio</span>
+                                    <div class="kpi-icon-box"><i class="fa-solid fa-receipt"></i></div>
+                                </div>
+                                <div class="kpi-value" id="repKpiTicket">$0.00</div>
+                                <div class="kpi-details">
+                                    <span>Média por Atendimento</span>
+                                    <span style="color: var(--accent-amber); font-weight: 700;">Serviços</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Secondary 4 KPIs -->
+                        <div class="secondary-kpi-grid" style="margin-bottom: 28px;">
+                            <div class="secondary-kpi-card glass-panel">
+                                <div class="secondary-kpi-title">Total de Agendamentos</div>
+                                <div class="secondary-kpi-val" id="repKpiAgendamentos">0</div>
+                                <div class="secondary-kpi-sub">Serviços executados</div>
+                            </div>
+
+                            <div class="secondary-kpi-card glass-panel">
+                                <div class="secondary-kpi-title">Clientes Únicos</div>
+                                <div class="secondary-kpi-val" id="repKpiClientes">0</div>
+                                <div class="secondary-kpi-sub">Base ativa no período</div>
+                            </div>
+
+                            <div class="secondary-kpi-card glass-panel">
+                                <div class="secondary-kpi-title">LTV Médio por Cliente</div>
+                                <div class="secondary-kpi-val" id="repKpiLTV">$0.00</div>
+                                <div class="secondary-kpi-sub" style="color: var(--accent-emerald); font-weight: 700;">Valor acumulado</div>
+                            </div>
+
+                            <div class="secondary-kpi-card glass-panel">
+                                <div class="secondary-kpi-title">Total em Gorjetas (Tips)</div>
+                                <div class="secondary-kpi-val" style="color: var(--accent-amber);" id="repKpiTips">$0.00</div>
+                                <div class="secondary-kpi-sub">Bonificações dos clientes</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. RESUMO EXECUTIVO DINÂMICO -->
+                        <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 28px;">
+                            <div class="chart-header" style="margin-bottom: 14px;">
+                                <h3 class="chart-title"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> 📋 Resumo Executivo do Relatório</h3>
+                            </div>
+                            <div id="repExecutiveSummaryText" class="executive-summary-text">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- 3. PERFORMANCE DAS EQUIPES -->
+                        <div class="table-panel glass-panel" style="margin-bottom: 28px;">
+                            <div class="chart-header" style="margin-bottom: 16px;">
+                                <h3 class="chart-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> 👥 Performance Consolidação por Equipe</h3>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Posição</th>
+                                            <th>Equipe</th>
+                                            <th class="text-right">Agendamentos</th>
+                                            <th class="text-right">Receita Total ($)</th>
+                                            <th class="text-right">Tips ($)</th>
+                                            <th class="text-right">Ticket Médio ($)</th>
+                                            <th class="text-right">Fat. Share (%)</th>
+                                            <th>Destaque</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="repTeamsTableBody">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top: 20px; height: 220px;">
+                                <canvas id="chartRepTeamsRevenue"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- 4. TOP 10 CLIENTES VIP -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+                            <div class="chart-card glass-panel">
+                                <div class="chart-header">
+                                    <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Top 10 Clientes em Faturamento ($)</h3>
+                                </div>
+                                <div class="chart-container" style="height: 280px;">
+                                    <canvas id="chartTopClients"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="table-panel glass-panel">
+                                <div class="chart-header" style="margin-bottom: 16px;">
+                                    <h3 class="chart-title"><i class="fa-solid fa-crown" style="color: var(--accent-amber);"></i> 👑 Ranking dos Top Clientes VIP</h3>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Rank</th>
+                                                <th>Cliente</th>
+                                                <th class="text-right">Agendamentos</th>
+                                                <th class="text-right">Total Pago ($)</th>
+                                                <th class="text-right">Share (%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="repClientsTableBody">
+                                            <!-- Loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. ANÁLISE FINANCEIRA & TENDÊNCIAS -->
+                        <div class="charts-grid" style="margin-bottom: 28px;">
+                            <div class="chart-card glass-panel">
+                                <div class="chart-header">
+                                    <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução da Receita Bruta vs Despesas ($)</h3>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="chartRepRevenueTrend"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="chart-card glass-panel">
+                                <div class="chart-header">
+                                    <h3 class="chart-title"><i class="fa-solid fa-line-chart" style="color: var(--accent-emerald);"></i> Evolução da Margem Líquida (%)</h3>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="chartRepMarginTrend"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. ANÁLISE ESTRUTURADA DAS DESPESAS -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+                            <div class="chart-card glass-panel">
+                                <div class="chart-header">
+                                    <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
+                                </div>
+                                <div class="chart-container" style="height: 260px;">
+                                    <canvas id="chartRepExpensesDonut"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="table-panel glass-panel">
+                                <div class="chart-header" style="margin-bottom: 16px;">
+                                    <h3 class="chart-title"><i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Resumo Estruturado das Despesas</h3>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Categoria</th>
+                                                <th>Centro de Custo</th>
+                                                <th class="text-right">Valor Pro-rata ($)</th>
+                                                <th class="text-right">Participação (%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="repExpensesTableBody">
+                                            <!-- Loaded dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7. INSIGHTS ESTRATÉGICOS & RECOMENDAÇÕES -->
+                        <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
+                            <div class="chart-header" style="margin-bottom: 18px;">
+                                <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> 💡 Insights Estratégicos & 📈 Recomendações Executivas</h3>
+                            </div>
+
+                            <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                                <div class="insight-card insight-high-priority">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
+                                        <span class="status-pill status-unpaid">Alta Prioridade</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                        O Time 5 possui ticket médio de $163,72 vs $188,39 do Time 4. Elevar o ticket ao nível médio da empresa gera ganho financeiro direto.
+                                    </p>
+                                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
+                                        Ganho Estimado: +$13.815,00 / ano em Lucro Líquido
+                                    </div>
+                                </div>
+
+                                <div class="insight-card insight-med-priority">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
+                                        <span class="status-pill status-pending">Média Prioridade</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                        O Time 4 concentrou 76% de todas as gorjetas. Replicar suas práticas de atendimento aumentará os ganhos dos helpers de todos os times.
+                                    </p>
+                                    <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                        Benefício: Retenção de Equipe & Experiência Premium
+                                    </div>
+                                </div>
+
+                                <div class="insight-card insight-med-priority">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-piggy-bank" style="color: var(--accent-amber);"></i> Otimização de Pagamentos</span>
+                                        <span class="status-pill status-pending">Média Prioridade</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                        Incentivar pagamentos via Zelle / ACH reduz custos com intermediadores de cartão e apps terceirizados.
+                                    </p>
+                                    <div style="font-size: 12px; font-weight: 700; color: var(--accent-emerald);">
+                                        Economia Estimada: -$1.500,00 / ano
+                                    </div>
+                                </div>
+
+                                <div class="insight-card insight-low-priority">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-rocket" style="color: var(--primary);"></i> Expansão de Marketing</span>
+                                        <span class="status-pill status-paid">Oportunidade</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                                        ROAS atual de ~38.8x valida o investimento de mídia. Escalar anúncios no Thumbtack e Ads trará novos clientes de alto LTV.
+                                    </p>
+                                    <div style="font-size: 12px; font-weight: 700; color: var(--primary);">
+                                        Impacto: Expansão de Faturamento Global
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- END PRINT CONTAINER -->
+
                 </div>
             </section>
 

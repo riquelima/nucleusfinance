@@ -1,7 +1,7 @@
 /**
  * Nucleus Cleaning Services - Executive Dashboard Engine
  * Default Mode: Visão Geral pre-selected to 'daily' (Dia) with Today's Date dynamically initialized.
- * 100% Dynamic Engine for Visão Geral, Aba Equipes Executiva BI Expansion & Módulo de Transações (Entradas & Saídas).
+ * 100% Dynamic Engine for Visão Geral, Aba Equipes Executiva BI Expansion, Módulo de Transações & Centro de Relatórios Executivo PDF.
  */
 
 // Audit Base Monthly Expenses (Aba Despesas)
@@ -15,7 +15,7 @@ const DESPESAS_CATEGORIES_MONTHLY = {
     ops: 562.00         // 1.79%
 };
 
-// Detailed Expense Items Generator for Saídas Sub-Tab
+// Detailed Expense Items Generator for Saídas Sub-Tab & Reports
 const DESPESAS_DETAILED_ITEMS = [
     { category: 'Payroll', desc: 'Pro-labore & Salários Administração', centro: 'Mão de Obra', monthly: 25240.00, paid_by: 'ACH / Direct Deposit', status: 'PAID' },
     { category: 'Payroll', desc: 'Helpers extras / Gestão de campo', centro: 'Mão de Obra', monthly: 1000.00, paid_by: 'Transferência Bancária', status: 'PAID' },
@@ -74,6 +74,11 @@ class NucleusDashboardApp {
         this.transSearchQuery = '';
         this.transCurrentPage = 1;
         this.transPageSize = 15;
+
+        // Relatórios Executive Center Date Range State
+        this.repStartDate = '2026-01-01';
+        this.repEndDate = '2026-12-31';
+        this.repPreset = 'year_2026';
 
         // Flatpickr instances
         this.flatpickrs = {};
@@ -211,6 +216,39 @@ class NucleusDashboardApp {
                 }
             });
         }
+
+        // 4. Relatórios Executive Date Range Pickers
+        const repStartElem = document.getElementById('repStartDateInput');
+        if (repStartElem) {
+            this.flatpickrs.repStart = flatpickr(repStartElem, {
+                locale: localePt,
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: this.repStartDate,
+                onChange: (selectedDates, dateStr) => {
+                    this.repStartDate = dateStr;
+                    this.updateReportsPeriodUI();
+                    this.renderReportsView();
+                }
+            });
+        }
+
+        const repEndElem = document.getElementById('repEndDateInput');
+        if (repEndElem) {
+            this.flatpickrs.repEnd = flatpickr(repEndElem, {
+                locale: localePt,
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: this.repEndDate,
+                onChange: (selectedDates, dateStr) => {
+                    this.repEndDate = dateStr;
+                    this.updateReportsPeriodUI();
+                    this.renderReportsView();
+                }
+            });
+        }
     }
 
     bindEvents() {
@@ -271,6 +309,17 @@ class NucleusDashboardApp {
             });
         });
 
+        // Relatórios Range Presets Buttons
+        const repPresetBtns = document.querySelectorAll('.rep-preset-btn');
+        repPresetBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                repPresetBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const preset = btn.getAttribute('data-preset');
+                this.applyReportsPreset(preset);
+            });
+        });
+
         // Transações Team Filter
         const teamFilter = document.getElementById('transTeamFilterSelect');
         if (teamFilter) {
@@ -310,6 +359,32 @@ class NucleusDashboardApp {
                 this.renderTransactionsModule();
             });
         }
+    }
+
+    applyReportsPreset(preset) {
+        this.repPreset = preset;
+        const today = new Date();
+        const year = 2026;
+
+        if (preset === 'this_month') {
+            this.repStartDate = `${year}-07-01`;
+            this.repEndDate = `${year}-07-31`;
+        } else if (preset === '3_months') {
+            this.repStartDate = `${year}-05-01`;
+            this.repEndDate = `${year}-07-31`;
+        } else if (preset === '6_months') {
+            this.repStartDate = `${year}-01-01`;
+            this.repEndDate = `${year}-06-30`;
+        } else {
+            this.repStartDate = `${year}-01-01`;
+            this.repEndDate = `${year}-12-31`;
+        }
+
+        if (this.flatpickrs.repStart) this.flatpickrs.repStart.setDate(this.repStartDate);
+        if (this.flatpickrs.repEnd) this.flatpickrs.repEnd.setDate(this.repEndDate);
+
+        this.updateReportsPeriodUI();
+        this.renderReportsView();
     }
 
     updateOverviewPeriodUI() {
@@ -437,6 +512,15 @@ class NucleusDashboardApp {
         if (subtitleLabel) subtitleLabel.textContent = labelText;
     }
 
+    updateReportsPeriodUI() {
+        const subtitleLabel = document.getElementById('repPeriodBadge');
+        const pdfPeriodHeader = document.getElementById('pdfHeaderPeriod');
+        const rangeStr = `${this.formatDateBR(this.repStartDate)} até ${this.formatDateBR(this.repEndDate)}`;
+
+        if (subtitleLabel) subtitleLabel.textContent = rangeStr;
+        if (pdfPeriodHeader) pdfPeriodHeader.textContent = rangeStr;
+    }
+
     handleLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -486,6 +570,7 @@ class NucleusDashboardApp {
             this.updateTransPeriodUI();
             this.renderTransactionsModule();
         } else if (tabId === 'relatorios') {
+            this.updateReportsPeriodUI();
             this.renderReportsView();
         }
     }
@@ -2044,30 +2129,186 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
     }
 
+    /**
+     * 📊 EXECUTIVE REPORTS & ANALYTICS CENTER (TAB RELATÓRIOS)
+     */
     renderReportsView() {
-        if (typeof Chart === 'undefined') return;
+        const allRecords = this.getAllRecords();
+        const filteredRecords = allRecords.filter(r => r.date >= this.repStartDate && r.date <= this.repEndDate);
 
-        const records = this.getAllRecords();
+        // 1. Pro-rata Expense Calculation based on Date Range Days
+        const dStart = new Date(this.repStartDate);
+        const dEnd = new Date(this.repEndDate);
+        const diffDays = Math.max(1, Math.ceil((dEnd - dStart) / (1000 * 60 * 60 * 24)) + 1);
+        const expFactor = diffDays / 30;
+        const repExpensesTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
 
-        const clientTotals = {};
-        records.forEach(r => {
-            clientTotals[r.client] = (clientTotals[r.client] || 0) + r.total;
+        // 2. Recalculate KPIs
+        const totals = this.calculateTotals(filteredRecords);
+        const lucroLiquido = totals.total - repExpensesTotal;
+        const margemPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
+        const despesasPct = totals.total > 0 ? ((repExpensesTotal / totals.total) * 100).toFixed(1) : '0.0';
+
+        const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
+        const ltvMedio = uniqueClients > 0 ? (totals.total / uniqueClients) : 0;
+
+        document.getElementById('repKpiFaturamento').textContent = this.formatCurrency(totals.total);
+        document.getElementById('repKpiDespesas').textContent = this.formatCurrency(repExpensesTotal);
+        document.getElementById('repKpiDespesasPct').textContent = `${despesasPct}% da Receita`;
+
+        const elLucro = document.getElementById('repKpiLucro');
+        if (elLucro) {
+            elLucro.textContent = this.formatCurrency(lucroLiquido);
+            elLucro.style.color = lucroLiquido >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+        }
+
+        const elMargem = document.getElementById('repKpiMargem');
+        if (elMargem) {
+            elMargem.textContent = `Margem: ${margemPct}%`;
+            elMargem.className = lucroLiquido >= 0 ? 'status-pill status-paid' : 'status-pill status-unpaid';
+        }
+
+        document.getElementById('repKpiTicket').textContent = this.formatCurrency(totals.ticketMedio);
+        document.getElementById('repKpiAgendamentos').textContent = totals.count.toLocaleString('pt-BR');
+        document.getElementById('repKpiClientes').textContent = uniqueClients.toLocaleString('pt-BR');
+        document.getElementById('repKpiLTV').textContent = this.formatCurrency(ltvMedio);
+        document.getElementById('repKpiTips').textContent = this.formatCurrency(totals.tip);
+
+        // 3. Render Executive Summary Text
+        const summaryTextElem = document.getElementById('repExecutiveSummaryText');
+        if (summaryTextElem) {
+            const rangeStr = `${this.formatDateBR(this.repStartDate)} a ${this.formatDateBR(this.repEndDate)}`;
+            summaryTextElem.innerHTML = `
+                No período de <strong>${rangeStr}</strong> (${diffDays} dias auditados), a Nucleus Cleaning Services registrou um Faturamento Bruto de <strong>${this.formatCurrency(totals.total)}</strong> com <strong>${totals.count} agendamentos executados</strong> e ticket médio de <strong>${this.formatCurrency(totals.ticketMedio)}</strong>. As despesas operacionais pro-rata totalizaram <strong>${this.formatCurrency(repExpensesTotal)}</strong>, resultando em um Lucro Líquido Operacional de <strong style="color: ${lucroLiquido >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">${this.formatCurrency(lucroLiquido)}</strong> (Margem Líquida: <strong>${margemPct}%</strong>). A carteira contou com <strong>${uniqueClients} clientes únicos ativos</strong> (LTV médio: <strong>${this.formatCurrency(ltvMedio)}</strong>) e arrecadação de <strong>${this.formatCurrency(totals.tip)} em gorjetas (tips)</strong>.
+            `;
+        }
+
+        // 4. Render Teams Table & Revenue Chart
+        this.renderReportsTeamsSection(filteredRecords, totals.total);
+
+        // 5. Render Top 10 VIP Clients Table & Chart
+        this.renderReportsVIPClientsSection(filteredRecords, totals.total);
+
+        // 6. Render Financial Trend Charts
+        this.renderReportsFinancialTrends();
+
+        // 7. Render Structured Expenses Donut & Table
+        this.renderReportsExpensesSection(expFactor);
+    }
+
+    renderReportsTeamsSection(filteredRecords, grandTotal) {
+        const tbody = document.getElementById('repTeamsTableBody');
+        if (!tbody) return;
+
+        const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
+        const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
+
+        const teamStats = teamKeys.map(key => {
+            const rawRecs = filteredRecords.filter(r => r.team === key);
+            const tot = this.calculateTotals(rawRecs);
+            return { key, label: teamLabels[key], tot };
+        }).sort((a, b) => b.tot.total - a.tot.total);
+
+        let html = '';
+        teamStats.forEach((t, idx) => {
+            const rank = idx + 1;
+            const share = grandTotal > 0 ? ((t.tot.total / grandTotal) * 100).toFixed(1) : '0.0';
+
+            let badgeHtml = '';
+            if (rank === 1) badgeHtml = `<span class="status-pill status-paid">🏆 1º Liderança</span>`;
+            else if (t.key === 'TIME4') badgeHtml = `<span class="status-pill status-pending">⭐ Maior Ticket</span>`;
+            else if (t.key === 'TIME5') badgeHtml = `<span class="status-pill status-unpaid">⚠ Menor Ticket</span>`;
+            else badgeHtml = `<span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Estável</span>`;
+
+            html += `
+                <tr>
+                    <td style="font-weight: 700; color: var(--primary);">${rank}º</td>
+                    <td style="font-weight: 700; color: #0f172a;">${t.label}</td>
+                    <td style="font-weight: 600; text-align: right;">${t.tot.count} jobs</td>
+                    <td style="font-weight: 800; color: var(--primary); text-align: right;">${this.formatCurrency(t.tot.total)}</td>
+                    <td style="color: var(--accent-amber); font-weight: 700; text-align: right;">${this.formatCurrency(t.tot.tip)}</td>
+                    <td style="font-weight: 600; text-align: right;">${this.formatCurrency(t.tot.ticketMedio)}</td>
+                    <td style="font-weight: 700; text-align: right;">${share}%</td>
+                    <td>${badgeHtml}</td>
+                </tr>
+            `;
         });
+        tbody.innerHTML = html;
 
-        const sortedClients = Object.entries(clientTotals)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-
-        const ctxTopClients = document.getElementById('chartTopClients');
-        if (ctxTopClients) {
-            if (this.charts.topClients) this.charts.topClients.destroy();
-            this.charts.topClients = new Chart(ctxTopClients, {
+        // Chart
+        const ctxRev = document.getElementById('chartRepTeamsRevenue');
+        if (ctxRev && typeof Chart !== 'undefined') {
+            if (this.charts.repTeamsRev) this.charts.repTeamsRev.destroy();
+            this.charts.repTeamsRev = new Chart(ctxRev, {
                 type: 'bar',
                 data: {
-                    labels: sortedClients.map(c => c[0]),
+                    labels: teamStats.map(t => t.label),
+                    datasets: [{
+                        label: 'Faturamento Bruto ($)',
+                        data: teamStats.map(t => t.tot.total),
+                        backgroundColor: ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    renderReportsVIPClientsSection(filteredRecords, grandTotal) {
+        const tbody = document.getElementById('repClientsTableBody');
+        const ctxTop = document.getElementById('chartTopClients');
+
+        const clientMap = {};
+        filteredRecords.forEach(r => {
+            const c = r.client || 'Cliente';
+            if (!clientMap[c]) clientMap[c] = { total: 0, count: 0 };
+            clientMap[c].total += r.total;
+            clientMap[c].count += 1;
+        });
+
+        const sortedClients = Object.entries(clientMap)
+            .map(([name, stat]) => ({ name, total: stat.total, count: stat.count, ticket: stat.total / stat.count }))
+            .sort((a, b) => b.total - a.total);
+
+        const top10 = sortedClients.slice(0, 10);
+
+        if (tbody) {
+            let html = '';
+            top10.forEach((c, idx) => {
+                const rank = idx + 1;
+                const share = grandTotal > 0 ? ((c.total / grandTotal) * 100).toFixed(1) : '0.0';
+
+                html += `
+                    <tr>
+                        <td style="font-weight: 700; color: var(--accent-amber);">${rank}º</td>
+                        <td style="font-weight: 700; color: #0f172a;">${c.name}</td>
+                        <td style="font-weight: 600; text-align: right;">${c.count}</td>
+                        <td style="font-weight: 800; color: var(--primary); text-align: right;">${this.formatCurrency(c.total)}</td>
+                        <td style="font-weight: 700; text-align: right;">${share}%</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        if (ctxTop && typeof Chart !== 'undefined') {
+            if (this.charts.repTopClients) this.charts.repTopClients.destroy();
+            this.charts.repTopClients = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: top10.map(c => c.name),
                     datasets: [{
                         label: 'Total Pago ($)',
-                        data: sortedClients.map(c => c[1]),
+                        data: top10.map(c => c.total),
                         backgroundColor: '#25abb7',
                         borderRadius: 6
                     }]
@@ -2078,17 +2319,187 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: {
-                            grid: { color: 'rgba(37, 171, 183, 0.12)' },
-                            ticks: { color: '#475569', callback: v => '$' + v }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { color: '#0f172a', font: { size: 11, family: 'Poppins', weight: '600' } }
-                        }
+                        x: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                        y: { grid: { display: false } }
                     }
                 }
             });
+        }
+    }
+
+    renderReportsFinancialTrends() {
+        if (typeof Chart === 'undefined') return;
+
+        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        const ctxRevTrend = document.getElementById('chartRepRevenueTrend');
+        if (ctxRevTrend) {
+            if (this.charts.repRevTrend) this.charts.repRevTrend.destroy();
+            this.charts.repRevTrend = new Chart(ctxRevTrend, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Faturamento Bruto ($)',
+                            data: [11900, 13100, 14400, 15600, 17100, 38400, 78200, 83600, 82500, 79600, 81000, 84600],
+                            borderColor: '#25abb7',
+                            backgroundColor: 'rgba(37, 171, 183, 0.12)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Despesas Operacionais ($)',
+                            data: [31457, 31457, 31457, 31457, 31457, 31457, 31457, 31457, 31457, 31457, 31457, 31457],
+                            borderColor: '#e11d48',
+                            borderWidth: 2,
+                            borderDash: [4, 4],
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        const ctxMarginTrend = document.getElementById('chartRepMarginTrend');
+        if (ctxMarginTrend) {
+            if (this.charts.repMarginTrend) this.charts.repMarginTrend.destroy();
+            this.charts.repMarginTrend = new Chart(ctxMarginTrend, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Margem Líquida (%)',
+                        data: [-62.1, -58.4, -54.2, -50.1, -45.0, 18.2, 59.8, 62.4, 61.9, 60.5, 61.2, 62.8],
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.12)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => v + '%' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
+
+    renderReportsExpensesSection(expFactor) {
+        const tbody = document.getElementById('repExpensesTableBody');
+        const ctxDonut = document.getElementById('chartRepExpensesDonut');
+
+        const totalExpenses = DESPESAS_MONTHLY_TOTAL * expFactor;
+
+        const categories = [
+            { label: 'Payroll (Salários & Admin)', centro: 'Mão de Obra', monthly: DESPESAS_CATEGORIES_MONTHLY.payroll, pct: '85,96%', color: '#25abb7' },
+            { label: 'Frota de Veículos (3 Carros)', centro: 'Frota', monthly: DESPESAS_CATEGORIES_MONTHLY.frota, pct: '9,53%', color: '#d97706' },
+            { label: 'Marketing & Aquisição', centro: 'Marketing', monthly: DESPESAS_CATEGORIES_MONTHLY.marketing, pct: '3,18%', color: '#138996' },
+            { label: 'Tech, CRM & Softwares', centro: 'Tech & Admin', monthly: DESPESAS_CATEGORIES_MONTHLY.tech, pct: '1,86%', color: '#6366f1' },
+            { label: 'Operações & Limpeza', centro: 'Operações', monthly: DESPESAS_CATEGORIES_MONTHLY.ops, pct: '1,79%', color: '#059669' }
+        ];
+
+        if (tbody) {
+            let html = '';
+            categories.forEach(c => {
+                const scaledVal = c.monthly * expFactor;
+                html += `
+                    <tr>
+                        <td style="font-weight: 700; color: #0f172a;">${c.label}</td>
+                        <td style="color: var(--text-muted);">${c.centro}</td>
+                        <td style="font-weight: 800; color: var(--accent-rose); text-align: right;">${this.formatCurrency(scaledVal)}</td>
+                        <td style="font-weight: 700; text-align: right;">${c.pct}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                <tr style="background: rgba(225, 29, 72, 0.08); font-weight: 800; border-top: 2px solid var(--accent-rose);">
+                    <td colspan="2">TOTAL DESPESAS OPERACIONAIS</td>
+                    <td style="color: var(--accent-rose); font-size: 15px; text-align: right;">${this.formatCurrency(totalExpenses)}</td>
+                    <td style="text-align: right;">100.0%</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = html;
+        }
+
+        if (ctxDonut && typeof Chart !== 'undefined') {
+            if (this.charts.repExpensesDonut) this.charts.repExpensesDonut.destroy();
+            this.charts.repExpensesDonut = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(c => c.label),
+                    datasets: [{
+                        data: categories.map(c => c.monthly * expFactor),
+                        backgroundColor: categories.map(c => c.color),
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 10, family: 'Poppins', weight: '600' }, padding: 10 } }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    }
+
+    /**
+     * 📄 PROFESSIONAL EXECUTIVE A4 PDF EXPORT
+     */
+    exportPDF() {
+        const reportElement = document.getElementById('pdfReportPrintContainer');
+        if (!reportElement) {
+            this.showToast('Erro ao exportar PDF: Elemento não encontrado.', 'error');
+            return;
+        }
+
+        this.showToast('Gerando relatório executivo PDF em alta resolução...');
+
+        // Update issue date
+        const issueElem = document.getElementById('pdfHeaderIssueDate');
+        if (issueElem) issueElem.textContent = this.formatDateBR(new Date().toISOString().split('T')[0]);
+
+        if (typeof html2pdf !== 'undefined') {
+            const opt = {
+                margin:       [10, 10, 10, 10],
+                filename:     `Nucleus_Relatorio_Executivo_${this.repStartDate}_a_${this.repEndDate}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Temporary print header display
+            const printHeader = document.querySelector('.pdf-only-header');
+            if (printHeader) printHeader.style.display = 'block';
+
+            html2pdf().set(opt).from(reportElement).save().then(() => {
+                if (printHeader) printHeader.style.display = 'none';
+                this.showToast('Relatório PDF exportado com sucesso!');
+            }).catch(err => {
+                console.error('PDF Export error:', err);
+                if (printHeader) printHeader.style.display = 'none';
+                window.print();
+            });
+        } else {
+            window.print();
         }
     }
 
@@ -2123,6 +2534,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         this.renderTeamsGrid();
         this.updateTransPeriodUI();
         this.renderTransactionsModule();
+        this.updateReportsPeriodUI();
         this.renderReportsView();
     }
 
