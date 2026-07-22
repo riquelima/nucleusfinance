@@ -83,10 +83,14 @@ class NucleusDashboardApp {
         // Flatpickr instances
         this.flatpickrs = {};
 
+        // Theme State System (Light / Notion Dark Mode System)
+        this.currentTheme = localStorage.getItem('nucleus_theme_preference') || 'light';
+
         this.init();
     }
 
     init() {
+        this.applyTheme(this.currentTheme);
         this.checkAuthSession();
         this.initFlatpickrs();
         this.bindEvents();
@@ -97,6 +101,45 @@ class NucleusDashboardApp {
         if (targetTab && this.isAuthenticated) {
             this.switchTab(targetTab);
         }
+    }
+
+    toggleTheme() {
+        this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('nucleus_theme_preference', this.currentTheme);
+        this.applyTheme(this.currentTheme);
+        this.showToast(`Modo ${this.currentTheme === 'dark' ? 'Escuro' : 'Claro'} ativado!`);
+    }
+
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const toggleBtn = document.getElementById('btnThemeToggle');
+        if (toggleBtn) {
+            toggleBtn.innerHTML = theme === 'dark' 
+                ? '<i class="fa-solid fa-sun" style="color: #f59e0b;"></i>' 
+                : '<i class="fa-solid fa-moon"></i>';
+            toggleBtn.title = theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro';
+        }
+
+        if (this.currentData && Object.keys(this.currentData).length > 0) {
+            this.renderOverviewCharts();
+            if (typeof this.renderReportsFinancialTrends === 'function') {
+                this.renderReportsFinancialTrends();
+                this.renderReportsExpensesSection();
+                this.renderReportsTeamsSection();
+            }
+        }
+    }
+
+    getChartGridColor() {
+        return this.currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(37, 171, 183, 0.12)';
+    }
+
+    getChartTickColor() {
+        return this.currentTheme === 'dark' ? '#b8b8b8' : '#475569';
+    }
+
+    getChartLegendColor() {
+        return this.currentTheme === 'dark' ? '#f5f5f5' : '#0f172a';
     }
 
     checkAuthSession() {
@@ -776,17 +819,17 @@ class NucleusDashboardApp {
                     plugins: {
                         legend: {
                             position: 'top',
-                            labels: { color: '#0f172a', font: { size: 12, family: 'Poppins', weight: '600' } }
+                            labels: { color: this.getChartLegendColor(), font: { size: 12, family: 'Poppins', weight: '600' } }
                         }
                     },
                     scales: {
                         y: {
-                            grid: { color: 'rgba(37, 171, 183, 0.12)' },
-                            ticks: { color: '#475569', callback: (v) => '$' + v.toLocaleString() }
+                            grid: { color: this.getChartGridColor() },
+                            ticks: { color: this.getChartTickColor(), callback: (v) => '$' + v.toLocaleString() }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { color: '#475569' }
+                            ticks: { color: this.getChartTickColor() }
                         }
                     }
                 }
@@ -819,7 +862,7 @@ class NucleusDashboardApp {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#0f172a', padding: 12, font: { size: 11, family: 'Poppins', weight: '600' } }
+                            labels: { color: this.getChartLegendColor(), padding: 12, font: { size: 11, family: 'Poppins', weight: '600' } }
                         }
                     },
                     cutout: '68%'
@@ -2381,9 +2424,14 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: this.getChartLegendColor(), font: { family: 'Poppins', weight: '600' } }
+                        }
+                    },
                     scales: {
-                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => '$' + v.toLocaleString() } },
-                        x: { grid: { display: false } }
+                        y: { grid: { color: this.getChartGridColor() }, ticks: { color: this.getChartTickColor(), callback: v => '$' + v.toLocaleString() } },
+                        x: { grid: { display: false }, ticks: { color: this.getChartTickColor() } }
                     }
                 }
             });
@@ -2408,9 +2456,14 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: this.getChartLegendColor(), font: { family: 'Poppins', weight: '600' } }
+                        }
+                    },
                     scales: {
-                        y: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { callback: v => v + '%' } },
-                        x: { grid: { display: false } }
+                        y: { grid: { color: this.getChartGridColor() }, ticks: { color: this.getChartTickColor(), callback: v => v + '%' } },
+                        x: { grid: { display: false }, ticks: { color: this.getChartTickColor() } }
                     }
                 }
             });
