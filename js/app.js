@@ -565,11 +565,18 @@ class NucleusDashboardApp {
     }
 
     handleLogin() {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
+        const emailElem = document.getElementById('loginEmail');
+        const passElem = document.getElementById('loginPassword');
         const alertBox = document.getElementById('loginAlert');
 
-        if (email === 'nucleus@admin.com' && password === 'nucleus2026') {
+        const email = emailElem ? emailElem.value.trim().toLowerCase() : '';
+        const password = passElem ? passElem.value.trim() : '';
+
+        // Flexible match for nucleus@admin.com / nucleus / admin with password nucleus2026
+        const isEmailValid = email === 'nucleus@admin.com' || email === 'nucleus' || email === 'admin';
+        const isPassValid = password === 'nucleus2026';
+
+        if (isEmailValid && isPassValid) {
             if (alertBox) alertBox.style.display = 'none';
 
             const splash = document.getElementById('appSplashScreen');
