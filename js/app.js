@@ -967,9 +967,9 @@ class NucleusDashboardApp {
             
             let badgeHtml = '';
             if (key === maxRevenueTeam) {
-                badgeHtml = `<span class="status-pill status-paid"><i class="fa-solid fa-trophy"></i> 🏆 Maior Faturamento</span>`;
+                badgeHtml = `<span class="status-pill status-paid"><i class="fa-solid fa-trophy"></i> Maior Faturamento</span>`;
             } else if (key === maxTicketTeam) {
-                badgeHtml = `<span class="status-pill status-pending"><i class="fa-solid fa-star"></i> 💰 Maior Ticket</span>`;
+                badgeHtml = `<span class="status-pill status-star"><i class="fa-solid fa-star"></i> Maior Ticket</span>`;
             } else if (key === 'TIME5') {
                 badgeHtml = `<span class="status-pill status-unpaid"><i class="fa-solid fa-lightbulb"></i> Oportunidade</span>`;
             } else {
