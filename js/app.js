@@ -1,7 +1,7 @@
 /**
  * Nucleus Cleaning Services - Executive Dashboard Engine
  * Default Mode: Visão Geral pre-selected to 'daily' (Dia) with Today's Date dynamically initialized.
- * 100% Dynamic Engine for Visão Geral & Aba Equipes Executiva BI Expansion.
+ * 100% Dynamic Engine for Visão Geral, Aba Equipes Executiva BI Expansion & Módulo de Transações (Entradas & Saídas).
  */
 
 // Audit Base Monthly Expenses (Aba Despesas)
@@ -15,17 +15,38 @@ const DESPESAS_CATEGORIES_MONTHLY = {
     ops: 562.00         // 1.79%
 };
 
+// Detailed Expense Items Generator for Saídas Sub-Tab
+const DESPESAS_DETAILED_ITEMS = [
+    { category: 'Payroll', desc: 'Pro-labore & Salários Administração', centro: 'Mão de Obra', monthly: 25240.00, paid_by: 'ACH / Direct Deposit', status: 'PAID' },
+    { category: 'Payroll', desc: 'Helpers extras / Gestão de campo', centro: 'Mão de Obra', monthly: 1000.00, paid_by: 'Transferência Bancária', status: 'PAID' },
+    { category: 'Payroll', desc: 'Gastos extras com Helpers (Overtime)', centro: 'Mão de Obra', monthly: 800.00, paid_by: 'Cartão Corporativo', status: 'PAID' },
+    
+    { category: 'Frota', desc: 'Financiamento / Prestação dos 3 veículos', centro: 'Frota', monthly: 1586.00, paid_by: 'Débito Automático', status: 'PAID' },
+    { category: 'Frota', desc: 'Seguro Comercial da Frota (3 carros)', centro: 'Frota', monthly: 713.00, paid_by: 'Débito Automático', status: 'PAID' },
+    { category: 'Frota', desc: 'Combustível / Gasolina mensal', centro: 'Frota', monthly: 600.00, paid_by: 'Cartão Combustível', status: 'PAID' },
+    { category: 'Frota', desc: 'Manutenção de veículos + Pedágio (EZ Pass)', centro: 'Frota', monthly: 100.00, paid_by: 'Cartão Corporativo', status: 'PAID' },
+    
+    { category: 'Marketing', desc: 'Anúncios Thumbtack, Google LSA & Ads', centro: 'Marketing', monthly: 1000.00, paid_by: 'Cartão Crédito Admin', status: 'PAID' },
+    
+    { category: 'Tech', desc: 'Taxas de Processamento de Pgto (Venmo/Apps)', centro: 'Tech & Softwares', monthly: 200.00, paid_by: 'Retenção Automática', status: 'PAID' },
+    { category: 'Tech', desc: 'CRM Especializado Maidpad', centro: 'Tech & Softwares', monthly: 90.00, paid_by: 'Cartão Crédito Admin', status: 'PAID' },
+    { category: 'Tech', desc: 'Telefonia & Internet Operacional', centro: 'Tech & Softwares', monthly: 72.50, paid_by: 'Débito Automático', status: 'PAID' },
+    { category: 'Tech', desc: 'Assinaturas AI & Mídia (Canva, ChatGPT, Beside IA)', centro: 'Tech & Softwares', monthly: 82.99, paid_by: 'Cartão Crédito Admin', status: 'PAID' },
+    { category: 'Tech', desc: 'Cursos & Capacitação Profissional', centro: 'Tech & Softwares', monthly: 71.91, paid_by: 'Cartão Crédito Admin', status: 'PAID' },
+    { category: 'Tech', desc: 'Liability Insurance (Seguro Responsabilidade)', centro: 'Tech & Softwares', monthly: 68.88, paid_by: 'Débito Automático', status: 'PAID' },
+    
+    { category: 'Operações', desc: 'Insumos & Produtos de Limpeza Profissional', centro: 'Operações', monthly: 200.00, paid_by: 'Cartão Corporativo', status: 'PAID' },
+    { category: 'Operações', desc: 'Uniformes / EPIs da Equipe de Campo', centro: 'Operações', monthly: 200.00, paid_by: 'Cartão Corporativo', status: 'PAID' },
+    { category: 'Operações', desc: 'Manutenção de Equipamentos & Mops', centro: 'Operações', monthly: 130.00, paid_by: 'Cartão Corporativo', status: 'PAID' },
+    { category: 'Operações', desc: 'Lavanderia de Panos & Microfibras', centro: 'Operações', monthly: 32.00, paid_by: 'Dinheiro', status: 'PAID' }
+];
+
 class NucleusDashboardApp {
     constructor() {
         // App State
         this.currentData = window.INITIAL_SHEET_DATA || {};
         this.activeTab = 'login';
         this.isAuthenticated = false;
-        this.selectedTeamFilter = 'ALL';
-        this.selectedStatusFilter = 'ALL';
-        this.searchQuery = '';
-        this.currentPage = 1;
-        this.pageSize = 15;
         this.charts = {};
 
         // MiniMax API Subscription Key
@@ -41,6 +62,18 @@ class NucleusDashboardApp {
         this.teamsPeriodMode = 'annual';
         this.teamsSelectedDate = todayStr;
         this.teamsSelectedMonth = todayStr.substring(0, 7);
+
+        // Transações Module State (Sub-Tabs: Entradas vs Saídas)
+        this.transActiveSubtab = 'entradas';
+        this.transPeriodMode = 'annual';
+        this.transSelectedDate = todayStr;
+        this.transSelectedMonth = todayStr.substring(0, 7);
+        this.transSelectedTeam = 'ALL';
+        this.transSelectedCategory = 'ALL';
+        this.transSelectedStatus = 'ALL';
+        this.transSearchQuery = '';
+        this.transCurrentPage = 1;
+        this.transPageSize = 15;
 
         // Flatpickr instances
         this.flatpickrs = {};
@@ -80,6 +113,7 @@ class NucleusDashboardApp {
 
         const localePt = flatpickr.l10ns && flatpickr.l10ns.pt ? flatpickr.l10ns.pt : 'default';
 
+        // 1. Overview Datepicker & Monthpicker
         const ovDateElem = document.getElementById('overviewDateInput');
         if (ovDateElem) {
             this.flatpickrs.ovDate = flatpickr(ovDateElem, {
@@ -112,6 +146,7 @@ class NucleusDashboardApp {
             });
         }
 
+        // 2. Teams Datepicker & Monthpicker
         const teamsDateElem = document.getElementById('teamsDateInput');
         if (teamsDateElem) {
             this.flatpickrs.teamsDate = flatpickr(teamsDateElem, {
@@ -143,6 +178,39 @@ class NucleusDashboardApp {
                 }
             });
         }
+
+        // 3. Transações Datepicker & Monthpicker
+        const transDateElem = document.getElementById('transDateInput');
+        if (transDateElem) {
+            this.flatpickrs.transDate = flatpickr(transDateElem, {
+                locale: localePt,
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: this.transSelectedDate,
+                onChange: (selectedDates, dateStr) => {
+                    this.transSelectedDate = dateStr;
+                    this.updateTransPeriodUI();
+                    this.renderTransactionsModule();
+                }
+            });
+        }
+
+        const transMonthElem = document.getElementById('transMonthInput');
+        if (transMonthElem) {
+            const plugins = (typeof monthSelectPlugin !== 'undefined') ? [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y" })] : [];
+            this.flatpickrs.transMonth = flatpickr(transMonthElem, {
+                locale: localePt,
+                dateFormat: 'Y-m',
+                defaultDate: this.transSelectedMonth,
+                plugins: plugins,
+                onChange: (selectedDates, dateStr) => {
+                    this.transSelectedMonth = dateStr;
+                    this.updateTransPeriodUI();
+                    this.renderTransactionsModule();
+                }
+            });
+        }
     }
 
     bindEvents() {
@@ -154,6 +222,7 @@ class NucleusDashboardApp {
             });
         }
 
+        // Overview Mode Buttons
         const ovModeBtns = document.querySelectorAll('.overview-mode-btn');
         ovModeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -165,6 +234,7 @@ class NucleusDashboardApp {
             });
         });
 
+        // Teams Mode Buttons
         const teamModeBtns = document.querySelectorAll('.period-mode-btn');
         teamModeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -176,30 +246,68 @@ class NucleusDashboardApp {
             });
         });
 
-        const teamFilter = document.getElementById('tableTeamFilter');
+        // Transações Sub-Tabs Switcher (Entradas vs Saídas)
+        const subtabBtns = document.querySelectorAll('.trans-subtab-btn');
+        subtabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subtabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.transActiveSubtab = btn.getAttribute('data-subtab');
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
+            });
+        });
+
+        // Transações Period Mode Buttons
+        const transModeBtns = document.querySelectorAll('.trans-mode-btn');
+        transModeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                transModeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.transPeriodMode = btn.getAttribute('data-mode');
+                this.transCurrentPage = 1;
+                this.updateTransPeriodUI();
+                this.renderTransactionsModule();
+            });
+        });
+
+        // Transações Team Filter
+        const teamFilter = document.getElementById('transTeamFilterSelect');
         if (teamFilter) {
             teamFilter.addEventListener('change', (e) => {
-                this.selectedTeamFilter = e.target.value;
-                this.currentPage = 1;
-                this.renderTransactionsTable();
+                this.transSelectedTeam = e.target.value;
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
             });
         }
 
-        const statusFilter = document.getElementById('tableStatusFilter');
+        // Transações Category Filter
+        const categoryFilter = document.getElementById('transCategoryFilterSelect');
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', (e) => {
+                this.transSelectedCategory = e.target.value;
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
+            });
+        }
+
+        // Transações Status Filter
+        const statusFilter = document.getElementById('transStatusFilterSelect');
         if (statusFilter) {
             statusFilter.addEventListener('change', (e) => {
-                this.selectedStatusFilter = e.target.value;
-                this.currentPage = 1;
-                this.renderTransactionsTable();
+                this.transSelectedStatus = e.target.value;
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
             });
         }
 
+        // Search Input
         const searchInput = document.getElementById('tableSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase().trim();
-                this.currentPage = 1;
-                this.renderTransactionsTable();
+                this.transSearchQuery = e.target.value.toLowerCase().trim();
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
             });
         }
     }
@@ -290,6 +398,45 @@ class NucleusDashboardApp {
         if (tableLabel) tableLabel.textContent = labelText;
     }
 
+    updateTransPeriodUI() {
+        const dateInputContainer = document.getElementById('transDateInputContainer');
+        const monthInputContainer = document.getElementById('transMonthInputContainer');
+        const subtitleLabel = document.getElementById('transPeriodSubtitle');
+
+        let labelText = '';
+
+        if (this.transPeriodMode === 'daily') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `${this.formatDateBR(this.transSelectedDate)}`;
+        } else if (this.transPeriodMode === 'weekly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+
+            const selDateObj = new Date(this.transSelectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+
+            const startStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endStr = lastDayOfWeek.toISOString().split('T')[0];
+
+            labelText = `Semana 30 • ${this.formatDateBR(startStr)} até ${this.formatDateBR(endStr)}`;
+        } else if (this.transPeriodMode === 'monthly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'flex';
+            labelText = `${this.formatMonthLabel(this.transSelectedMonth)}`;
+        } else {
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `Consolidação Anual 2026`;
+        }
+
+        if (subtitleLabel) subtitleLabel.textContent = labelText;
+    }
+
     handleLogin() {
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
@@ -336,7 +483,8 @@ class NucleusDashboardApp {
             this.updateTeamsPeriodUI();
             this.renderTeamsGrid();
         } else if (tabId === 'transacoes') {
-            this.renderTransactionsTable();
+            this.updateTransPeriodUI();
+            this.renderTransactionsModule();
         } else if (tabId === 'relatorios') {
             this.renderReportsView();
         }
@@ -478,7 +626,6 @@ class NucleusDashboardApp {
         if (typeof Chart === 'undefined') return;
 
         const records = this.getAllRecords();
-
         const months = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12'];
         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
@@ -1000,9 +1147,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
     }
 
-    /**
-     * 👥 TEAMS TAB RENDERER (COMPLIANT WITH EXECUTIVE BI EXPANSION)
-     */
     renderTeamsGrid() {
         const teamsContainer = document.getElementById('teamsGridContainer');
         const comparativeTbody = document.getElementById('teamsComparativeTbody');
@@ -1044,7 +1188,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             teamTotalsList.push({ key, label: teamLabels[key], tot, filteredRecs });
         });
 
-        // 1. Render 5 Top Team Cards (Intacto)
         let cardsHtml = '';
         teamTotalsList.forEach(({ key, label, tot }) => {
             cardsHtml += `
@@ -1083,7 +1226,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         });
         teamsContainer.innerHTML = cardsHtml;
 
-        // 2. Render Comparative Table (Intacto)
         if (comparativeTbody) {
             let tableHtml = '';
             teamTotalsList.forEach(({ key, label, tot }) => {
@@ -1092,19 +1234,19 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 tableHtml += `
                     <tr>
                         <td style="font-weight: 700;">
-                            <span class="team-jobs-badge">${label}</span>
+                            <span class="team-jobs-badge" style="width: 68px; justify-content: center;">${label}</span>
                         </td>
-                        <td style="font-weight: 600;">${tot.count} serviços</td>
-                        <td style="font-weight: 600;">${this.formatCurrency(tot.subtotal)}</td>
-                        <td style="color: var(--accent-amber); font-weight: 700;">${this.formatCurrency(tot.tip)}</td>
-                        <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
-                        <td style="color: var(--primary); font-weight: 800; font-size: 14px;">${this.formatCurrency(tot.total)}</td>
+                        <td style="font-weight: 600; text-align: right;">${tot.count} serviços</td>
+                        <td style="font-weight: 600; text-align: right;">${this.formatCurrency(tot.subtotal)}</td>
+                        <td style="color: var(--accent-amber); font-weight: 700; text-align: right;">${this.formatCurrency(tot.tip)}</td>
+                        <td style="font-weight: 600; text-align: right;">${this.formatCurrency(tot.ticketMedio)}</td>
+                        <td style="color: var(--primary); font-weight: 800; font-size: 14px; text-align: right;">${this.formatCurrency(tot.total)}</td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="flex: 1; height: 8px; background: rgba(37, 171, 183, 0.15); border-radius: 4px; overflow: hidden;">
+                                <div style="width: 80px; height: 8px; background: rgba(37, 171, 183, 0.15); border-radius: 4px; overflow: hidden; flex-shrink: 0;">
                                     <div style="width: ${sharePct}%; height: 100%; background: var(--primary); border-radius: 4px;"></div>
                                 </div>
-                                <span style="font-weight: 700; font-size: 11px; min-width: 40px;">${sharePct}%</span>
+                                <span style="font-weight: 700; font-size: 11px; min-width: 40px; text-align: right;">${sharePct}%</span>
                             </div>
                         </td>
                     </tr>
@@ -1118,21 +1260,20 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const avgTicket = allCount > 0 ? (allTotal / allCount) : 0;
 
             tableHtml += `
-                <tr style="background: rgba(37, 171, 183, 0.1); font-weight: 800; border-top: 2px solid var(--primary);">
+                <tr style="background: rgba(37, 171, 183, 0.12); font-weight: 800; border-top: 2px solid var(--primary);">
                     <td>TOTAL CONSOLIDADOS</td>
-                    <td>${allCount} serviços</td>
-                    <td>${this.formatCurrency(allSubtotal)}</td>
-                    <td style="color: var(--accent-amber);">${this.formatCurrency(allTip)}</td>
-                    <td>${this.formatCurrency(avgTicket)}</td>
-                    <td><span style="color: var(--primary); font-size: 15px;">${this.formatCurrency(allTotal)}</span></td>
-                    <td>100.0%</td>
+                    <td style="text-align: right;">${allCount} serviços</td>
+                    <td style="text-align: right;">${this.formatCurrency(allSubtotal)}</td>
+                    <td style="color: var(--accent-amber); text-align: right;">${this.formatCurrency(allTip)}</td>
+                    <td style="text-align: right;">${this.formatCurrency(avgTicket)}</td>
+                    <td style="text-align: right;"><span style="color: var(--primary); font-size: 15px;">${this.formatCurrency(allTotal)}</span></td>
+                    <td style="text-align: right;">100.0%</td>
                 </tr>
             `;
 
             comparativeTbody.innerHTML = tableHtml;
         }
 
-        // 🚀 3. TRIGGER EXECUTIVE BI EXPANSION FOR TEAMS TAB (12 SECTIONS)
         this.renderTeamsRanking(teamTotalsList, grandTotalAllTeamsInPeriod);
         this.renderTeamProfileCards(teamTotalsList, grandTotalAllTeamsInPeriod);
         this.renderTeamsBICharts(teamTotalsList);
@@ -1144,9 +1285,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         this.renderTeamsExecutiveSummary(teamTotalsList, grandTotalAllTeamsInPeriod);
     }
 
-    /**
-     * 🏆 1. RANKING DAS EQUIPES (OURO, PRATA, BRONZE)
-     */
     renderTeamsRanking(teamTotalsList, grandTotalAllTeamsInPeriod) {
         const tbody = document.getElementById('teamsRankingTbody');
         if (!tbody) return;
@@ -1176,10 +1314,10 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 <tr class="${rowClass}">
                     <td>${posBadge}</td>
                     <td style="font-weight: 700; color: #0f172a;">${item.label}</td>
-                    <td style="font-weight: 800; color: var(--primary); font-size: 14px;">${this.formatCurrency(item.tot.total)}</td>
-                    <td style="font-weight: 700;">${share}%</td>
-                    <td style="font-weight: 600;">${this.formatCurrency(item.tot.ticketMedio)}</td>
-                    <td style="font-weight: 600;">${item.tot.count} agendamentos</td>
+                    <td style="font-weight: 800; color: var(--primary); font-size: 14px; text-align: right;">${this.formatCurrency(item.tot.total)}</td>
+                    <td style="font-weight: 700; text-align: right;">${share}%</td>
+                    <td style="font-weight: 600; text-align: right;">${this.formatCurrency(item.tot.ticketMedio)}</td>
+                    <td style="font-weight: 600; text-align: right;">${item.tot.count} agendamentos</td>
                 </tr>
             `;
         });
@@ -1187,9 +1325,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         tbody.innerHTML = html;
     }
 
-    /**
-     * 👤 2. PERFIL DAS EQUIPES & CLIENTE ÂNCORA (5 CARDS GRANDES)
-     */
     renderTeamProfileCards(teamTotalsList, grandTotalAllTeamsInPeriod) {
         const container = document.getElementById('teamProfileCardsContainer');
         if (!container) return;
@@ -1231,7 +1366,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         teamTotalsList.forEach(({ key, label, tot, filteredRecs }) => {
             const meta = profilesMeta[key] || {};
 
-            // Calculate Anchor Client (Principal Cliente do Time no período)
             const clientCounts = {};
             filteredRecs.forEach(r => {
                 const c = r.client || 'Cliente';
@@ -1242,7 +1376,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const clientJobsCount = filteredRecs.filter(r => r.client === topClient[0]).length;
             const clientTeamShare = tot.total > 0 ? ((topClient[1] / tot.total) * 100).toFixed(1) : '0.0';
 
-            // Badges automáticas
             let badgesHtml = '';
             if (key === 'TIME2') badgesHtml += `<span class="status-pill status-paid">🏆 Maior Faturamento</span> `;
             if (key === 'TIME4') badgesHtml += `<span class="status-pill status-pending">⭐ Melhor Ticket</span> <span class="status-pill status-paid">❤️ 76% Tips</span> `;
@@ -1293,16 +1426,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         container.innerHTML = html;
     }
 
-    /**
-     * 📊 3. COMPARATIVO VISUAL ENTRE EQUIPES (4 GRÁFICOS BI)
-     */
     renderTeamsBICharts(teamTotalsList) {
         if (typeof Chart === 'undefined') return;
 
         const labels = teamTotalsList.map(t => t.label);
         const colors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
 
-        // Chart 1: Revenue Bar Chart
         const ctxRev = document.getElementById('chartBIRevenueBar');
         if (ctxRev) {
             if (this.charts.biRev) this.charts.biRev.destroy();
@@ -1329,7 +1458,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             });
         }
 
-        // Chart 2: Ticket Médio Horizontal Bar Chart
         const ctxTicket = document.getElementById('chartBITicketHorizontal');
         if (ctxTicket) {
             if (this.charts.biTicket) this.charts.biTicket.destroy();
@@ -1357,7 +1485,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             });
         }
 
-        // Chart 3: Volume Bar Chart
         const ctxVol = document.getElementById('chartBIVolumeBar');
         if (ctxVol) {
             if (this.charts.biVol) this.charts.biVol.destroy();
@@ -1384,7 +1511,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             });
         }
 
-        // Chart 4: Tips Bar Chart (Destaque Time 4 76%)
         const ctxTips = document.getElementById('chartBITipsBar');
         if (ctxTips) {
             if (this.charts.biTips) this.charts.biTips.destroy();
@@ -1412,9 +1538,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
     }
 
-    /**
-     * ⚡ 4. PERFORMANCE STRIP MINI CARDS
-     */
     renderTeamsPerformanceStrip(teamTotalsList, grandTotalAllTeamsInPeriod) {
         let topRev = teamTotalsList[0];
         let topTicket = teamTotalsList[0];
@@ -1443,9 +1566,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         document.getElementById('biCompanyAvg').textContent = `${this.formatCurrency(avgCompanyTicket)} / job`;
     }
 
-    /**
-     * 📉 5. COMPARAÇÃO COM A MÉDIA DA EMPRESA (BENCHMARK TABLE)
-     */
     renderTeamsBenchmarkTable(teamTotalsList, grandTotalAllTeamsInPeriod) {
         const tbody = document.getElementById('teamsBenchmarkTbody');
         if (!tbody) return;
@@ -1472,15 +1592,15 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             html += `
                 <tr>
                     <td style="font-weight: 700; color: #0f172a;">${label}</td>
-                    <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
-                    <td style="font-weight: 700; color: ${ticketDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">
+                    <td style="font-weight: 600; text-align: right;">${this.formatCurrency(tot.ticketMedio)}</td>
+                    <td style="font-weight: 700; color: ${ticketDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'}; text-align: right;">
                         ${ticketDiff >= 0 ? '+' : ''}${this.formatCurrency(ticketDiff)}
                     </td>
-                    <td style="font-weight: 700;">${this.formatCurrency(tot.total)}</td>
-                    <td style="font-weight: 700; color: ${revDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">
+                    <td style="font-weight: 700; text-align: right;">${this.formatCurrency(tot.total)}</td>
+                    <td style="font-weight: 700; color: ${revDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'}; text-align: right;">
                         ${revDiff >= 0 ? '+' : ''}${this.formatCurrency(revDiff)}
                     </td>
-                    <td style="font-weight: 700; color: var(--primary);">${sharePct}%</td>
+                    <td style="font-weight: 700; color: var(--primary); text-align: right;">${sharePct}%</td>
                     <td>${statusBadge}</td>
                 </tr>
             `;
@@ -1489,9 +1609,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         tbody.innerHTML = html;
     }
 
-    /**
-     * 🎯 6. RADAR DE PERFORMANCE MULTI-EIXOS
-     */
     renderTeamsRadarChart(teamTotalsList) {
         if (typeof Chart === 'undefined') return;
 
@@ -1522,7 +1639,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         teamTotalsList.forEach(({ key, label, tot }) => {
             if (selectedKey !== 'ALL' && selectedKey !== key) return;
 
-            // Normalized scores 0 to 100 for radar rendering
             const ticketScore = Math.min(100, (tot.ticketMedio / 200) * 100);
             const volScore = Math.min(100, (tot.count / 600) * 100);
             const revScore = Math.min(100, (tot.total / 110000) * 100);
@@ -1551,9 +1667,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         });
     }
 
-    /**
-     * 🍩 7. DONUT DE FATURAMENTO DAS EQUIPES
-     */
     renderTeamsDonutChart(teamTotalsList) {
         if (typeof Chart === 'undefined') return;
 
@@ -1587,9 +1700,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         });
     }
 
-    /**
-     * 📈 8. EVOLUÇÃO TEMPORAL MENSAL DAS EQUIPES (LINE TREND CHART)
-     */
     renderTeamsTrendChart() {
         if (typeof Chart === 'undefined') return;
 
@@ -1637,9 +1747,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         });
     }
 
-    /**
-     * 📋 9. RESUMO EXECUTIVO DINÂMICO DA ABA EQUIPES
-     */
     renderTeamsExecutiveSummary(teamTotalsList, grandTotalAllTeamsInPeriod) {
         const container = document.getElementById('teamsExecutiveSummaryContent');
         if (!container) return;
@@ -1663,38 +1770,118 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         `;
     }
 
-    renderTransactionsTable() {
+    /**
+     * 💳 TRANSAÇÕES MODULE RENDERER (SUB-TABS: ENTRADAS & SAÍDAS)
+     */
+    renderTransactionsModule() {
+        const entradasGroup = document.getElementById('entradasFilterGroup');
+        const saidasGroup = document.getElementById('saidasFilterGroup');
+        const entradasTable = document.getElementById('entradasTablePanel');
+        const saidasTable = document.getElementById('saidasTablePanel');
+
+        if (this.transActiveSubtab === 'entradas') {
+            if (entradasGroup) entradasGroup.style.display = 'flex';
+            if (saidasGroup) saidasGroup.style.display = 'none';
+            if (entradasTable) entradasTable.style.display = 'block';
+            if (saidasTable) saidasTable.style.display = 'none';
+
+            this.renderEntradasTransactions();
+        } else {
+            if (entradasGroup) entradasGroup.style.display = 'none';
+            if (saidasGroup) saidasGroup.style.display = 'flex';
+            if (entradasTable) entradasTable.style.display = 'none';
+            if (saidasTable) saidasTable.style.display = 'block';
+
+            this.renderSaidasExpenses();
+        }
+    }
+
+    renderEntradasTransactions() {
         const tbody = document.getElementById('transactionsTbody');
+        const summaryContainer = document.getElementById('transSummaryCardsContainer');
         if (!tbody) return;
 
         let records = this.getAllRecords();
 
-        if (this.selectedTeamFilter !== 'ALL') {
-            records = records.filter(r => r.team === this.selectedTeamFilter);
+        // 1. Filter by Period
+        if (this.transPeriodMode === 'daily') {
+            records = records.filter(r => r.date === this.transSelectedDate);
+        } else if (this.transPeriodMode === 'weekly') {
+            const selDateObj = new Date(this.transSelectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+
+            const startStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endStr = lastDayOfWeek.toISOString().split('T')[0];
+            records = records.filter(r => r.date >= startStr && r.date <= endStr);
+        } else if (this.transPeriodMode === 'monthly') {
+            records = records.filter(r => r.date.startsWith(this.transSelectedMonth));
+        } else {
+            records = records.filter(r => r.date.startsWith('2026'));
         }
 
-        if (this.selectedStatusFilter !== 'ALL') {
-            records = records.filter(r => (r.status || 'PAID').toUpperCase() === this.selectedStatusFilter.toUpperCase());
+        // 2. Render Mini Summary Cards for Entradas
+        const grandPeriodTotal = records.reduce((acc, r) => acc + r.total, 0);
+        const teamKeys = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
+        const teamLabels = { 'TIME1': 'Time 1', 'TIME2': 'Time 2', 'TIME3': 'Time 3', 'TIME4': 'Time 4', 'TIME5': 'Time 5' };
+
+        if (summaryContainer) {
+            let cardsHtml = `
+                <div class="health-mini-card glass-panel ${this.transSelectedTeam === 'ALL' ? 'health-mini-card-highlight' : ''}">
+                    <span class="health-label"><i class="fa-solid fa-dollar-sign" style="color: var(--accent-emerald);"></i> Receita Total Entradas</span>
+                    <span class="health-val" style="color: var(--accent-emerald);">${this.formatCurrency(grandPeriodTotal)}</span>
+                </div>
+            `;
+
+            teamKeys.forEach(key => {
+                const teamRecs = records.filter(r => r.team === key);
+                const teamTot = teamRecs.reduce((acc, r) => acc + r.total, 0);
+                const isSelected = this.transSelectedTeam === key;
+
+                cardsHtml += `
+                    <div class="health-mini-card glass-panel ${isSelected ? 'health-mini-card-highlight' : ''}">
+                        <span class="health-label">${teamLabels[key]}</span>
+                        <span class="health-val" style="color: #0f172a;">${this.formatCurrency(teamTot)}</span>
+                    </div>
+                `;
+            });
+
+            summaryContainer.innerHTML = cardsHtml;
         }
 
-        if (this.searchQuery) {
-            records = records.filter(r => 
-                (r.client && r.client.toLowerCase().includes(this.searchQuery)) ||
-                (r.trans_type && r.trans_type.toLowerCase().includes(this.searchQuery)) ||
-                (r.notes && r.notes.toLowerCase().includes(this.searchQuery)) ||
-                (r.date && r.date.includes(this.searchQuery))
+        // 3. Filter by Selected Team & Status & Search Query
+        let tableRecords = [...records];
+
+        if (this.transSelectedTeam !== 'ALL') {
+            tableRecords = tableRecords.filter(r => r.team === this.transSelectedTeam);
+        }
+
+        if (this.transSelectedStatus !== 'ALL') {
+            tableRecords = tableRecords.filter(r => (r.status || 'PAID').toUpperCase() === this.transSelectedStatus.toUpperCase());
+        }
+
+        if (this.transSearchQuery) {
+            tableRecords = tableRecords.filter(r => 
+                (r.client && r.client.toLowerCase().includes(this.transSearchQuery)) ||
+                (r.trans_type && r.trans_type.toLowerCase().includes(this.transSearchQuery)) ||
+                (r.notes && r.notes.toLowerCase().includes(this.transSearchQuery)) ||
+                (r.date && r.date.includes(this.transSearchQuery))
             );
         }
 
-        const totalItems = records.length;
-        const totalPages = Math.ceil(totalItems / this.pageSize) || 1;
-        if (this.currentPage > totalPages) this.currentPage = totalPages;
+        // 4. Pagination
+        const totalItems = tableRecords.length;
+        const totalPages = Math.ceil(totalItems / this.transPageSize) || 1;
+        if (this.transCurrentPage > totalPages) this.transCurrentPage = totalPages;
 
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        const paginatedRecords = records.slice(startIndex, startIndex + this.pageSize);
+        const startIndex = (this.transCurrentPage - 1) * this.transPageSize;
+        const paginatedRecords = tableRecords.slice(startIndex, startIndex + this.transPageSize);
 
         if (paginatedRecords.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhum agendamento encontrado com os filtros selecionados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhum faturamento encontrado para os filtros aplicados.</td></tr>`;
         } else {
             let html = '';
             paginatedRecords.forEach(r => {
@@ -1707,9 +1894,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                         <td><span class="team-jobs-badge">${r.team}</span></td>
                         <td style="font-weight: 700; color: #0f172a;">${r.client}</td>
                         <td>${r.trans_type || 'Cleaning'}</td>
-                        <td style="font-weight: 600;">${this.formatCurrency(r.subtotal)}</td>
-                        <td style="color: var(--accent-amber); font-weight: 600;">${this.formatCurrency(r.tip)}</td>
-                        <td style="color: var(--primary); font-weight: 800;">${this.formatCurrency(r.total)}</td>
+                        <td style="font-weight: 600; text-align: right;">${this.formatCurrency(r.subtotal)}</td>
+                        <td style="color: var(--accent-amber); font-weight: 600; text-align: right;">${this.formatCurrency(r.tip)}</td>
+                        <td style="color: var(--primary); font-weight: 800; text-align: right;">${this.formatCurrency(r.total)}</td>
                         <td><span class="status-pill ${statusClass}">${r.status || 'PAID'}</span></td>
                         <td style="color: var(--text-muted);">${r.paid_by || 'Dinheiro/Cartão'}</td>
                     </tr>
@@ -1718,31 +1905,142 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             tbody.innerHTML = html;
         }
 
-        document.getElementById('tablePaginationInfo').textContent = `Exibindo ${startIndex + 1} - ${Math.min(startIndex + this.pageSize, totalItems)} de ${totalItems} agendamentos`;
-        document.getElementById('btnPrevPage').disabled = this.currentPage <= 1;
-        document.getElementById('btnNextPage').disabled = this.currentPage >= totalPages;
-        document.getElementById('pageNumberDisplay').textContent = `Página ${this.currentPage} de ${totalPages}`;
+        document.getElementById('tablePaginationInfo').textContent = `Exibindo ${totalItems > 0 ? startIndex + 1 : 0} - ${Math.min(startIndex + this.transPageSize, totalItems)} de ${totalItems} registros de faturamento`;
+        document.getElementById('btnPrevPage').disabled = this.transCurrentPage <= 1;
+        document.getElementById('btnNextPage').disabled = this.transCurrentPage >= totalPages;
+        document.getElementById('pageNumberDisplay').textContent = `Página ${this.transCurrentPage} de ${totalPages}`;
+    }
+
+    renderSaidasExpenses() {
+        const tbody = document.getElementById('expensesTbody');
+        const summaryContainer = document.getElementById('transSummaryCardsContainer');
+        if (!tbody) return;
+
+        // Pro-rata factor for Expenses based on Period Mode
+        let expFactor = 12;
+        if (this.transPeriodMode === 'daily') expFactor = 1 / 30;
+        else if (this.transPeriodMode === 'weekly') expFactor = 7 / 30;
+        else if (this.transPeriodMode === 'monthly') expFactor = 1;
+
+        // Render Summary Mini-Cards for Saídas
+        const totalDespesasPeriod = DESPESAS_MONTHLY_TOTAL * expFactor;
+
+        if (summaryContainer) {
+            const categories = [
+                { key: 'Payroll', label: 'Payroll', val: DESPESAS_CATEGORIES_MONTHLY.payroll * expFactor },
+                { key: 'Frota', label: 'Frota', val: DESPESAS_CATEGORIES_MONTHLY.frota * expFactor },
+                { key: 'Marketing', label: 'Marketing', val: DESPESAS_CATEGORIES_MONTHLY.marketing * expFactor },
+                { key: 'Tech', label: 'Tech & CRM', val: DESPESAS_CATEGORIES_MONTHLY.tech * expFactor },
+                { key: 'Operações', label: 'Operações', val: DESPESAS_CATEGORIES_MONTHLY.ops * expFactor }
+            ];
+
+            let cardsHtml = `
+                <div class="health-mini-card glass-panel ${this.transSelectedCategory === 'ALL' ? 'health-mini-card-highlight' : ''}">
+                    <span class="health-label"><i class="fa-solid fa-arrow-down-short-wide" style="color: var(--accent-rose);"></i> Despesa Total Saídas</span>
+                    <span class="health-val" style="color: var(--accent-rose);">${this.formatCurrency(totalDespesasPeriod)}</span>
+                </div>
+            `;
+
+            categories.forEach(cat => {
+                const isSelected = this.transSelectedCategory === cat.key;
+                cardsHtml += `
+                    <div class="health-mini-card glass-panel ${isSelected ? 'health-mini-card-highlight' : ''}">
+                        <span class="health-label">${cat.label}</span>
+                        <span class="health-val" style="color: #0f172a;">${this.formatCurrency(cat.val)}</span>
+                    </div>
+                `;
+            });
+
+            summaryContainer.innerHTML = cardsHtml;
+        }
+
+        // Scaled Items for Saídas Table
+        let scaledItems = DESPESAS_DETAILED_ITEMS.map(item => ({
+            ...item,
+            scaledValue: item.monthly * expFactor,
+            date: this.transSelectedDate
+        }));
+
+        // Filter by Selected Category
+        if (this.transSelectedCategory !== 'ALL') {
+            scaledItems = scaledItems.filter(item => item.category === this.transSelectedCategory);
+        }
+
+        // Search Query Filter
+        if (this.transSearchQuery) {
+            scaledItems = scaledItems.filter(item => 
+                item.desc.toLowerCase().includes(this.transSearchQuery) ||
+                item.category.toLowerCase().includes(this.transSearchQuery) ||
+                item.centro.toLowerCase().includes(this.transSearchQuery)
+            );
+        }
+
+        // Pagination
+        const totalItems = scaledItems.length;
+        const totalPages = Math.ceil(totalItems / this.transPageSize) || 1;
+        if (this.transCurrentPage > totalPages) this.transCurrentPage = totalPages;
+
+        const startIndex = (this.transCurrentPage - 1) * this.transPageSize;
+        const paginatedItems = scaledItems.slice(startIndex, startIndex + this.transPageSize);
+
+        if (paginatedItems.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhuma despesa encontrada para os filtros aplicados.</td></tr>`;
+        } else {
+            let html = '';
+            paginatedItems.forEach(item => {
+                html += `
+                    <tr>
+                        <td style="font-weight: 600;">${this.formatDateBR(item.date)}</td>
+                        <td><span class="status-pill status-unpaid" style="font-size: 11px;">${item.category}</span></td>
+                        <td style="font-weight: 700; color: #0f172a;">${item.desc}</td>
+                        <td style="color: var(--text-muted);">${item.centro}</td>
+                        <td style="color: var(--accent-rose); font-weight: 800; text-align: right;">${this.formatCurrency(item.scaledValue)}</td>
+                        <td style="color: var(--text-muted);">${item.paid_by}</td>
+                        <td><span class="status-pill status-paid">${item.status}</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        document.getElementById('tablePaginationInfo').textContent = `Exibindo ${totalItems > 0 ? startIndex + 1 : 0} - ${Math.min(startIndex + this.transPageSize, totalItems)} de ${totalItems} registros de despesas`;
+        document.getElementById('btnPrevPage').disabled = this.transCurrentPage <= 1;
+        document.getElementById('btnNextPage').disabled = this.transCurrentPage >= totalPages;
+        document.getElementById('pageNumberDisplay').textContent = `Página ${this.transCurrentPage} de ${totalPages}`;
     }
 
     changePage(delta) {
-        this.currentPage += delta;
-        this.renderTransactionsTable();
+        this.transCurrentPage += delta;
+        this.renderTransactionsModule();
     }
 
     exportCSV() {
-        const records = this.getAllRecords();
-        let csv = 'Data,Equipe,Cliente,Tipo,Subtotal,Tip,Total,Status,FormaPagamento\n';
+        if (this.transActiveSubtab === 'entradas') {
+            const records = this.getAllRecords();
+            let csv = 'Data,Equipe,Cliente,Tipo,Subtotal,Tip,Total,Status,FormaPagamento\n';
+            records.forEach(r => {
+                csv += `"${r.date}","${r.team}","${r.client.replace(/"/g, '""')}","${r.trans_type}","${r.subtotal}","${r.tip}","${r.total}","${r.status}","${r.paid_by}"\n`;
+            });
 
-        records.forEach(r => {
-            csv += `"${r.date}","${r.team}","${r.client.replace(/"/g, '""')}","${r.trans_type}","${r.subtotal}","${r.tip}","${r.total}","${r.status}","${r.paid_by}"\n`;
-        });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Nucleus_Entradas_Faturamento_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            this.showToast('Relatório CSV de Entradas exportado com sucesso!');
+        } else {
+            let csv = 'Data,Categoria,Descricao,CentroDeCusto,Valor,FormaPagamento,Status\n';
+            DESPESAS_DETAILED_ITEMS.forEach(item => {
+                csv += `"${this.transSelectedDate}","${item.category}","${item.desc.replace(/"/g, '""')}","${item.centro}","${item.monthly}","${item.paid_by}","${item.status}"\n`;
+            });
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `Nucleus_Cleaning_Financeiro_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        this.showToast('Relatório CSV exportado com sucesso!');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Nucleus_Saidas_Despesas_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            this.showToast('Relatório CSV de Saídas exportado com sucesso!');
+        }
     }
 
     renderReportsView() {
@@ -1822,7 +2120,8 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         this.renderOverviewCharts();
         this.updateTeamsPeriodUI();
         this.renderTeamsGrid();
-        this.renderTransactionsTable();
+        this.updateTransPeriodUI();
+        this.renderTransactionsModule();
         this.renderReportsView();
     }
 

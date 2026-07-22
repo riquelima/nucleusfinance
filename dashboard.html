@@ -622,11 +622,11 @@
                                 <thead>
                                     <tr>
                                         <th>Equipe</th>
-                                        <th>Agendamentos</th>
-                                        <th>Subtotal Serviços (Col G)</th>
-                                        <th>Gorjetas / Tips (Col J)</th>
-                                        <th>Ticket Médio</th>
-                                        <th>Total Pago Cliente (Col L)</th>
+                                        <th class="text-right">Agendamentos</th>
+                                        <th class="text-right">Subtotal Serviços (Col G)</th>
+                                        <th class="text-right">Gorjetas / Tips (Col J)</th>
+                                        <th class="text-right">Ticket Médio</th>
+                                        <th class="text-right">Total Pago Cliente (Col L)</th>
                                         <th>Participação (%)</th>
                                     </tr>
                                 </thead>
@@ -653,10 +653,10 @@
                                     <tr>
                                         <th>Posição</th>
                                         <th>Equipe</th>
-                                        <th>Faturamento ($)</th>
-                                        <th>Participação (%)</th>
-                                        <th>Ticket Médio ($)</th>
-                                        <th>Agendamentos</th>
+                                        <th class="text-right">Faturamento ($)</th>
+                                        <th class="text-right">Participação (%)</th>
+                                        <th class="text-right">Ticket Médio ($)</th>
+                                        <th class="text-right">Agendamentos</th>
                                     </tr>
                                 </thead>
                                 <tbody id="teamsRankingTbody">
@@ -703,7 +703,7 @@
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title"><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> 👤 Perfil Operacional & Cliente Âncora das 5 Equipes</h3>
                         </div>
-                        <div id="teamProfileCardsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+                        <div id="teamProfileCardsContainer" class="team-profile-grid">
                             <!-- Loaded dynamically via app.js -->
                         </div>
                     </div>
@@ -786,11 +786,11 @@
                                 <thead>
                                     <tr>
                                         <th>Equipe</th>
-                                        <th>Ticket Médio ($)</th>
-                                        <th>Diferença p/ Média ($)</th>
-                                        <th>Receita Total ($)</th>
-                                        <th>Diferença p/ Média ($)</th>
-                                        <th>Participação (%)</th>
+                                        <th class="text-right">Ticket Médio ($)</th>
+                                        <th class="text-right">Diferença p/ Média ($)</th>
+                                        <th class="text-right">Receita Total ($)</th>
+                                        <th class="text-right">Diferença p/ Média ($)</th>
+                                        <th class="text-right">Participação (%)</th>
                                         <th>Status do Desempenho</th>
                                     </tr>
                                 </thead>
@@ -865,40 +865,104 @@
                             <h3 class="chart-title"><i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i> 📋 Resumo Executivo das Equipes</h3>
                         </div>
                         <div id="teamsExecutiveSummaryContent" class="executive-summary-text">
-                            O <strong>Time 2</strong> permanece como principal motor financeiro da empresa, respondendo por aproximadamente <strong>23,5% do faturamento anual ($109.315,00)</strong>. O <strong>Time 4</strong> apresenta o maior ticket médio (<strong>$188,39</strong>) e concentra a maior parte das gorjetas (<strong>76% das tips</strong>), indicando elevado nível de satisfação dos clientes. Já o <strong>Time 5</strong> representa a maior oportunidade de crescimento, pois mantém um alto volume de atendimentos (560 jobs), porém com o menor ticket médio (<strong>$163,72</strong>). Ajustes na precificação podem elevar em <strong>+$13.815,00/ano</strong> a lucratividade sem necessidade de expansão operacional.
+                            O <strong>Time 2</strong> permanece como principal motor financeiro da empresa, respondendo por aproximadamente <strong>23,5% do faturamento anual ($109.315,00)</strong> no período selecionado. O <strong>Time 4</strong> apresenta o maior ticket médio (<strong>$188,39</strong>) e o <strong>Time 4</strong> concentra a maior parte das gorjetas (<strong>$238,00 em tips</strong>), indicando elevado nível de satisfação dos clientes. Já o <strong>Time 5</strong> representa a maior oportunidade de crescimento, pois mantém um alto volume de atendimentos (560 jobs), porém com o menor ticket médio (<strong>$163,72</strong>). Ajustes na precificação podem elevar significativamente a lucratividade sem necessidade de expansão operacional.
                         </div>
                     </div>
 
                 </div>
             </section>
 
-            <!-- TAB 3: AGENDAMENTOS E TRANSAÇÕES -->
+            <!-- TAB 3: AGENDAMENTOS & MÓDULO FINANCEIRO DE TRANSAÇÕES (ENTRADAS & SAÍDAS) -->
             <section id="view-transacoes" class="view-section">
                 <div class="container">
+                    
+                    <!-- Top Header -->
                     <header class="top-header glass-panel">
                         <div class="brand-title">
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
-                                <h1>Agendamentos & Transações Auditadas</h1>
-                                <p>Mapeamento completo dos dados extraídos do Google Sheets</p>
+                                <h1>Módulo Financeiro & Transações</h1>
+                                <p>Gestão auditada de entradas (faturamento) e saídas (despesas operacionais)</p>
                             </div>
                         </div>
                         <div class="header-actions">
-                            <button class="btn-primary" onclick="window.app.exportCSV()">
+                            <button class="btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;" onclick="window.app.exportCSV()">
                                 <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                            </button>
+                            <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
+                                <i class="fa-solid fa-power-off"></i>
                             </button>
                         </div>
                     </header>
 
+                    <!-- Sub-Tab Switcher Bar (Entradas vs Saídas) -->
+                    <div class="glass-panel" style="padding: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-radius: var(--radius-lg);">
+                        <div class="trans-subtabs-group" style="display: flex; gap: 6px;">
+                            <button type="button" class="trans-subtab-btn active" data-subtab="entradas">
+                                <i class="fa-solid fa-circle-arrow-down" style="color: var(--accent-emerald);"></i> 💰 Entradas (Faturamento)
+                            </button>
+                            <button type="button" class="trans-subtab-btn" data-subtab="saidas">
+                                <i class="fa-solid fa-circle-arrow-up" style="color: var(--accent-rose);"></i> 💸 Saídas (Despesas Operacionais)
+                            </button>
+                        </div>
+
+                        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); padding-right: 12px;">
+                            <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Controle Financeiro Auditado
+                        </div>
+                    </div>
+
+                    <!-- Unified Period Filter Controls Bar -->
+                    <div class="period-bar glass-panel">
+                        <div class="period-title">
+                            <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Período de Análise das Transações
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div class="period-mode-group">
+                                <button type="button" class="trans-mode-btn" data-mode="daily">📅 Dia</button>
+                                <button type="button" class="trans-mode-btn" data-mode="weekly">🗓️ Semana</button>
+                                <button type="button" class="trans-mode-btn" data-mode="monthly">📆 Mês</button>
+                                <button type="button" class="trans-mode-btn active" data-mode="annual">🏆 Anual</button>
+                            </div>
+
+                            <div id="transDateInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <input type="text" id="transDateInput" class="custom-flatpickr-input" placeholder="Selecionar data...">
+                                </div>
+                            </div>
+
+                            <div id="transMonthInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Mês:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <input type="text" id="transMonthInput" class="custom-flatpickr-input" placeholder="Selecionar mês...">
+                                </div>
+                            </div>
+
+                            <div id="transPeriodSubtitle" class="period-subtitle-badge">
+                                Consolidação Anual 2026
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Summary Mini-Cards Line (Entradas / Saídas) -->
+                    <div id="transSummaryCardsContainer" class="business-health-strip" style="margin-bottom: 24px;">
+                        <!-- Loaded dynamically via app.js -->
+                    </div>
+
+                    <!-- Main Table Panel -->
                     <div class="table-panel glass-panel">
                         <div class="table-header-controls">
                             <div class="search-box">
                                 <i class="fa-solid fa-magnifying-glass"></i>
-                                <input type="text" id="tableSearchInput" placeholder="Buscar por cliente, tipo ou data...">
+                                <input type="text" id="tableSearchInput" placeholder="Buscar por cliente, descrição, tipo ou data...">
                             </div>
 
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <select id="tableTeamFilter" class="input-select" style="height: 38px;">
+                            <!-- Dynamic Filter Dropdowns (Entradas vs Saídas) -->
+                            <div id="entradasFilterGroup" style="display: flex; gap: 12px; align-items: center;">
+                                <select id="transTeamFilterSelect" class="input-select" style="height: 38px;">
                                     <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
                                     <option value="TIME1">Time 1</option>
                                     <option value="TIME2">Time 2</option>
@@ -907,16 +971,28 @@
                                     <option value="TIME5">Time 5</option>
                                 </select>
 
-                                <select id="tableStatusFilter" class="input-select" style="height: 38px;">
+                                <select id="transStatusFilterSelect" class="input-select" style="height: 38px;">
                                     <option value="ALL">Todos os Status</option>
                                     <option value="PAID">PAID (Pago)</option>
                                     <option value="UNPAID">UNPAID (Pendente)</option>
                                     <option value="PENDING">PENDING</option>
                                 </select>
                             </div>
+
+                            <div id="saidasFilterGroup" style="display: none; gap: 12px; align-items: center;">
+                                <select id="transCategoryFilterSelect" class="input-select" style="height: 38px;">
+                                    <option value="ALL">Todas as Categorias</option>
+                                    <option value="Payroll">Mão de Obra (Payroll)</option>
+                                    <option value="Frota">Frota de Veículos</option>
+                                    <option value="Marketing">Marketing & Aquisição</option>
+                                    <option value="Tech">Tech, CRM & Softwares</option>
+                                    <option value="Operações">Operações & Limpeza</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="table-responsive">
+                        <!-- Entradas Table -->
+                        <div id="entradasTablePanel" class="table-responsive">
                             <table class="custom-table">
                                 <thead>
                                     <tr>
@@ -924,9 +1000,9 @@
                                         <th>Equipe</th>
                                         <th>Cliente (Col C)</th>
                                         <th>Tipo Serviço</th>
-                                        <th>Subtotal (Col G)</th>
-                                        <th>Tip (Col J)</th>
-                                        <th>Total Pago (Col L)</th>
+                                        <th class="text-right">Subtotal (Col G)</th>
+                                        <th class="text-right">Tip (Col J)</th>
+                                        <th class="text-right">Total Pago (Col L)</th>
                                         <th>Status (Col F)</th>
                                         <th>Forma Pgto</th>
                                     </tr>
@@ -937,15 +1013,36 @@
                             </table>
                         </div>
 
-                        <div class="table-pagination">
-                            <span id="tablePaginationInfo">Exibindo 0 - 0 de 0</span>
+                        <!-- Saídas Table (Expenses) -->
+                        <div id="saidasTablePanel" class="table-responsive" style="display: none;">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Categoria</th>
+                                        <th>Descrição do Item</th>
+                                        <th>Centro de Custo</th>
+                                        <th class="text-right">Valor ($)</th>
+                                        <th>Forma Pgto</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expensesTbody">
+                                    <!-- Loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-pagination" style="margin-top: 18px;">
+                            <span id="tablePaginationInfo">Exibindo 0 - 0 de 0 registros</span>
                             <div class="pagination-controls">
-                                <button id="btnPrevPage" class="page-btn" onclick="window.app.changePage(-1)"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
-                                <span id="pageNumberDisplay" style="align-self: center; font-weight: 600; padding: 0 8px;">Página 1</span>
-                                <button id="btnNextPage" class="page-btn" onclick="window.app.changePage(1)">Próxima <i class="fa-solid fa-chevron-right"></i></button>
+                                <button id="btnPrevPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(-1)"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+                                <span id="pageNumberDisplay" style="align-self: center; font-weight: 600; padding: 0 12px; font-size: 13px;">Página 1 de 1</span>
+                                <button id="btnNextPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(1)">Próxima <i class="fa-solid fa-chevron-right"></i></button>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 

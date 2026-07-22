@@ -756,13 +756,20 @@ body {
 /* Teams Cards Grid (Tab Equipes) */
 .teams-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
     margin-bottom: 28px;
 }
 
+@media (max-width: 1440px) {
+    .teams-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+}
+@media (max-width: 768px) {
+    .teams-grid { grid-template-columns: 1fr; }
+}
+
 .team-card {
-    padding: 22px;
+    padding: 20px;
     border-radius: var(--radius-lg);
     background: #ffffff;
     border: 1px solid var(--border-color);
@@ -770,6 +777,11 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow-glass);
     transition: transform 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 220px;
+    height: 100%;
 }
 
 .team-card:hover {
@@ -781,20 +793,23 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    height: 42px;
 }
 
 .team-avatar {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(37, 171, 183, 0.25);
+    flex-shrink: 0;
 }
 
 .team-1 { background: linear-gradient(135deg, #25abb7, #1d949f); }
@@ -805,55 +820,67 @@ body {
 
 .team-name {
     font-family: 'Montserrat', sans-serif;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     color: #0f172a;
     white-space: nowrap;
+    line-height: 1.2;
 }
 
 .team-jobs-badge {
     background: rgba(37, 171, 183, 0.12);
     border: 1px solid rgba(37, 171, 183, 0.25);
-    padding: 3px 10px;
+    padding: 0 10px;
+    height: 24px;
     border-radius: var(--radius-full);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--accent-cyan);
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .team-metrics {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 14px;
-    padding-top: 14px;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid var(--border-color);
+    flex: 1;
+    justify-content: space-between;
 }
 
 .team-metric-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
+    font-size: 12px;
     white-space: nowrap;
 }
 
 .team-metric-label {
     color: var(--text-muted);
+    font-weight: 500;
 }
 
 .team-metric-val {
     font-weight: 700;
     color: var(--text-main);
+    text-align: right;
 }
 
 .team-metric-total {
     font-family: 'Montserrat', sans-serif;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--primary);
+    text-align: right;
+    white-space: nowrap;
 }
+
 
 /* Data Table Component */
 .table-panel {
@@ -928,6 +955,33 @@ body {
     border-bottom: 1px solid rgba(37, 171, 183, 0.12);
     color: var(--text-main);
     white-space: nowrap;
+}
+
+.custom-table th.text-right,
+.custom-table td.text-right {
+    text-align: right !important;
+}
+
+/* Automatic right-alignment for monetary and numerical columns in team tables */
+#teamsComparativeTbody td:nth-child(2),
+#teamsComparativeTbody td:nth-child(3),
+#teamsComparativeTbody td:nth-child(4),
+#teamsComparativeTbody td:nth-child(5),
+#teamsComparativeTbody td:nth-child(6),
+#teamsRankingTbody td:nth-child(3),
+#teamsRankingTbody td:nth-child(4),
+#teamsRankingTbody td:nth-child(5),
+#teamsRankingTbody td:nth-child(6),
+#teamsBenchmarkTbody td:nth-child(2),
+#teamsBenchmarkTbody td:nth-child(3),
+#teamsBenchmarkTbody td:nth-child(4),
+#teamsBenchmarkTbody td:nth-child(5),
+#teamsBenchmarkTbody td:nth-child(6) {
+    text-align: right;
+}
+
+#teamsComparativeTbody tr:last-child td:nth-child(n+2) {
+    text-align: right;
 }
 
 .custom-table tbody tr {
@@ -1181,6 +1235,16 @@ body {
     border-left: 4px solid var(--accent-amber);
 }
 
+.team-profile-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 1440px) {
+    .team-profile-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+}
+
 .team-profile-card {
     background: #ffffff;
     border-radius: var(--radius-lg);
@@ -1246,4 +1310,41 @@ body {
     color: var(--accent-rose);
     border: 1px solid rgba(225, 29, 72, 0.3);
 }
+
+/* Transações Sub-Tabs Styling (Entradas vs Saídas) */
+.trans-subtab-btn {
+    background: transparent;
+    border: none;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.trans-subtab-btn:hover {
+    color: var(--primary);
+    background: rgba(37, 171, 183, 0.08);
+}
+
+.trans-subtab-btn.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.health-mini-card-highlight {
+    background: rgba(37, 171, 183, 0.12) !important;
+    border: 1px solid var(--primary) !important;
+    box-shadow: 0 4px 12px rgba(37, 171, 183, 0.25) !important;
+}
+
 
