@@ -2528,7 +2528,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const syncBtn = document.getElementById('btnSyncSheets');
         if (syncBtn) {
             syncBtn.disabled = true;
-            syncBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sincronizando...`;
+            syncBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
         }
 
         try {
@@ -2542,7 +2542,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         } finally {
             if (syncBtn) {
                 syncBtn.disabled = false;
-                syncBtn.innerHTML = `<i class="fa-solid fa-rotate"></i> Sincronizar Planilha`;
+                syncBtn.innerHTML = `<i class="fa-solid fa-rotate"></i>`;
             }
         }
     }
