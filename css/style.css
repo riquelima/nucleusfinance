@@ -116,31 +116,27 @@ body {
     box-shadow: 0 12px 32px rgba(37, 171, 183, 0.12);
 }
 
-/* Brand Logo Image Styling */
+/* Brand Logo Image Styling (Transparent PNG) */
 .brand-logo-img {
     object-fit: contain;
-    border-radius: 12px;
+    filter: drop-shadow(0 2px 8px rgba(37, 171, 183, 0.25));
+    transition: transform 0.3s ease;
+}
+
+.brand-logo-img:hover {
+    transform: scale(1.04);
 }
 
 .header-logo-img {
-    height: 42px;
+    height: 48px;
     width: auto;
-    background: #ffffff;
-    padding: 4px 8px;
-    border-radius: 10px;
-    border: 1px solid rgba(37, 171, 183, 0.3);
 }
 
 .login-logo-img {
-    height: 72px;
+    height: 84px;
     width: auto;
     margin: 0 auto 20px auto;
     display: block;
-    background: #ffffff;
-    padding: 8px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(37, 171, 183, 0.3);
-    box-shadow: var(--shadow-glow);
 }
 
 /* Header & Top Bar */
@@ -1484,4 +1480,148 @@ body {
         font-size: 10px !important;
         gap: 6px !important;
     }
+}
+
+/* Ultra-Modern Animated Login Splashscreen Overlay */
+.splash-screen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.splash-screen-overlay.splash-fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+}
+
+.splash-logo-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.splash-pulse-ring {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(37, 171, 183, 0.25);
+    animation: splashGlowRing 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.splash-pulse-ring-outer {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: 2px dashed rgba(37, 171, 183, 0.4);
+    animation: splashRotateRing 10s linear infinite;
+}
+
+.splash-logo-img {
+    width: 105px;
+    height: 105px;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 0 20px rgba(37, 171, 183, 0.8));
+    animation: splashLogoEnter 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.splash-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    animation: splashTextFade 1.4s ease forwards;
+}
+
+.splash-subtitle {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 28px;
+    animation: splashTextFade 1.6s ease forwards;
+}
+
+.splash-loader-bar {
+    width: 240px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(37, 171, 183, 0.3);
+}
+
+.splash-loader-progress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), #10b981);
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(37, 171, 183, 0.8);
+    animation: splashProgressBar 2.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes splashLogoEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(30px);
+        filter: blur(12px) drop-shadow(0 0 0px rgba(37, 171, 183, 0));
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.08) translateY(-4px);
+        filter: blur(0px) drop-shadow(0 0 25px rgba(37, 171, 183, 0.9));
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0px) drop-shadow(0 0 20px rgba(37, 171, 183, 0.8));
+    }
+}
+
+@keyframes splashGlowRing {
+    0% { transform: scale(0.8); opacity: 0.2; }
+    50% { transform: scale(1.35); opacity: 0.6; }
+    100% { transform: scale(0.8); opacity: 0.2; }
+}
+
+@keyframes splashRotateRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes splashTextFade {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashProgressBar {
+    0% { width: 0%; }
+    100% { width: 100%; }
 }

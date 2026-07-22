@@ -527,13 +527,33 @@ class NucleusDashboardApp {
         const alertBox = document.getElementById('loginAlert');
 
         if (email === 'nucleus@admin.com' && password === 'nucleus2026') {
-            this.isAuthenticated = true;
-            sessionStorage.setItem('nucleus_auth_logged_in', 'true');
             if (alertBox) alertBox.style.display = 'none';
-            
-            document.getElementById('bottomNavBar').style.display = 'flex';
-            this.switchTab('overview');
-            this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
+
+            const splash = document.getElementById('appSplashScreen');
+            if (splash) {
+                splash.style.display = 'flex';
+                splash.classList.remove('splash-fade-out');
+
+                setTimeout(() => {
+                    this.isAuthenticated = true;
+                    sessionStorage.setItem('nucleus_auth_logged_in', 'true');
+                    
+                    document.getElementById('bottomNavBar').style.display = 'flex';
+                    this.switchTab('overview');
+
+                    splash.classList.add('splash-fade-out');
+                    setTimeout(() => {
+                        splash.style.display = 'none';
+                        this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
+                    }, 500);
+                }, 2500);
+            } else {
+                this.isAuthenticated = true;
+                sessionStorage.setItem('nucleus_auth_logged_in', 'true');
+                document.getElementById('bottomNavBar').style.display = 'flex';
+                this.switchTab('overview');
+                this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
+            }
         } else {
             if (alertBox) {
                 alertBox.textContent = 'E-mail ou senha incorretos. Utilize nucleus@admin.com / nucleus2026';
