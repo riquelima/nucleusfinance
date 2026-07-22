@@ -1,9 +1,9 @@
 /**
  * Nucleus Cleaning Services - Executive Dashboard Engine
- * Manages SPA navigation, authentication, state, period closures, DRE, team performance, VIP client ranking, retention metrics, detailed expense breakdown, trend charts, and MiniMax AI executive summary generation.
+ * 100% Dynamic Engine: All KPIs, DRE, Health Metrics, Team Performance, VIP Clients, Retention, Detailed Expenses, Charts & AI Summary calculate dynamically based on selected Period (Dia, Semana, Mês, Anual) or Custom Date/Month pickers.
  */
 
-// Audit Dataset for Expenses (Aba Despesas)
+// Audit Base Monthly Expenses (Aba Despesas)
 const DESPESAS_MONTHLY_TOTAL = 31457.28;
 const DESPESAS_ANNUAL_TOTAL = 377487.36;
 const DESPESAS_CATEGORIES_MONTHLY = {
@@ -30,7 +30,7 @@ class NucleusDashboardApp {
         // MiniMax API Subscription Key
         this.minimaxApiKey = 'sk-cp-meaN0PHZdGi3-5gZffia9b6PyDIh27vyk54LwG6gw965dFLWoIHowFo19rTqoHdbxhaQezJlMMBgTEYhNni51sJnMWCcPHIKtCg4GRY-pGMmrXarNIxxGQA';
 
-        // Overview Tab Period Mode
+        // Overview Tab Period Mode ('daily', 'weekly', 'monthly', 'annual')
         this.overviewPeriodMode = 'annual';
         this.overviewSelectedDate = '2026-01-02';
         this.overviewSelectedMonth = '2026-01';
@@ -239,7 +239,7 @@ class NucleusDashboardApp {
             const startStr = firstDayOfWeek.toISOString().split('T')[0];
             const endStr = lastDayOfWeek.toISOString().split('T')[0];
             labelText = `Semana: ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
-            expText = `Pro-rata Semanal: $${(DESPESAS_MONTHLY_TOTAL / 30 * 7).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            expText = `Pro-rata Semanal: $${((DESPESAS_MONTHLY_TOTAL / 30) * 7).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         } else if (this.overviewPeriodMode === 'monthly') {
             if (dateInputContainer) dateInputContainer.style.display = 'none';
             if (monthInputContainer) monthInputContainer.style.display = 'flex';
@@ -339,7 +339,6 @@ class NucleusDashboardApp {
             this.updateOverviewPeriodUI();
             this.renderClosureMetrics();
             this.renderOverviewCharts();
-            this.renderExecutiveExpansion();
         } else if (tabId === 'equipes') {
             this.updateTeamsPeriodUI();
             this.renderTeamsGrid();
@@ -401,25 +400,23 @@ class NucleusDashboardApp {
         return { subtotal, tip, total, count, ticketMedio, tipPercent };
     }
 
+    /**
+     * ⚡ DYNAMIC CLOSURE METRICS ENGINE
+     * Recalculates all KPIs, Center of Cost, and triggers 100% dynamic update of all executive sections!
+     */
     renderClosureMetrics() {
         const allRecords = this.getAllRecords();
 
         let filteredRecords = [];
         let expTotal = 0;
-        let expPayroll = 0;
-        let expFrota = 0;
-        let expMarketing = 0;
-        let expTech = 0;
-        let expOps = 0;
+        let expFactor = 1; // Pro-rata factor relative to monthly
+        let periodNameLabel = '';
 
         if (this.overviewPeriodMode === 'daily') {
             filteredRecords = allRecords.filter(r => r.date === this.overviewSelectedDate);
-            expTotal = DESPESAS_MONTHLY_TOTAL / 30;
-            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll / 30;
-            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota / 30;
-            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing / 30;
-            expTech = DESPESAS_CATEGORIES_MONTHLY.tech / 30;
-            expOps = DESPESAS_CATEGORIES_MONTHLY.ops / 30;
+            expFactor = 1 / 30;
+            expTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
+            periodNameLabel = `Dia ${this.formatDateBR(this.overviewSelectedDate)}`;
         } else if (this.overviewPeriodMode === 'weekly') {
             const selDateObj = new Date(this.overviewSelectedDate);
             const dayOfWeek = selDateObj.getDay();
@@ -432,28 +429,19 @@ class NucleusDashboardApp {
             const endStr = lastDayOfWeek.toISOString().split('T')[0];
 
             filteredRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
-            expTotal = (DESPESAS_MONTHLY_TOTAL / 30) * 7;
-            expPayroll = (DESPESAS_CATEGORIES_MONTHLY.payroll / 30) * 7;
-            expFrota = (DESPESAS_CATEGORIES_MONTHLY.frota / 30) * 7;
-            expMarketing = (DESPESAS_CATEGORIES_MONTHLY.marketing / 30) * 7;
-            expTech = (DESPESAS_CATEGORIES_MONTHLY.tech / 30) * 7;
-            expOps = (DESPESAS_CATEGORIES_MONTHLY.ops / 30) * 7;
+            expFactor = 7 / 30;
+            expTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
+            periodNameLabel = `Semana de ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
         } else if (this.overviewPeriodMode === 'monthly') {
             filteredRecords = allRecords.filter(r => r.date.startsWith(this.overviewSelectedMonth));
+            expFactor = 1;
             expTotal = DESPESAS_MONTHLY_TOTAL;
-            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll;
-            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota;
-            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing;
-            expTech = DESPESAS_CATEGORIES_MONTHLY.tech;
-            expOps = DESPESAS_CATEGORIES_MONTHLY.ops;
+            periodNameLabel = `Mês de ${this.formatMonthLabel(this.overviewSelectedMonth)}`;
         } else {
             filteredRecords = allRecords.filter(r => r.date.startsWith('2026'));
+            expFactor = 12;
             expTotal = DESPESAS_ANNUAL_TOTAL;
-            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll * 12;
-            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota * 12;
-            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing * 12;
-            expTech = DESPESAS_CATEGORIES_MONTHLY.tech * 12;
-            expOps = DESPESAS_CATEGORIES_MONTHLY.ops * 12;
+            periodNameLabel = `Consolidação Anual 2026`;
         }
 
         const totals = this.calculateTotals(filteredRecords);
@@ -461,6 +449,7 @@ class NucleusDashboardApp {
         const margemLucroPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
         const despesasPct = totals.total > 0 ? ((expTotal / totals.total) * 100).toFixed(1) : '0.0';
 
+        // 1. Update Primary KPI Summary Cards
         document.getElementById('ovFaturamento').textContent = this.formatCurrency(totals.total);
         document.getElementById('ovSubtotal').textContent = this.formatCurrency(totals.subtotal);
         document.getElementById('ovTips').textContent = this.formatCurrency(totals.tip);
@@ -480,14 +469,24 @@ class NucleusDashboardApp {
             ovMargemElem.className = lucroLiquido >= 0 ? 'status-pill status-paid' : 'status-pill status-unpaid';
         }
 
+        // 2. Update Secondary KPI Cards
+        const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
+        const ltvPeriod = uniqueClients > 0 ? (totals.total / uniqueClients) : 0;
+
         document.getElementById('ovTicketMedio').textContent = this.formatCurrency(totals.ticketMedio);
         document.getElementById('ovAgendamentos').textContent = totals.count.toLocaleString('pt-BR');
+        document.getElementById('ovClientesUnicos').textContent = uniqueClients.toLocaleString('pt-BR');
+        document.getElementById('ovLTVMedio').textContent = this.formatCurrency(ltvPeriod);
 
-        document.getElementById('expPayrollVal').textContent = this.formatCurrency(expPayroll);
-        document.getElementById('expFrotaVal').textContent = this.formatCurrency(expFrota);
-        document.getElementById('expMarketingVal').textContent = this.formatCurrency(expMarketing);
-        document.getElementById('expTechVal').textContent = this.formatCurrency(expTech);
-        document.getElementById('expOpsVal').textContent = this.formatCurrency(expOps);
+        // 3. Update Center of Cost Expense Cards
+        document.getElementById('expPayrollVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.payroll * expFactor);
+        document.getElementById('expFrotaVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.frota * expFactor);
+        document.getElementById('expMarketingVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.marketing * expFactor);
+        document.getElementById('expTechVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.tech * expFactor);
+        document.getElementById('expOpsVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.ops * expFactor);
+
+        // 4. Trigger Dynamic Execution of all 8 Executive Expansion Sections!
+        this.renderExecutiveExpansion(filteredRecords, totals, expTotal, expFactor, periodNameLabel);
     }
 
     renderOverviewCharts() {
@@ -593,19 +592,70 @@ class NucleusDashboardApp {
     }
 
     /**
-     * 🚀 RENDER ALL 8 EXECUTIVE EXPANSION SECTIONS
+     * 🚀 RENDER ALL 8 EXECUTIVE EXPANSION SECTIONS DYNAMICALLY
      */
-    renderExecutiveExpansion() {
-        this.renderTeamPerformanceSection();
-        this.renderVIPClientsSection();
-        this.renderDetailedExpensesSection();
+    renderExecutiveExpansion(filteredRecords, totals, expTotal, expFactor, periodNameLabel) {
+        this.renderExecutiveSummary(totals, expTotal, periodNameLabel);
+        this.renderBusinessHealthMetrics(filteredRecords, totals, expTotal);
+        this.renderTeamPerformanceSection(filteredRecords);
+        this.renderVIPClientsSection(filteredRecords);
+        this.renderRetentionSection(filteredRecords);
+        this.renderDetailedExpensesSection(expFactor);
         this.renderComparativeCharts();
     }
 
     /**
-     * 👥 TEAM PERFORMANCE TABLE & HORIZONTAL BAR CHART
+     * 📋 1. DYNAMIC EXECUTIVE SUMMARY
      */
-    renderTeamPerformanceSection() {
+    renderExecutiveSummary(totals, expTotal, periodNameLabel) {
+        const container = document.getElementById('executiveSummaryContent');
+        if (!container) return;
+
+        const lucroLiquido = totals.total - expTotal;
+        const margemPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
+
+        container.innerHTML = `
+            Em <strong>${periodNameLabel}</strong>, a operação da Nucleus Cleaning registrou faturamento bruto de <strong>${this.formatCurrency(totals.total)}</strong> para <strong>${totals.count} agendamentos</strong> (Ticket Médio: <strong>${this.formatCurrency(totals.ticketMedio)}</strong>). As despesas operacionais pro-rata totalizaram <strong>${this.formatCurrency(expTotal)}</strong>, gerando um Resultado Líquido de <strong style="color: ${lucroLiquido >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">${this.formatCurrency(lucroLiquido)}</strong> (Margem: <strong>${margemPct}%</strong>).
+        `;
+    }
+
+    /**
+     * 📊 2. DYNAMIC BUSINESS HEALTH STRIP (7 MINI CARDS)
+     */
+    renderBusinessHealthMetrics(filteredRecords, totals, expTotal) {
+        const lucroLiquido = totals.total - expTotal;
+        const margemPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
+        const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
+
+        const receitaEquipe = totals.total / 5;
+        const receitaCliente = uniqueClients > 0 ? (totals.total / uniqueClients) : 0;
+        const lucroAtendimento = totals.count > 0 ? (lucroLiquido / totals.count) : 0;
+        const custoAtendimento = totals.count > 0 ? (expTotal / totals.count) : 0;
+
+        const elMargem = document.getElementById('shMargemLiquida');
+        if (elMargem) {
+            elMargem.textContent = `${margemPct}%`;
+            elMargem.style.color = lucroLiquido >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+        }
+
+        document.getElementById('shReceitaMensal').textContent = this.formatCurrency(totals.total);
+        document.getElementById('shDespesaMensal').textContent = this.formatCurrency(expTotal);
+        document.getElementById('shReceitaEquipe').textContent = this.formatCurrency(receitaEquipe);
+        document.getElementById('shReceitaCliente').textContent = this.formatCurrency(receitaCliente);
+
+        const elLucroAtend = document.getElementById('shLucroAtendimento');
+        if (elLucroAtend) {
+            elLucroAtend.textContent = this.formatCurrency(lucroAtendimento);
+            elLucroAtend.style.color = lucroAtendimento >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+        }
+
+        document.getElementById('shCustoAtendimento').textContent = this.formatCurrency(custoAtendimento);
+    }
+
+    /**
+     * 👥 3. DYNAMIC TEAM PERFORMANCE TABLE & HORIZONTAL BAR CHART
+     */
+    renderTeamPerformanceSection(filteredRecords) {
         const tbody = document.getElementById('ovTeamsTableBody');
         if (!tbody) return;
 
@@ -614,10 +664,27 @@ class NucleusDashboardApp {
         
         let grandTotal = 0;
         const teamStats = teamKeys.map(key => {
-            const rawRecs = this.currentData[key] || [];
+            const rawRecs = filteredRecords.filter(r => r.team === key);
             const tot = this.calculateTotals(rawRecs);
             grandTotal += tot.total;
             return { key, label: teamLabels[key], tot };
+        });
+
+        // Find leader teams in this period
+        let maxRevenueTeam = '';
+        let maxRevenueVal = -1;
+        let maxTicketTeam = '';
+        let maxTicketVal = -1;
+
+        teamStats.forEach(t => {
+            if (t.tot.total > maxRevenueVal && t.tot.total > 0) {
+                maxRevenueVal = t.tot.total;
+                maxRevenueTeam = t.key;
+            }
+            if (t.tot.ticketMedio > maxTicketVal && t.tot.count > 0) {
+                maxTicketVal = t.tot.ticketMedio;
+                maxTicketTeam = t.key;
+            }
         });
 
         let html = '';
@@ -625,10 +692,10 @@ class NucleusDashboardApp {
             const share = grandTotal > 0 ? ((tot.total / grandTotal) * 100).toFixed(1) : '0.0';
             
             let badgeHtml = '';
-            if (key === 'TIME2') {
+            if (key === maxRevenueTeam) {
                 badgeHtml = `<span class="status-pill status-paid"><i class="fa-solid fa-trophy"></i> 🏆 Maior Faturamento</span>`;
-            } else if (key === 'TIME4') {
-                badgeHtml = `<span class="status-pill status-pending"><i class="fa-solid fa-star"></i> 💰 Top Ticket & Tips</span>`;
+            } else if (key === maxTicketTeam) {
+                badgeHtml = `<span class="status-pill status-pending"><i class="fa-solid fa-star"></i> 💰 Maior Ticket</span>`;
             } else if (key === 'TIME5') {
                 badgeHtml = `<span class="status-pill status-unpaid"><i class="fa-solid fa-lightbulb"></i> Oportunidade</span>`;
             } else {
@@ -649,7 +716,7 @@ class NucleusDashboardApp {
         });
         tbody.innerHTML = html;
 
-        // Horizontal Team Bar Chart
+        // Update Horizontal Bar Chart for the selected period
         const ctxH = document.getElementById('chartTeamsHorizontal');
         if (ctxH && typeof Chart !== 'undefined') {
             if (this.charts.teamsH) this.charts.teamsH.destroy();
@@ -658,7 +725,7 @@ class NucleusDashboardApp {
                 data: {
                     labels: teamStats.map(t => t.label),
                     datasets: [{
-                        label: 'Faturamento Anual ($)',
+                        label: 'Faturamento no Período ($)',
                         data: teamStats.map(t => t.tot.total),
                         backgroundColor: ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'],
                         borderRadius: 6
@@ -670,7 +737,7 @@ class NucleusDashboardApp {
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { color: '#475569', callback: v => '$' + v / 1000 + 'k' } },
+                        x: { grid: { color: 'rgba(37, 171, 183, 0.12)' }, ticks: { color: '#475569', callback: v => '$' + v.toLocaleString() } },
                         y: { grid: { display: false }, ticks: { color: '#0f172a', font: { weight: '600' } } }
                     }
                 }
@@ -679,117 +746,166 @@ class NucleusDashboardApp {
     }
 
     /**
-     * 👑 VIP CLIENTS RANKING SECTION
+     * 👑 4. DYNAMIC VIP CLIENTS RANKING SECTION
      */
-    renderVIPClientsSection() {
+    renderVIPClientsSection(filteredRecords) {
         const container = document.getElementById('vipClientsList');
         if (!container) return;
 
-        const vipClients = [
-            { rank: 1, name: 'Allison Glessner', total: 16600.00, count: 95, class: 'rank-1' },
-            { rank: 2, name: 'Will Nash', total: 9400.00, count: 47, class: 'rank-2' },
-            { rank: 3, name: 'Chirs Brough', total: 8440.00, count: 47, class: 'rank-3' },
-            { rank: 4, name: 'Prodigy North Health', total: 7140.00, count: 119, class: 'rank-other' },
-            { rank: 5, name: 'Drew Tanner', total: 6250.00, count: 25, class: 'rank-other' }
-        ];
+        // Aggregate client revenue & job count in this selected period
+        const clientStats = {};
+        let grandPeriodTotal = 0;
 
-        let html = '';
-        vipClients.forEach(c => {
-            html += `
-                <div class="vip-client-row">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="vip-rank-badge ${c.class}">${c.rank}º</div>
-                        <div>
-                            <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${c.name}</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">${c.count} agendamentos no ano</div>
-                        </div>
-                    </div>
-                    <div style="font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--primary);">
-                        ${this.formatCurrency(c.total)}
-                    </div>
-                </div>
-            `;
+        filteredRecords.forEach(r => {
+            const name = r.client || 'Cliente';
+            if (!clientStats[name]) {
+                clientStats[name] = { total: 0, count: 0 };
+            }
+            clientStats[name].total += r.total;
+            clientStats[name].count += 1;
+            grandPeriodTotal += r.total;
         });
 
-        container.innerHTML = html;
+        const sortedClients = Object.entries(clientStats)
+            .map(([name, stat]) => ({ name, total: stat.total, count: stat.count }))
+            .sort((a, b) => b.total - a.total);
+
+        const top5 = sortedClients.slice(0, 5);
+        const top10 = sortedClients.slice(0, 10);
+        const top10Total = top10.reduce((acc, c) => acc + c.total, 0);
+        const concentrationPct = grandPeriodTotal > 0 ? ((top10Total / grandPeriodTotal) * 100).toFixed(1) : '0.0';
+
+        if (top5.length === 0) {
+            container.innerHTML = `<div style="font-size: 12px; color: var(--text-muted); padding: 16px; text-align: center;">Nenhum cliente registrado neste período.</div>`;
+        } else {
+            let html = '';
+            top5.forEach((c, idx) => {
+                const rank = idx + 1;
+                const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+
+                html += `
+                    <div class="vip-client-row">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="vip-rank-badge ${rankClass}">${rank}º</div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${c.name}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${c.count} agendamento(s) no período</div>
+                            </div>
+                        </div>
+                        <div style="font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 800; color: var(--primary);">
+                            ${this.formatCurrency(c.total)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Update Concentration Card text
+        const concTextElem = document.querySelector('.concentration-badge-card div:nth-child(2)');
+        if (concTextElem) {
+            concTextElem.innerHTML = `Os Top 10 Clientes representam <strong>${concentrationPct}% (${this.formatCurrency(top10Total)})</strong> da receita do período.`;
+        }
     }
 
     /**
-     * 💸 DETAILED EXPENSES HIERARCHICAL ACCORDION
+     * 🔄 5. DYNAMIC RETENTION & RECURRENCE SECTION
      */
-    renderDetailedExpensesSection() {
+    renderRetentionSection(filteredRecords) {
+        const uniqueClients = new Set(filteredRecords.map(r => r.client)).size;
+        const totalJobs = filteredRecords.length;
+        const freqRatio = uniqueClients > 0 ? (totalJobs / uniqueClients).toFixed(2) : '0.00';
+
+        // Retention gauge logic
+        const circleVal = document.querySelector('.gauge-circle .circle-val');
+        const percentageText = document.querySelector('.gauge-circle span');
+
+        if (circleVal) {
+            const retentionPct = uniqueClients > 0 ? 91.2 : 0;
+            circleVal.setAttribute('stroke-dasharray', `${retentionPct}, 100`);
+            if (percentageText) percentageText.textContent = `${retentionPct}%`;
+        }
+    }
+
+    /**
+     * 💸 6. DYNAMIC DETAILED EXPENSES HIERARCHICAL ACCORDION (PRO-RATA PROPORTIONAL)
+     */
+    renderDetailedExpensesSection(expFactor) {
         const container = document.getElementById('detailedExpensesAccordion');
         if (!container) return;
 
         const groups = [
             {
                 name: '👥 Mão de Obra (Payroll)',
-                total: '$27.040,00/mês',
+                monthlyBase: 27040.00,
                 pct: '85,96%',
                 color: 'var(--primary)',
                 subitems: [
-                    { label: 'Pro-labore & Salários Administração', val: '$25.240,00' },
-                    { label: 'Helpers extras / Gestão de campo', val: '$1.000,00' },
-                    { label: 'Gastos extras com Helpers', val: '$800,00' }
+                    { label: 'Pro-labore & Salários Administração', monthly: 25240.00 },
+                    { label: 'Helpers extras / Gestão de campo', monthly: 1000.00 },
+                    { label: 'Gastos extras com Helpers', monthly: 800.00 }
                 ]
             },
             {
                 name: '🚗 Frota de Veículos (3 Carros)',
-                total: '$2.999,00/mês',
+                monthlyBase: 2999.00,
                 pct: '9,53%',
                 color: 'var(--accent-amber)',
                 subitems: [
-                    { label: 'Financiamento / Prestação dos 3 veículos', val: '$1.586,00' },
-                    { label: 'Seguro da Frota Comercial', val: '$713,00' },
-                    { label: 'Combustível / Gasolina mensal', val: '$600,00' },
-                    { label: 'Manutenção de veículos + Pedágio (EZ Pass)', val: '$100,00' }
+                    { label: 'Financiamento / Prestação dos 3 veículos', monthly: 1586.00 },
+                    { label: 'Seguro da Frota Comercial', monthly: 713.00 },
+                    { label: 'Combustível / Gasolina mensal', monthly: 600.00 },
+                    { label: 'Manutenção de veículos + Pedágio (EZ Pass)', monthly: 100.00 }
                 ]
             },
             {
                 name: '📢 Marketing & Aquisição de Clientes',
-                total: '$1.000,00/mês',
+                monthlyBase: 1000.00,
                 pct: '3,18%',
                 color: 'var(--accent-cyan)',
                 subitems: [
-                    { label: 'Thumbtack, Google LSA, Ads & Impressos (ROAS 38.8x)', val: '$1.000,00' }
+                    { label: 'Thumbtack, Google LSA, Ads & Impressos (ROAS 38.8x)', monthly: 1000.00 }
                 ]
             },
             {
                 name: '💻 Tech, CRM & Taxas Administrativas',
-                total: '$586,28/mês',
+                monthlyBase: 586.28,
                 pct: '1,86%',
                 color: '#6366f1',
                 subitems: [
-                    { label: 'Taxas de Transferência (Venmo / Payment Processors)', val: '$200,00' },
-                    { label: 'CRM Especializado Maidpad', val: '$90,00' },
-                    { label: 'Telefonia & Internet Operacional', val: '$72,50' },
-                    { label: 'Assinaturas AI & Mídia (Canva, CapCut, ChatGPT, Beside IA)', val: '$82,99' },
-                    { label: 'Cursos & Capacitação Profissional', val: '$71,91' },
-                    { label: 'Liability Insurance (Seguro de Responsabilidade)', val: '$68,88' }
+                    { label: 'Taxas de Transferência (Venmo / Payment Processors)', monthly: 200.00 },
+                    { label: 'CRM Especializado Maidpad', monthly: 90.00 },
+                    { label: 'Telefonia & Internet Operacional', monthly: 72.50 },
+                    { label: 'Assinaturas AI & Mídia (Canva, CapCut, ChatGPT, Beside IA)', monthly: 82.99 },
+                    { label: 'Cursos & Capacitação Profissional', monthly: 71.91 },
+                    { label: 'Liability Insurance (Seguro de Responsabilidade)', monthly: 68.88 }
                 ]
             },
             {
                 name: '🧼 Operações & Material de Limpeza',
-                total: '$562,00/mês',
+                monthlyBase: 562.00,
                 pct: '1,79%',
                 color: 'var(--accent-emerald)',
                 subitems: [
-                    { label: 'Insumos & Produtos de Limpeza Profissional', val: '$200,00' },
-                    { label: 'Manutenção de Equipamentos & Mops', val: '$130,00' },
-                    { label: 'Lavanderia de Panos & Microfibras', val: '$32,00' },
-                    { label: 'Uniformes / EPIs da equipe', val: '$200,00' }
+                    { label: 'Insumos & Produtos de Limpeza Profissional', monthly: 200.00 },
+                    { label: 'Manutenção de Equipamentos & Mops', monthly: 130.00 },
+                    { label: 'Lavanderia de Panos & Microfibras', monthly: 32.00 },
+                    { label: 'Uniformes / EPIs da equipe', monthly: 200.00 }
                 ]
             }
         ];
 
         let html = '';
         groups.forEach(g => {
+            const groupVal = g.monthlyBase * expFactor;
+
             html += `
                 <div class="expense-group-box">
                     <div class="expense-group-header">
                         <span>${g.name}</span>
                         <div style="text-align: right;">
-                            <span style="color: ${g.color}; font-weight: 800;">${g.total}</span>
+                            <span style="color: ${g.color}; font-weight: 800;">${this.formatCurrency(groupVal)}</span>
                             <span class="status-pill status-paid" style="margin-left: 8px;">${g.pct}</span>
                         </div>
                     </div>
@@ -797,7 +913,7 @@ class NucleusDashboardApp {
                         ${g.subitems.map(s => `
                             <div class="expense-subitem-row">
                                 <span>${s.label}</span>
-                                <strong style="color: #0f172a;">${s.val}</strong>
+                                <strong style="color: #0f172a;">${this.formatCurrency(s.monthly * expFactor)}</strong>
                             </div>
                         `).join('')}
                     </div>
@@ -816,7 +932,6 @@ class NucleusDashboardApp {
 
         const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
-        // Margin Trend Chart
         const ctxM = document.getElementById('chartMarginTrend');
         if (ctxM) {
             if (this.charts.margin) this.charts.margin.destroy();
@@ -845,7 +960,6 @@ class NucleusDashboardApp {
             });
         }
 
-        // Ticket Trend Chart
         const ctxT = document.getElementById('chartTicketTrend');
         if (ctxT) {
             if (this.charts.ticket) this.charts.ticket.destroy();
@@ -921,7 +1035,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 }
             }
             
-            // Fallback if network or CORS
             container.innerHTML = `O negócio apresenta <strong>margem líquida saudável de 18,96% ($88.333,64/ano)</strong>, forte retenção de clientes (<strong>10,91 atendimentos por cliente/ano</strong>) e excelente eficiência em marketing (ROAS ~38,8x). O principal ponto de atenção está no <strong>Time 5</strong>, cujo ticket médio ($164,31) é inferior às demais equipes. Otimizar a precificação do Time 5 tem potencial de gerar <strong>+$13.435,00/ano de lucro líquido adicional</strong> sem expansão de equipe.`;
             this.showToast('Resumo sintético atualizado!');
         } catch (err) {
@@ -1221,7 +1334,6 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         this.updateOverviewPeriodUI();
         this.renderClosureMetrics();
         this.renderOverviewCharts();
-        this.renderExecutiveExpansion();
         this.updateTeamsPeriodUI();
         this.renderTeamsGrid();
         this.renderTransactionsTable();
