@@ -79,9 +79,6 @@
                             </div>
                         </div>
                         <div class="header-actions">
-                            <div class="badge-live">
-                                <span class="pulse-dot"></span> Planilha Conectada
-                            </div>
                             <button id="btnSyncSheets" class="btn-secondary" onclick="window.app.syncGoogleSheets()">
                                 <i class="fa-solid fa-rotate"></i> Sincronizar Planilha
                             </button>
@@ -292,6 +289,14 @@
                                 <p>Faturamento, tips e ticket médio por time com seleção por período</p>
                             </div>
                         </div>
+                        <div class="header-actions">
+                            <button class="btn-secondary" onclick="window.app.syncGoogleSheets()">
+                                <i class="fa-solid fa-rotate"></i> Sincronizar Planilha
+                            </button>
+                            <button class="btn-secondary" onclick="window.app.logout()" title="Sair">
+                                <i class="fa-solid fa-power-off"></i>
+                            </button>
+                        </div>
                     </header>
 
                     <!-- Teams Period Filter Controls Bar -->
@@ -483,13 +488,6 @@
         </button>
         <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
             <i class="fa-solid fa-chart-bar"></i> Relatórios
-        </button>
-        <div style="width: 1px; height: 20px; background: rgba(37, 171, 183, 0.2); margin: 0 4px;"></div>
-        <button class="nav-item" onclick="window.app.syncGoogleSheets()" title="Sincronizar Google Sheets">
-            <i class="fa-solid fa-rotate"></i> Sync
-        </button>
-        <button class="nav-item" onclick="window.app.logout()" title="Sair do Sistema">
-            <i class="fa-solid fa-right-from-bracket"></i> Sair
         </button>
     </nav>
 
