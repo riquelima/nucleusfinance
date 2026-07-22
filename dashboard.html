@@ -65,7 +65,7 @@
                 </div>
             </section>
 
-            <!-- TAB 1: VISÃO GERAL (OVERVIEW & FECHAMENTOS) -->
+            <!-- TAB 1: VISÃO GERAL (CONSOLIDADA COM DEEP ANALYSIS & DRE COMPLETO) -->
             <section id="view-overview" class="view-section">
                 <div class="container">
                     
@@ -75,7 +75,7 @@
                             <img src="nucleusLogo.jpg" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
                             <div class="brand-text">
                                 <h1>Nucleus Financial Control</h1>
-                                <p>Dashboard e Fechamento Financeiro por Equipes</p>
+                                <p>Visão Geral Consolidada, DRE & Inteligência Financeira</p>
                             </div>
                         </div>
                         <div class="header-actions">
@@ -88,177 +88,220 @@
                         </div>
                     </header>
 
-                    <!-- Global KPI Summary Cards Grid -->
-                    <div class="kpi-grid">
+                    <!-- Overview Period Filter Controls Bar (Dia, Semana, Mês, Anual) -->
+                    <div class="period-bar glass-panel" style="margin-bottom: 24px;">
+                        <div class="period-title">
+                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Período de Análise da Visão Geral
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <!-- Mode Toggle Buttons -->
+                            <div class="period-mode-group">
+                                <button type="button" class="overview-mode-btn" data-mode="daily">📅 Dia</button>
+                                <button type="button" class="overview-mode-btn" data-mode="weekly">🗓️ Semana</button>
+                                <button type="button" class="overview-mode-btn" data-mode="monthly">📆 Mês</button>
+                                <button type="button" class="overview-mode-btn active" data-mode="annual">🏆 Anual</button>
+                            </div>
+
+                            <!-- Dynamic Date/Month Selectors -->
+                            <div id="overviewDateInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted);">Data:</label>
+                                <input type="date" id="overviewDateInput" class="input-date" value="2026-01-02">
+                            </div>
+
+                            <div id="overviewMonthInputContainer" class="filter-group" style="display: none;">
+                                <label style="font-size: 12px; color: var(--text-muted);">Mês:</label>
+                                <input type="month" id="overviewMonthInput" class="input-date" value="2026-01">
+                            </div>
+
+                            <div id="overviewPeriodSubtitle" style="font-size: 12px; font-weight: 700; color: var(--primary); background: rgba(37, 171, 183, 0.1); padding: 6px 14px; border-radius: var(--radius-full);">
+                                Consolidação Anual 2026
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DRE & FINANCIAL KPI SUMMARY GRID (Recalculado Dinamicamente por Período) -->
+                    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+                        
+                        <!-- 1. Faturamento Total -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
                             <div class="kpi-header">
-                                <span class="kpi-title">Faturamento Total (Cliente)</span>
+                                <span class="kpi-title">Faturamento Total (Receita)</span>
                                 <div class="kpi-icon-box"><i class="fa-solid fa-dollar-sign"></i></div>
                             </div>
-                            <div class="kpi-value" id="kpiTotalFaturamento">$0.00</div>
+                            <div class="kpi-value" id="ovFaturamento">$0.00</div>
                             <div class="kpi-details">
                                 <span>Soma da Coluna L (Total)</span>
-                                <span style="color: var(--accent-emerald); font-weight: 700;">100% Auditado</span>
+                                <span style="color: var(--primary); font-weight: 700;">100% Auditado</span>
                             </div>
                         </div>
 
-                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-cyan);">
+                        <!-- 2. Despesas Operacionais Totais -->
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-rose);">
                             <div class="kpi-header">
-                                <span class="kpi-title">Subtotal dos Serviços</span>
-                                <div class="kpi-icon-box"><i class="fa-solid fa-receipt"></i></div>
+                                <span class="kpi-title">Despesas Operacionais Totais</span>
+                                <div class="kpi-icon-box" style="background: rgba(225, 29, 72, 0.12); color: var(--accent-rose);">
+                                    <i class="fa-solid fa-arrow-down-short-wide"></i>
+                                </div>
                             </div>
-                            <div class="kpi-value" id="kpiTotalSubtotal">$0.00</div>
+                            <div class="kpi-value" id="ovDespesas" style="color: var(--accent-rose);">$0.00</div>
                             <div class="kpi-details">
-                                <span>Soma da Coluna G (Subtotal)</span>
-                                <span>Valor base serviços</span>
+                                <span>Payroll, Frota, Marketing & Ops</span>
+                                <span style="color: var(--accent-rose); font-weight: 700;" id="ovDespesasPct">0%</span>
                             </div>
                         </div>
 
-                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
-                            <div class="kpi-header">
-                                <span class="kpi-title">Gorjetas Arrecadadas (Tips)</span>
-                                <div class="kpi-icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-                            </div>
-                            <div class="kpi-value" id="kpiTotalTip">$0.00</div>
-                            <div class="kpi-details">
-                                <span>Soma da Coluna J (Tip)</span>
-                                <span style="color: var(--accent-amber); font-weight: 700;">Repasse Equipes</span>
-                            </div>
-                        </div>
-
+                        <!-- 3. Lucro Líquido Operacional -->
                         <div class="kpi-card glass-panel" style="--card-accent: var(--accent-emerald);">
                             <div class="kpi-header">
-                                <span class="kpi-title">Total de Agendamentos</span>
-                                <div class="kpi-icon-box"><i class="fa-solid fa-calendar-check"></i></div>
+                                <span class="kpi-title">Lucro Líquido Operacional</span>
+                                <div class="kpi-icon-box" style="background: rgba(5, 150, 105, 0.12); color: var(--accent-emerald);">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                </div>
                             </div>
-                            <div class="kpi-value" id="kpiTotalAgendamentos">0</div>
+                            <div class="kpi-value" id="ovLucroLiquido" style="color: var(--accent-emerald);">$0.00</div>
                             <div class="kpi-details">
-                                <span>Ticket Médio: <strong id="kpiTicketMedio">$0.00</strong></span>
-                                <span>5 Equipes</span>
+                                <span>Receita - Despesas Totais</span>
+                                <span class="status-pill status-paid" id="ovMargemLucro">Margem: 0%</span>
                             </div>
+                        </div>
+
+                        <!-- 4. Subtotal & Tips -->
+                        <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Subtotal & Gorjetas (Tips)</span>
+                                <div class="kpi-icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                            </div>
+                            <div class="kpi-value" id="ovTips">$0.00</div>
+                            <div class="kpi-details">
+                                <span>Subtotal: <strong id="ovSubtotal">$0.00</strong></span>
+                                <span style="color: var(--accent-amber); font-weight: 700;">Gorjetas</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- SECONDARY KPIS: Ticket Médio, Agendamentos, Clientes & LTV -->
+                    <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 28px;">
+                        <div class="kpi-card glass-panel" style="padding: 16px 20px;">
+                            <div class="kpi-title" style="font-size: 11px;">Ticket Médio por Serviço</div>
+                            <div class="kpi-value" id="ovTicketMedio" style="font-size: 22px; margin-top: 4px;">$0.00</div>
+                            <div style="font-size: 11px; color: var(--text-muted);" id="ovTicketMedioSub">Média por atendimento</div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="padding: 16px 20px;">
+                            <div class="kpi-title" style="font-size: 11px;">Total de Agendamentos</div>
+                            <div class="kpi-value" id="ovAgendamentos" style="font-size: 22px; margin-top: 4px;">0</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Serviços executados</div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="padding: 16px 20px;">
+                            <div class="kpi-title" style="font-size: 11px;">Clientes Únicos Atendidos</div>
+                            <div class="kpi-value" id="ovClientesUnicos" style="font-size: 22px; margin-top: 4px;">238</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Recorrência média: ~11x/ano</div>
+                        </div>
+
+                        <div class="kpi-card glass-panel" style="padding: 16px 20px;">
+                            <div class="kpi-title" style="font-size: 11px;">LTV Médio por Cliente</div>
+                            <div class="kpi-value" id="ovLTVMedio" style="font-size: 22px; margin-top: 4px;">$1,957.23</div>
+                            <div style="font-size: 11px; color: var(--accent-emerald); font-weight: 700;">Valor de vida do cliente</div>
                         </div>
                     </div>
 
-                    <!-- Period Controls Bar -->
-                    <div class="period-bar glass-panel">
-                        <div class="period-title">
-                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Fechamento por Período & Equipes
-                        </div>
-                        <div class="filter-group">
-                            <label style="font-size: 12px; color: var(--text-muted);">Filtrar Data:</label>
-                            <input type="date" id="filterDateInput" class="input-date">
-
-                            <label style="font-size: 12px; color: var(--text-muted); margin-left: 10px;">Filtrar Mês:</label>
-                            <input type="month" id="filterMonthInput" class="input-date" value="2026-01">
-                        </div>
-                    </div>
-
-                    <!-- FECHAMENTO POR EQUIPE & PERÍODO GRID (Diário, Semanal, Mensal, Anual) -->
-                    <div class="closure-grid">
-                        
-                        <!-- DIÁRIO -->
-                        <div class="closure-card">
-                            <span class="closure-badge badge-diario">Diário</span>
-                            <div class="closure-title">
-                                <i class="fa-solid fa-sun" style="color: var(--accent-cyan);"></i> Fechamento Diário
-                            </div>
-                            <div class="closure-total" id="closureDailyTotal">$0.00</div>
-                            <div class="closure-row">
-                                <span>Subtotal Serviços:</span>
-                                <span id="closureDailySubtotal">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Gorjetas (Tip):</span>
-                                <span id="closureDailyTip" style="color: var(--accent-amber);">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Agendamentos:</span>
-                                <span id="closureDailyCount">0 serviços</span>
-                            </div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureDailySubtitle">
-                                Data selecionada
-                            </div>
+                    <!-- CENTRO DE CUSTOS & ESTRUTURA DE DESPESAS PANEL (DEEP ANALYSIS FINDINGS) -->
+                    <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
+                        <div class="chart-header" style="margin-bottom: 18px;">
+                            <h3 class="chart-title">
+                                <i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Estrutura do Centro de Custos & Despesas Operacionais (<span id="ovExpensePeriodLabel">Mensal $31.457,28</span>)
+                            </h3>
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Fonte: Aba Despesas Auditada</span>
                         </div>
 
-                        <!-- SEMANAL -->
-                        <div class="closure-card">
-                            <span class="closure-badge badge-semanal">Semanal</span>
-                            <div class="closure-title">
-                                <i class="fa-solid fa-calendar-week" style="color: var(--primary);"></i> Fechamento Semanal
+                        <div class="expense-breakdown-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+                            
+                            <!-- Payroll -->
+                            <div style="background: #edf7f9; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-user-group" style="color: var(--primary);"></i> Payroll (Mão de Obra)</span>
+                                    <span style="font-weight: 800; font-size: 13px; color: var(--primary);" id="expPayrollVal">$27,040.00</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(37, 171, 183, 0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px;">
+                                    <div style="width: 85.96%; height: 100%; background: var(--primary);"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                    <span>Salários admin + helpers</span>
+                                    <span style="font-weight: 700;">85,96% das despesas</span>
+                                </div>
                             </div>
-                            <div class="closure-total" id="closureWeeklyTotal">$0.00</div>
-                            <div class="closure-row">
-                                <span>Subtotal Serviços:</span>
-                                <span id="closureWeeklySubtotal">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Gorjetas (Tip):</span>
-                                <span id="closureWeeklyTip" style="color: var(--accent-amber);">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Agendamentos:</span>
-                                <span id="closureWeeklyCount">0 serviços</span>
-                            </div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureWeeklySubtitle">
-                                Semana ativa
-                            </div>
-                        </div>
 
-                        <!-- MENSAL -->
-                        <div class="closure-card">
-                            <span class="closure-badge badge-mensal">Mensal</span>
-                            <div class="closure-title">
-                                <i class="fa-solid fa-calendar-days" style="color: var(--accent-emerald);"></i> Fechamento Mensal
+                            <!-- Frota -->
+                            <div style="background: #edf7f9; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-car" style="color: var(--accent-amber);"></i> Frota (3 Veículos)</span>
+                                    <span style="font-weight: 800; font-size: 13px; color: var(--accent-amber);" id="expFrotaVal">$2,999.00</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(217, 119, 6, 0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px;">
+                                    <div style="width: 9.53%; height: 100%; background: var(--accent-amber);"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                    <span>Parcela, seguro, gasolina</span>
+                                    <span style="font-weight: 700;">9,53% das despesas</span>
+                                </div>
                             </div>
-                            <div class="closure-total" id="closureMonthlyTotal">$0.00</div>
-                            <div class="closure-row">
-                                <span>Subtotal Serviços:</span>
-                                <span id="closureMonthlySubtotal">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Gorjetas (Tip):</span>
-                                <span id="closureMonthlyTip" style="color: var(--accent-amber);">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Agendamentos:</span>
-                                <span id="closureMonthlyCount">0 serviços</span>
-                            </div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureMonthlySubtitle">
-                                Mês selecionado
-                            </div>
-                        </div>
 
-                        <!-- ANUAL -->
-                        <div class="closure-card">
-                            <span class="closure-badge badge-anual">Anual</span>
-                            <div class="closure-title">
-                                <i class="fa-solid fa-calendar-check" style="color: var(--accent-amber);"></i> Fechamento Anual
+                            <!-- Marketing -->
+                            <div style="background: #edf7f9; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-bullhorn" style="color: var(--accent-cyan);"></i> Marketing & Ads</span>
+                                    <span style="font-weight: 800; font-size: 13px; color: var(--accent-cyan);" id="expMarketingVal">$1,000.00</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(19, 137, 150, 0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px;">
+                                    <div style="width: 3.18%; height: 100%; background: var(--accent-cyan);"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                    <span>Thumbtack, LSA & Ads</span>
+                                    <span style="font-weight: 700;">3,18% das despesas</span>
+                                </div>
                             </div>
-                            <div class="closure-total" id="closureAnnualTotal">$0.00</div>
-                            <div class="closure-row">
-                                <span>Subtotal Serviços:</span>
-                                <span id="closureAnnualSubtotal">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Gorjetas (Tip):</span>
-                                <span id="closureAnnualTip" style="color: var(--accent-amber);">$0.00</span>
-                            </div>
-                            <div class="closure-row">
-                                <span>Agendamentos:</span>
-                                <span id="closureAnnualCount">0 serviços</span>
-                            </div>
-                            <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px;" id="closureAnnualSubtitle">
-                                Ano 2026
-                            </div>
-                        </div>
 
+                            <!-- Tech & Admin -->
+                            <div style="background: #edf7f9; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-laptop-code" style="color: #6366f1;"></i> Tech, CRM & Admin</span>
+                                    <span style="font-weight: 800; font-size: 13px; color: #6366f1;" id="expTechVal">$586.28</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(99, 102, 241, 0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px;">
+                                    <div style="width: 1.86%; height: 100%; background: #6366f1;"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                    <span>Maidpad, IA & taxas</span>
+                                    <span style="font-weight: 700;">1,86% das despesas</span>
+                                </div>
+                            </div>
+
+                            <!-- Operações -->
+                            <div style="background: #edf7f9; padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-pump-soap" style="color: var(--accent-emerald);"></i> Operações & Insumos</span>
+                                    <span style="font-weight: 800; font-size: 13px; color: var(--accent-emerald);" id="expOpsVal">$562.00</span>
+                                </div>
+                                <div style="height: 6px; background: rgba(5, 150, 105, 0.2); border-radius: 3px; overflow: hidden; margin-bottom: 6px;">
+                                    <div style="width: 1.79%; height: 100%; background: var(--accent-emerald);"></div>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                                    <span>Material de limpeza</span>
+                                    <span style="font-weight: 700;">1,79% das despesas</span>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
 
                     <!-- Charts Grid -->
                     <div class="charts-grid">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução Mensal do Faturamento</h3>
+                                <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução Mensal: Faturamento Bruto vs Despesas Operacionais</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartRevenueTrend"></canvas>
@@ -267,7 +310,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-cyan);"></i> Distribuição por Equipes</h3>
+                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartTeamComparison"></canvas>

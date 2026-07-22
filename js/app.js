@@ -1,7 +1,18 @@
 /**
  * Nucleus Cleaning Services - Dashboard Application Engine
- * Manages SPA navigation, authentication, state, period closures, financial metrics, and charts.
+ * Manages SPA navigation, authentication, state, period closures, DRE, financial metrics, and charts.
  */
+
+// Audit Dataset for Expenses (Aba Despesas)
+const DESPESAS_MONTHLY_TOTAL = 31457.28;
+const DESPESAS_ANNUAL_TOTAL = 377487.36;
+const DESPESAS_CATEGORIES_MONTHLY = {
+    payroll: 27040.00,  // 85.96%
+    frota: 2999.00,     // 9.53%
+    marketing: 1000.00, // 3.18%
+    tech: 586.28,       // 1.86%
+    ops: 562.00         // 1.79%
+};
 
 class NucleusDashboardApp {
     constructor() {
@@ -16,13 +27,13 @@ class NucleusDashboardApp {
         this.pageSize = 15;
         this.charts = {};
 
-        // Period filter selections for Overview Tab
-        this.selectedDate = '2026-01-02'; // default sample date
-        this.selectedMonth = '2026-01'; // YYYY-MM
-        this.selectedYear = '2026';
+        // Overview Tab Period Mode (Dia, Semana, Mês, Anual)
+        this.overviewPeriodMode = 'annual'; // 'daily', 'weekly', 'monthly', 'annual'
+        this.overviewSelectedDate = '2026-01-02';
+        this.overviewSelectedMonth = '2026-01';
 
-        // Period filter selections for Teams Tab (Dia, Semana, Mês, Anual)
-        this.teamsPeriodMode = 'annual'; // 'daily', 'weekly', 'monthly', 'annual'
+        // Teams Tab Period Mode (Dia, Semana, Mês, Anual)
+        this.teamsPeriodMode = 'annual';
         this.teamsSelectedDate = '2026-01-02';
         this.teamsSelectedMonth = '2026-01';
 
@@ -32,7 +43,6 @@ class NucleusDashboardApp {
     init() {
         this.checkAuthSession();
         this.bindEvents();
-        this.updatePeriodSelectors();
         this.renderAllViews();
         
         // Handle URL params tab if specified
@@ -67,24 +77,38 @@ class NucleusDashboardApp {
             });
         }
 
-        // Overview Date / Period filters
-        const dateInput = document.getElementById('filterDateInput');
-        if (dateInput) {
-            dateInput.addEventListener('change', (e) => {
-                this.selectedDate = e.target.value;
+        // Overview Period Mode Toggle Buttons (Dia, Semana, Mês, Anual)
+        const ovModeBtns = document.querySelectorAll('.overview-mode-btn');
+        ovModeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                ovModeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.overviewPeriodMode = btn.getAttribute('data-mode');
+                this.updateOverviewPeriodUI();
+                this.renderClosureMetrics();
+            });
+        });
+
+        // Overview Date / Month Selectors
+        const ovDateInput = document.getElementById('overviewDateInput');
+        if (ovDateInput) {
+            ovDateInput.addEventListener('change', (e) => {
+                this.overviewSelectedDate = e.target.value;
+                this.updateOverviewPeriodUI();
                 this.renderClosureMetrics();
             });
         }
 
-        const monthInput = document.getElementById('filterMonthInput');
-        if (monthInput) {
-            monthInput.addEventListener('change', (e) => {
-                this.selectedMonth = e.target.value;
+        const ovMonthInput = document.getElementById('overviewMonthInput');
+        if (ovMonthInput) {
+            ovMonthInput.addEventListener('change', (e) => {
+                this.overviewSelectedMonth = e.target.value;
+                this.updateOverviewPeriodUI();
                 this.renderClosureMetrics();
             });
         }
 
-        // Teams Period Mode Toggle Buttons (Dia, Semana, Mês, Anual)
+        // Teams Period Mode Toggle Buttons
         const teamModeBtns = document.querySelectorAll('.period-mode-btn');
         teamModeBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -146,6 +170,52 @@ class NucleusDashboardApp {
         }
     }
 
+    updateOverviewPeriodUI() {
+        const dateInputContainer = document.getElementById('overviewDateInputContainer');
+        const monthInputContainer = document.getElementById('overviewMonthInputContainer');
+        const subtitleLabel = document.getElementById('overviewPeriodSubtitle');
+        const expPeriodLabel = document.getElementById('ovExpensePeriodLabel');
+
+        let labelText = '';
+        let expText = '';
+
+        if (this.overviewPeriodMode === 'daily') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `Dia: ${this.formatDateBR(this.overviewSelectedDate)}`;
+            expText = `Pro-rata Diário: $${(DESPESAS_MONTHLY_TOTAL / 30).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        } else if (this.overviewPeriodMode === 'weekly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'flex';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+
+            const selDateObj = new Date(this.overviewSelectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+
+            const startStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endStr = lastDayOfWeek.toISOString().split('T')[0];
+            labelText = `Semana: ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
+            expText = `Pro-rata Semanal: $${(DESPESAS_MONTHLY_TOTAL / 30 * 7).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        } else if (this.overviewPeriodMode === 'monthly') {
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'flex';
+            labelText = `Mês: ${this.formatMonthLabel(this.overviewSelectedMonth)}`;
+            expText = `Mensal: $31.457,28`;
+        } else {
+            // annual
+            if (dateInputContainer) dateInputContainer.style.display = 'none';
+            if (monthInputContainer) monthInputContainer.style.display = 'none';
+            labelText = `Consolidação Anual 2026`;
+            expText = `Anual Consolidado: $377.487,36`;
+        }
+
+        if (subtitleLabel) subtitleLabel.textContent = labelText;
+        if (expPeriodLabel) expPeriodLabel.textContent = expText;
+    }
+
     updateTeamsPeriodUI() {
         const dateInputContainer = document.getElementById('teamsDateInputContainer');
         const monthInputContainer = document.getElementById('teamsMonthInputContainer');
@@ -171,6 +241,7 @@ class NucleusDashboardApp {
 
             const startStr = firstDayOfWeek.toISOString().split('T')[0];
             const endStr = lastDayOfWeek.toISOString().split('T')[0];
+
             labelText = `Semana: ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
         } else if (this.teamsPeriodMode === 'monthly') {
             if (dateInputContainer) dateInputContainer.style.display = 'none';
@@ -226,6 +297,7 @@ class NucleusDashboardApp {
         this.updateNavButtons(tabId);
 
         if (tabId === 'overview') {
+            this.updateOverviewPeriodUI();
             this.renderClosureMetrics();
             this.renderOverviewCharts();
         } else if (tabId === 'equipes') {
@@ -289,72 +361,99 @@ class NucleusDashboardApp {
         return { subtotal, tip, total, count, ticketMedio, tipPercent };
     }
 
-    updatePeriodSelectors() {
-        const allRecords = this.getAllRecords();
-        if (allRecords.length === 0) return;
-
-        const dateInput = document.getElementById('filterDateInput');
-        if (dateInput && !dateInput.value) {
-            dateInput.value = this.selectedDate;
-        }
-
-        const monthInput = document.getElementById('filterMonthInput');
-        if (monthInput && !monthInput.value) {
-            monthInput.value = this.selectedMonth;
-        }
-    }
-
+    /**
+     * Render Visão Geral DRE & Financial Metrics based on overviewPeriodMode
+     */
     renderClosureMetrics() {
-        const records = this.getAllRecords();
+        const allRecords = this.getAllRecords();
 
-        // 1. Fechamento Diário
-        const dailyRecords = records.filter(r => r.date === this.selectedDate);
-        const dailyTot = this.calculateTotals(dailyRecords);
-        this.updateClosureCard('daily', dailyTot, `Data: ${this.formatDateBR(this.selectedDate)}`);
+        let filteredRecords = [];
+        let expTotal = 0;
+        let expPayroll = 0;
+        let expFrota = 0;
+        let expMarketing = 0;
+        let expTech = 0;
+        let expOps = 0;
 
-        // 2. Fechamento Semanal
-        const selDateObj = new Date(this.selectedDate);
-        const dayOfWeek = selDateObj.getDay();
-        const firstDayOfWeek = new Date(selDateObj);
-        firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
-        const lastDayOfWeek = new Date(firstDayOfWeek);
-        lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+        if (this.overviewPeriodMode === 'daily') {
+            filteredRecords = allRecords.filter(r => r.date === this.overviewSelectedDate);
+            expTotal = DESPESAS_MONTHLY_TOTAL / 30;
+            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll / 30;
+            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota / 30;
+            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing / 30;
+            expTech = DESPESAS_CATEGORIES_MONTHLY.tech / 30;
+            expOps = DESPESAS_CATEGORIES_MONTHLY.ops / 30;
+        } else if (this.overviewPeriodMode === 'weekly') {
+            const selDateObj = new Date(this.overviewSelectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
 
-        const startStr = firstDayOfWeek.toISOString().split('T')[0];
-        const endStr = lastDayOfWeek.toISOString().split('T')[0];
+            const startStr = firstDayOfWeek.toISOString().split('T')[0];
+            const endStr = lastDayOfWeek.toISOString().split('T')[0];
 
-        const weeklyRecords = records.filter(r => r.date >= startStr && r.date <= endStr);
-        const weeklyTot = this.calculateTotals(weeklyRecords);
-        this.updateClosureCard('weekly', weeklyTot, `Semana: ${this.formatDateBR(startStr)} - ${this.formatDateBR(endStr)}`);
+            filteredRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
+            expTotal = (DESPESAS_MONTHLY_TOTAL / 30) * 7;
+            expPayroll = (DESPESAS_CATEGORIES_MONTHLY.payroll / 30) * 7;
+            expFrota = (DESPESAS_CATEGORIES_MONTHLY.frota / 30) * 7;
+            expMarketing = (DESPESAS_CATEGORIES_MONTHLY.marketing / 30) * 7;
+            expTech = (DESPESAS_CATEGORIES_MONTHLY.tech / 30) * 7;
+            expOps = (DESPESAS_CATEGORIES_MONTHLY.ops / 30) * 7;
+        } else if (this.overviewPeriodMode === 'monthly') {
+            filteredRecords = allRecords.filter(r => r.date.startsWith(this.overviewSelectedMonth));
+            expTotal = DESPESAS_MONTHLY_TOTAL;
+            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll;
+            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota;
+            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing;
+            expTech = DESPESAS_CATEGORIES_MONTHLY.tech;
+            expOps = DESPESAS_CATEGORIES_MONTHLY.ops;
+        } else {
+            // annual
+            filteredRecords = allRecords.filter(r => r.date.startsWith('2026'));
+            expTotal = DESPESAS_ANNUAL_TOTAL;
+            expPayroll = DESPESAS_CATEGORIES_MONTHLY.payroll * 12;
+            expFrota = DESPESAS_CATEGORIES_MONTHLY.frota * 12;
+            expMarketing = DESPESAS_CATEGORIES_MONTHLY.marketing * 12;
+            expTech = DESPESAS_CATEGORIES_MONTHLY.tech * 12;
+            expOps = DESPESAS_CATEGORIES_MONTHLY.ops * 12;
+        }
 
-        // 3. Fechamento Mensal
-        const monthlyRecords = records.filter(r => r.date.startsWith(this.selectedMonth));
-        const monthlyTot = this.calculateTotals(monthlyRecords);
-        const monthLabel = this.formatMonthLabel(this.selectedMonth);
-        this.updateClosureCard('monthly', monthlyTot, `Mês: ${monthLabel}`);
+        const totals = this.calculateTotals(filteredRecords);
+        const lucroLiquido = totals.total - expTotal;
+        const margemLucroPct = totals.total > 0 ? ((lucroLiquido / totals.total) * 100).toFixed(1) : '0.0';
+        const despesasPct = totals.total > 0 ? ((expTotal / totals.total) * 100).toFixed(1) : '0.0';
 
-        // 4. Fechamento Anual
-        const annualRecords = records.filter(r => r.date.startsWith(this.selectedYear));
-        const annualTot = this.calculateTotals(annualRecords);
-        this.updateClosureCard('annual', annualTot, `Ano: ${this.selectedYear}`);
-
-        // Global KPI Cards
-        const overall = this.calculateTotals(records);
-        document.getElementById('kpiTotalFaturamento').textContent = this.formatCurrency(overall.total);
-        document.getElementById('kpiTotalSubtotal').textContent = this.formatCurrency(overall.subtotal);
-        document.getElementById('kpiTotalTip').textContent = this.formatCurrency(overall.tip);
-        document.getElementById('kpiTotalAgendamentos').textContent = overall.count.toLocaleString('pt-BR');
-        document.getElementById('kpiTicketMedio').textContent = this.formatCurrency(overall.ticketMedio);
-    }
-
-    updateClosureCard(type, totals, subtitle) {
-        document.getElementById(`closure${type.charAt(0).toUpperCase() + type.slice(1)}Total`).textContent = this.formatCurrency(totals.total);
-        document.getElementById(`closure${type.charAt(0).toUpperCase() + type.slice(1)}Subtotal`).textContent = this.formatCurrency(totals.subtotal);
-        document.getElementById(`closure${type.charAt(0).toUpperCase() + type.slice(1)}Tip`).textContent = this.formatCurrency(totals.tip);
-        document.getElementById(`closure${type.charAt(0).toUpperCase() + type.slice(1)}Count`).textContent = `${totals.count} serviços`;
+        // Update Overview KPI Elements
+        document.getElementById('ovFaturamento').textContent = this.formatCurrency(totals.total);
+        document.getElementById('ovSubtotal').textContent = this.formatCurrency(totals.subtotal);
+        document.getElementById('ovTips').textContent = this.formatCurrency(totals.tip);
         
-        const subElem = document.getElementById(`closure${type.charAt(0).toUpperCase() + type.slice(1)}Subtitle`);
-        if (subElem) subElem.textContent = subtitle;
+        document.getElementById('ovDespesas').textContent = this.formatCurrency(expTotal);
+        document.getElementById('ovDespesasPct').textContent = `${despesasPct}% da Receita`;
+
+        const ovLucroElem = document.getElementById('ovLucroLiquido');
+        if (ovLucroElem) {
+            ovLucroElem.textContent = this.formatCurrency(lucroLiquido);
+            ovLucroElem.style.color = lucroLiquido >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+        }
+
+        const ovMargemElem = document.getElementById('ovMargemLucro');
+        if (ovMargemElem) {
+            ovMargemElem.textContent = `Margem: ${margemLucroPct}%`;
+            ovMargemElem.className = lucroLiquido >= 0 ? 'status-pill status-paid' : 'status-pill status-unpaid';
+        }
+
+        document.getElementById('ovTicketMedio').textContent = this.formatCurrency(totals.ticketMedio);
+        document.getElementById('ovAgendamentos').textContent = totals.count.toLocaleString('pt-BR');
+
+        // Update Expense Breakdown Panel values
+        document.getElementById('expPayrollVal').textContent = this.formatCurrency(expPayroll);
+        document.getElementById('expFrotaVal').textContent = this.formatCurrency(expFrota);
+        document.getElementById('expMarketingVal').textContent = this.formatCurrency(expMarketing);
+        document.getElementById('expTechVal').textContent = this.formatCurrency(expTech);
+        document.getElementById('expOpsVal').textContent = this.formatCurrency(expOps);
     }
 
     renderOverviewCharts() {
@@ -365,36 +464,51 @@ class NucleusDashboardApp {
         const months = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11', '2026-12'];
         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
         
-        const monthlyData = months.map(m => {
+        const monthlyRevenue = months.map(m => {
             const recs = records.filter(r => r.date.startsWith(m));
             return recs.reduce((acc, r) => acc + r.total, 0);
         });
 
+        const monthlyExpenses = months.map(() => DESPESAS_MONTHLY_TOTAL);
+
+        // Chart 1: Revenue vs Expenses Dual Bar/Line Chart
         const ctxTrend = document.getElementById('chartRevenueTrend');
         if (ctxTrend) {
             if (this.charts.trend) this.charts.trend.destroy();
             this.charts.trend = new Chart(ctxTrend, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: monthNames,
-                    datasets: [{
-                        label: 'Faturamento Total ($)',
-                        data: monthlyData,
-                        borderColor: '#25abb7',
-                        backgroundColor: 'rgba(37, 171, 183, 0.15)',
-                        fill: true,
-                        tension: 0.35,
-                        pointBackgroundColor: '#25abb7',
-                        pointBorderColor: '#ffffff',
-                        pointRadius: 5,
-                        pointHoverRadius: 8
-                    }]
+                    datasets: [
+                        {
+                            type: 'bar',
+                            label: 'Faturamento Bruto ($)',
+                            data: monthlyRevenue,
+                            backgroundColor: '#25abb7',
+                            borderRadius: 6,
+                            order: 2
+                        },
+                        {
+                            type: 'line',
+                            label: 'Despesas Operacionais ($31.4k/mês)',
+                            data: monthlyExpenses,
+                            borderColor: '#e11d48',
+                            borderWidth: 3,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            order: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#0f172a', font: { size: 12, family: 'Poppins', weight: '600' } }
+                        }
                     },
                     scales: {
                         y: {
@@ -410,23 +524,23 @@ class NucleusDashboardApp {
             });
         }
 
-        const teamNames = ['TIME1', 'TIME2', 'TIME3', 'TIME4', 'TIME5'];
-        const teamColors = ['#25abb7', '#10b981', '#f59e0b', '#ec4899', '#75d3cd'];
-        const teamTotals = teamNames.map(t => {
-            const recs = this.currentData[t] || [];
-            return recs.reduce((acc, r) => acc + r.total, 0);
-        });
-
+        // Chart 2: Center of Cost Distribution Doughnut Chart
         const ctxTeam = document.getElementById('chartTeamComparison');
         if (ctxTeam) {
             if (this.charts.team) this.charts.team.destroy();
             this.charts.team = new Chart(ctxTeam, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Time 1', 'Time 2', 'Time 3', 'Time 4', 'Time 5'],
+                    labels: ['Payroll (85.96%)', 'Frota (9.53%)', 'Marketing (3.18%)', 'Tech/Admin (1.86%)', 'Operações (1.79%)'],
                     datasets: [{
-                        data: teamTotals,
-                        backgroundColor: teamColors,
+                        data: [
+                            DESPESAS_CATEGORIES_MONTHLY.payroll,
+                            DESPESAS_CATEGORIES_MONTHLY.frota,
+                            DESPESAS_CATEGORIES_MONTHLY.marketing,
+                            DESPESAS_CATEGORIES_MONTHLY.tech,
+                            DESPESAS_CATEGORIES_MONTHLY.ops
+                        ],
+                        backgroundColor: ['#25abb7', '#d97706', '#138996', '#6366f1', '#059669'],
                         borderWidth: 0,
                         hoverOffset: 8
                     }]
@@ -437,10 +551,10 @@ class NucleusDashboardApp {
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#0f172a', padding: 16, font: { size: 12, family: 'Poppins', weight: '600' } }
+                            labels: { color: '#0f172a', padding: 12, font: { size: 11, family: 'Poppins', weight: '600' } }
                         }
                     },
-                    cutout: '70%'
+                    cutout: '68%'
                 }
             });
         }
@@ -736,6 +850,7 @@ class NucleusDashboardApp {
     }
 
     renderAllViews() {
+        this.updateOverviewPeriodUI();
         this.renderClosureMetrics();
         this.renderOverviewCharts();
         this.updateTeamsPeriodUI();

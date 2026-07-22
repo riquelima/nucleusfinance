@@ -180,34 +180,6 @@ body {
     gap: 12px;
 }
 
-.badge-live {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(37, 171, 183, 0.12);
-    border: 1px solid rgba(37, 171, 183, 0.35);
-    color: var(--accent-cyan);
-    padding: 8px 14px;
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: var(--primary);
-    box-shadow: 0 0 10px var(--primary);
-    animation: pulse 1.8s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.3); opacity: 1; }
-    100% { transform: scale(0.95); opacity: 0.8; }
-}
-
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
@@ -280,7 +252,7 @@ body {
     gap: 4px;
 }
 
-.period-mode-btn {
+.period-mode-btn, .overview-mode-btn {
     background: transparent;
     border: none;
     padding: 7px 16px;
@@ -292,11 +264,11 @@ body {
     transition: all 0.2s ease;
 }
 
-.period-mode-btn:hover {
+.period-mode-btn:hover, .overview-mode-btn:hover {
     color: var(--primary);
 }
 
-.period-mode-btn.active {
+.period-mode-btn.active, .overview-mode-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
     box-shadow: 0 4px 12px rgba(37, 171, 183, 0.3);
@@ -330,7 +302,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }
 
 .kpi-card {
@@ -395,7 +367,7 @@ body {
     color: var(--text-muted);
 }
 
-/* Fechamento por Período Section (Diário, Semanal, Mensal, Anual) */
+/* Fechamento por Período Section */
 .closure-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
