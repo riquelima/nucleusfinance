@@ -263,7 +263,7 @@ body {
     gap: 3px;
 }
 
-.period-mode-btn, .overview-mode-btn {
+.period-mode-btn, .overview-mode-btn, .trans-mode-btn {
     background: transparent;
     border: none;
     height: 32px;
@@ -280,11 +280,11 @@ body {
     white-space: nowrap;
 }
 
-.period-mode-btn:hover, .overview-mode-btn:hover {
+.period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover {
     color: var(--primary);
 }
 
-.period-mode-btn.active, .overview-mode-btn.active {
+.period-mode-btn.active, .overview-mode-btn.active, .trans-mode-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
     box-shadow: 0 3px 10px rgba(37, 171, 183, 0.3);
