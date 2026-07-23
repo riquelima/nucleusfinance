@@ -992,7 +992,12 @@ class NucleusDashboardApp {
 
             html += `
                 <tr>
-                    <td style="font-weight: 700;"><span class="team-jobs-badge">${label}</span></td>
+                    <td style="font-weight: 700;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img-xs">
+                            <span>${label}</span>
+                        </div>
+                    </td>
                     <td style="font-weight: 600;">${tot.count} jobs</td>
                     <td style="font-weight: 700; color: #0f172a;">${this.formatCurrency(tot.total)}</td>
                     <td style="color: var(--accent-amber); font-weight: 700;">${this.formatCurrency(tot.tip)}</td>
@@ -1363,8 +1368,8 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 <div class="team-card glass-panel animate-fade-in">
                     <div class="team-card-header">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                            <div class="team-avatar ${teamClasses[key]}">
-                                T${key.replace('TIME', '')}
+                            <div class="team-avatar">
+                                <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img">
                             </div>
                             <div>
                                 <h3 class="team-name">${label}</h3>
@@ -1403,7 +1408,10 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 tableHtml += `
                     <tr>
                         <td style="font-weight: 700;">
-                            <span class="team-jobs-badge" style="width: 68px; justify-content: center;">${label}</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img-xs">
+                                <span>${label}</span>
+                            </div>
                         </td>
                         <td style="font-weight: 600; text-align: right;">${tot.count} serviços</td>
                         <td style="font-weight: 600; text-align: right;">${this.formatCurrency(tot.subtotal)}</td>
@@ -1482,7 +1490,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             html += `
                 <tr class="${rowClass}">
                     <td>${posBadge}</td>
-                    <td style="font-weight: 700; color: #0f172a;">${item.label}</td>
+                    <td style="font-weight: 700; color: #0f172a;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="time${item.key.replace('TIME', '')}.jpg" alt="${item.label}" class="team-avatar-img-xs">
+                            <span>${item.label}</span>
+                        </div>
+                    </td>
                     <td style="font-weight: 800; color: var(--primary); font-size: 14px; text-align: right;">${this.formatCurrency(item.tot.total)}</td>
                     <td style="font-weight: 700; text-align: right;">${share}%</td>
                     <td style="font-weight: 600; text-align: right;">${this.formatCurrency(item.tot.ticketMedio)}</td>
@@ -1556,7 +1569,10 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 <div class="team-profile-card">
                     <div>
                         <div class="team-profile-header">
-                            <span class="team-profile-title" style="color: ${meta.color};">${label}</span>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                                <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img-sm">
+                                <span class="team-profile-title" style="color: ${meta.color};">${label}</span>
+                            </div>
                             <div style="font-size: 11px; font-weight: 700; color: var(--text-muted);">
                                 ${tot.count} jobs | ${this.formatCurrency(tot.total)}
                             </div>
@@ -1744,7 +1760,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const avgCompanyRevenuePerTeam = grandTotalAllTeamsInPeriod / 5;
 
         let html = '';
-        teamTotalsList.forEach(({ label, tot }) => {
+        teamTotalsList.forEach(({ key, label, tot }) => {
             const ticketDiff = tot.ticketMedio - avgCompanyTicket;
             const revDiff = tot.total - avgCompanyRevenuePerTeam;
             const sharePct = grandTotalAllTeamsInPeriod > 0 ? ((tot.total / grandTotalAllTeamsInPeriod) * 100).toFixed(1) : '0.0';
@@ -1760,7 +1776,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
             html += `
                 <tr>
-                    <td style="font-weight: 700; color: #0f172a;">${label}</td>
+                    <td style="font-weight: 700; color: #0f172a;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img-xs">
+                            <span>${label}</span>
+                        </div>
+                    </td>
                     <td style="font-weight: 600; text-align: right;">${this.formatCurrency(tot.ticketMedio)}</td>
                     <td style="font-weight: 700; color: ${ticketDiff >= 0 ? 'var(--accent-emerald)' : 'var(--accent-rose)'}; text-align: right;">
                         ${ticketDiff >= 0 ? '+' : ''}${this.formatCurrency(ticketDiff)}
@@ -2307,7 +2328,12 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             html += `
                 <tr>
                     <td style="font-weight: 700; color: var(--primary);">${rank}º</td>
-                    <td style="font-weight: 700; color: #0f172a;">${t.label}</td>
+                    <td style="font-weight: 700; color: #0f172a;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <img src="time${t.key.replace('TIME', '')}.jpg" alt="${t.label}" class="team-avatar-img-xs">
+                            <span>${t.label}</span>
+                        </div>
+                    </td>
                     <td style="font-weight: 600; text-align: right;">${t.tot.count} jobs</td>
                     <td style="font-weight: 800; color: var(--primary); text-align: right;">${this.formatCurrency(t.tot.total)}</td>
                     <td style="color: var(--accent-amber); font-weight: 700; text-align: right;">${this.formatCurrency(t.tot.tip)}</td>
