@@ -43,6 +43,57 @@
     --radius-full: 9999px;
 }
 
+/* ==========================================================================
+   Lucide Icons Global Sizing, Alignment & Design System Styling
+   ========================================================================== */
+i[data-lucide], svg.lucide {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2px;
+    vertical-align: middle;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: color 0.2s ease, stroke 0.2s ease;
+}
+
+.kpi-icon-box i[data-lucide], .kpi-icon-box svg.lucide {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2.2px;
+}
+
+.btn i[data-lucide], .btn svg.lucide,
+button i[data-lucide], button svg.lucide {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.header-actions .btn-secondary i[data-lucide],
+.header-actions .btn-secondary svg.lucide {
+    margin-right: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.select-icon[data-lucide], .select-icon.lucide,
+.datepicker-icon[data-lucide], .datepicker-icon.lucide {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+}
+
+.spin, svg.lucide-loader-2.spin {
+    animation: lucide-spin 1s linear infinite;
+}
+
+@keyframes lucide-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 [data-theme="dark"] {
     --bg-body: #191919;
     --bg-gradient: radial-gradient(circle at 10% 10%, rgba(37, 171, 183, 0.08) 0%, transparent 40%),

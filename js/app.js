@@ -102,6 +102,17 @@ class NucleusDashboardApp {
             this.switchTab(targetTab);
         }
         this.initialized = true;
+        this.refreshLucideIcons();
+    }
+
+    refreshLucideIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            try {
+                window.lucide.createIcons();
+            } catch (e) {
+                console.warn('Lucide createIcons notice:', e);
+            }
+        }
     }
 
     toggleTheme() {
@@ -116,14 +127,15 @@ class NucleusDashboardApp {
         const toggleBtn = document.getElementById('btnThemeToggle');
         if (toggleBtn) {
             toggleBtn.innerHTML = theme === 'dark' 
-                ? '<i class="fa-solid fa-sun" style="color: #f59e0b;"></i>' 
-                : '<i class="fa-solid fa-moon"></i>';
+                ? '<i data-lucide="sun" style="color: #f59e0b;"></i>' 
+                : '<i data-lucide="moon"></i>';
             toggleBtn.title = theme === 'dark' ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro';
         }
 
         if (this.initialized && this.currentData && Object.keys(this.currentData).length > 0) {
             this.renderAllViews();
         }
+        this.refreshLucideIcons();
     }
 
     getChartGridColor() {
@@ -643,6 +655,8 @@ class NucleusDashboardApp {
             this.updateReportsPeriodUI();
             this.renderReportsView();
         }
+
+        this.refreshLucideIcons();
     }
 
     applySliderTransform(tabId) {
@@ -967,11 +981,11 @@ class NucleusDashboardApp {
             
             let badgeHtml = '';
             if (key === maxRevenueTeam) {
-                badgeHtml = `<span class="status-pill status-paid"><i class="fa-solid fa-trophy"></i> Maior Faturamento</span>`;
+                badgeHtml = `<span class="status-pill status-paid"><i data-lucide="trophy"></i> Maior Faturamento</span>`;
             } else if (key === maxTicketTeam) {
-                badgeHtml = `<span class="status-pill status-star"><i class="fa-solid fa-star"></i> Maior Ticket</span>`;
+                badgeHtml = `<span class="status-pill status-star"><i data-lucide="star"></i> Maior Ticket</span>`;
             } else if (key === 'TIME5') {
-                badgeHtml = `<span class="status-pill status-unpaid"><i class="fa-solid fa-lightbulb"></i> Oportunidade</span>`;
+                badgeHtml = `<span class="status-pill status-unpaid"><i data-lucide="lightbulb"></i> Oportunidade</span>`;
             } else {
                 badgeHtml = `<span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Estável</span>`;
             }
@@ -1096,7 +1110,7 @@ class NucleusDashboardApp {
 
         const groups = [
             {
-                name: '👥 Mão de Obra (Payroll)',
+                name: '<i data-lucide="users" style="color: var(--primary);"></i> Mão de Obra (Payroll)',
                 monthlyBase: 27040.00,
                 pct: '85,96%',
                 color: 'var(--primary)',
@@ -1107,7 +1121,7 @@ class NucleusDashboardApp {
                 ]
             },
             {
-                name: '🚗 Frota de Veículos (3 Carros)',
+                name: '<i data-lucide="car" style="color: var(--accent-amber);"></i> Frota de Veículos (3 Carros)',
                 monthlyBase: 2999.00,
                 pct: '9,53%',
                 color: 'var(--accent-amber)',
@@ -1119,7 +1133,7 @@ class NucleusDashboardApp {
                 ]
             },
             {
-                name: '📢 Marketing & Aquisição de Clientes',
+                name: '<i data-lucide="megaphone" style="color: var(--accent-cyan);"></i> Marketing & Aquisição de Clientes',
                 monthlyBase: 1000.00,
                 pct: '3,18%',
                 color: 'var(--accent-cyan)',
@@ -1128,7 +1142,7 @@ class NucleusDashboardApp {
                 ]
             },
             {
-                name: '💻 Tech, CRM & Taxas Administrativas',
+                name: '<i data-lucide="laptop" style="color: #6366f1;"></i> Tech, CRM & Taxas Administrativas',
                 monthlyBase: 586.28,
                 pct: '1,86%',
                 color: '#6366f1',
@@ -1142,7 +1156,7 @@ class NucleusDashboardApp {
                 ]
             },
             {
-                name: '🧼 Operações & Material de Limpeza',
+                name: '<i data-lucide="sparkles" style="color: var(--accent-emerald);"></i> Operações & Material de Limpeza',
                 monthlyBase: 562.00,
                 pct: '1,79%',
                 color: 'var(--accent-emerald)',
@@ -1251,7 +1265,7 @@ class NucleusDashboardApp {
 
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando via MiniMax AI...`;
+            btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Gerando via MiniMax AI...`;
         }
 
         try {
@@ -1297,7 +1311,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Gerar via MiniMax AI`;
+                btn.innerHTML = `<i data-lucide="sparkles"></i> Gerar via MiniMax AI`;
             }
         }
     }
@@ -1532,10 +1546,10 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const clientTeamShare = tot.total > 0 ? ((topClient[1] / tot.total) * 100).toFixed(1) : '0.0';
 
             let badgesHtml = '';
-            if (key === 'TIME2') badgesHtml += `<span class="status-pill status-paid">🏆 Maior Faturamento</span> `;
+            if (key === 'TIME2') badgesHtml += `<span class="status-pill status-paid">Maior Faturamento</span> `;
             if (key === 'TIME4') badgesHtml += `<span class="status-pill status-pending">⭐ Melhor Ticket</span> <span class="status-pill status-paid">❤️ 76% Tips</span> `;
             if (key === 'TIME3') badgesHtml += `<span class="status-pill status-paid">💰 Alta Receita</span> `;
-            if (key === 'TIME5') badgesHtml += `<span class="status-pill status-unpaid">⚠ Menor Ticket</span> `;
+            if (key === 'TIME5') badgesHtml += `<span class="status-pill status-unpaid"><i data-lucide="alert-triangle"></i> Menor Ticket</span> `;
             if (key === 'TIME1') badgesHtml += `<span class="status-pill status-paid">🚀 Operação Estável</span> `;
 
             html += `
@@ -1564,7 +1578,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
                     <div class="anchor-client-box">
                         <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase;">
-                            <i class="fa-solid fa-crown"></i> Cliente Âncora do Time
+                            <i data-lucide="crown"></i> Cliente Âncora do Time
                         </div>
                         <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px;">
                             ${topClient[0]}
@@ -1986,7 +2000,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         if (summaryContainer) {
             let cardsHtml = `
                 <div class="health-mini-card glass-panel ${this.transSelectedTeam === 'ALL' ? 'health-mini-card-highlight' : ''}">
-                    <span class="health-label"><i class="fa-solid fa-dollar-sign" style="color: var(--accent-emerald);"></i> Receita Total Entradas</span>
+                    <span class="health-label"><i data-lucide="dollar-sign" style="color: var(--accent-emerald);"></i> Receita Total Entradas</span>
                     <span class="health-val" style="color: var(--accent-emerald);">${this.formatCurrency(grandPeriodTotal)}</span>
                 </div>
             `;
@@ -2092,7 +2106,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
             let cardsHtml = `
                 <div class="health-mini-card glass-panel ${this.transSelectedCategory === 'ALL' ? 'health-mini-card-highlight' : ''}">
-                    <span class="health-label"><i class="fa-solid fa-arrow-down-short-wide" style="color: var(--accent-rose);"></i> Despesa Total Saídas</span>
+                    <span class="health-label"><i data-lucide="trending-down" style="color: var(--accent-rose);"></i> Despesa Total Saídas</span>
                     <span class="health-val" style="color: var(--accent-rose);">${this.formatCurrency(totalDespesasPeriod)}</span>
                 </div>
             `;
@@ -2285,9 +2299,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const share = grandTotal > 0 ? ((t.tot.total / grandTotal) * 100).toFixed(1) : '0.0';
 
             let badgeHtml = '';
-            if (rank === 1) badgeHtml = `<span class="status-pill status-paid">🏆 1º Liderança</span>`;
-            else if (t.key === 'TIME4') badgeHtml = `<span class="status-pill status-pending">⭐ Maior Ticket</span>`;
-            else if (t.key === 'TIME5') badgeHtml = `<span class="status-pill status-unpaid">⚠ Menor Ticket</span>`;
+            if (rank === 1) badgeHtml = `<span class="status-pill status-paid"><i data-lucide="trophy"></i> 1º Liderança</span>`;
+            else if (t.key === 'TIME4') badgeHtml = `<span class="status-pill status-pending"><i data-lucide="star"></i> Maior Ticket</span>`;
+            else if (t.key === 'TIME5') badgeHtml = `<span class="status-pill status-unpaid"><i data-lucide="alert-triangle"></i> Menor Ticket</span>`;
             else badgeHtml = `<span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Estável</span>`;
 
             html += `
@@ -2588,7 +2602,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const syncBtn = document.getElementById('btnSyncSheets');
         if (syncBtn) {
             syncBtn.disabled = true;
-            syncBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+            syncBtn.innerHTML = `<i data-lucide="loader-2" class="spin"></i>`;
         }
 
         try {
@@ -2602,7 +2616,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         } finally {
             if (syncBtn) {
                 syncBtn.disabled = false;
-                syncBtn.innerHTML = `<i class="fa-solid fa-rotate"></i>`;
+                syncBtn.innerHTML = `<i data-lucide="refresh-cw"></i>`;
             }
         }
     }

@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Chart.js -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Flatpickr Custom Calendar Picker Assets -->
@@ -84,7 +85,7 @@
                                 <input type="password" id="loginPassword" class="form-input" value="nucleus2026" required placeholder="••••••••">
                             </div>
                             <button type="submit" class="btn-primary login-btn">
-                                <i class="fa-solid fa-right-to-bracket"></i> Entrar no Sistema
+                                <i data-lucide="log-in"></i> Entrar no Sistema
                             </button>
                         </form>
                     </div>
@@ -106,13 +107,13 @@
                         </div>
                         <div class="header-actions">
                             <button id="btnSyncSheets" class="btn-secondary" onclick="window.app.syncGoogleSheets()" title="Sincronizar Planilha">
-                                <i class="fa-solid fa-rotate"></i>
+                                <i data-lucide="refresh-cw"></i>
                             </button>
                             <button id="btnThemeToggle" class="btn-secondary" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
-                                <i class="fa-solid fa-moon"></i>
+                                <i data-lucide="moon"></i>
                             </button>
                             <button class="btn-secondary" onclick="window.app.logout()" title="Sair">
-                                <i class="fa-solid fa-power-off"></i>
+                                <i data-lucide="log-out"></i>
                             </button>
                         </div>
                     </header>
@@ -120,21 +121,21 @@
                     <!-- Overview Period Filter Controls Bar -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
-                            <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> Período de Análise da Visão Geral
+                            <i data-lucide="sliders" style="color: var(--primary);"></i> Período de Análise da Visão Geral
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <div class="period-mode-group">
-                                <button type="button" class="overview-mode-btn active" data-mode="daily">📅 Dia</button>
-                                <button type="button" class="overview-mode-btn" data-mode="weekly">🗓️ Semana</button>
-                                <button type="button" class="overview-mode-btn" data-mode="monthly">📆 Mês</button>
-                                <button type="button" class="overview-mode-btn" data-mode="annual">🏆 Anual</button>
+                                <button type="button" class="overview-mode-btn active" data-mode="daily">Dia</button>
+                                <button type="button" class="overview-mode-btn" data-mode="weekly">Semana</button>
+                                <button type="button" class="overview-mode-btn" data-mode="monthly">Mês</button>
+                                <button type="button" class="overview-mode-btn" data-mode="annual">Anual</button>
                             </div>
 
                             <div id="overviewDateInputContainer" class="filter-group">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
                                     <input type="text" id="overviewDateInput" class="custom-flatpickr-input" placeholder="Selecionar data...">
                                 </div>
                             </div>
@@ -142,7 +143,7 @@
                             <div id="overviewMonthInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Mês:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <i data-lucide="calendar-check" class="datepicker-icon"></i>
                                     <input type="text" id="overviewMonthInput" class="custom-flatpickr-input" placeholder="Selecionar mês...">
                                 </div>
                             </div>
@@ -158,7 +159,7 @@
                         <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Faturamento Total (Receita)">Faturamento Total (Receita)</span>
-                                <div class="kpi-icon-box"><i class="fa-solid fa-dollar-sign"></i></div>
+                                <div class="kpi-icon-box"><i data-lucide="dollar-sign"></i></div>
                             </div>
                             <div class="kpi-value" id="ovFaturamento">$0.00</div>
                             <div class="kpi-details">
@@ -171,7 +172,7 @@
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Despesas Operacionais Totais">Despesas Operacionais Totais</span>
                                 <div class="kpi-icon-box" style="background: rgba(225, 29, 72, 0.12); color: var(--accent-rose);">
-                                    <i class="fa-solid fa-arrow-down-short-wide"></i>
+                                    <i data-lucide="trending-down"></i>
                                 </div>
                             </div>
                             <div class="kpi-value" id="ovDespesas" style="color: var(--accent-rose);">$0.00</div>
@@ -185,7 +186,7 @@
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Lucro Líquido Operacional">Lucro Líquido Operacional</span>
                                 <div class="kpi-icon-box" style="background: rgba(5, 150, 105, 0.12); color: var(--accent-emerald);">
-                                    <i class="fa-solid fa-chart-line"></i>
+                                    <i data-lucide="trending-up"></i>
                                 </div>
                             </div>
                             <div class="kpi-value" id="ovLucroLiquido" style="color: var(--accent-emerald);">$0.00</div>
@@ -198,7 +199,7 @@
                         <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
                             <div class="kpi-header">
                                 <span class="kpi-title" title="Subtotal & Gorjetas (Tips)">Subtotal & Gorjetas (Tips)</span>
-                                <div class="kpi-icon-box"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                                <div class="kpi-icon-box"><i data-lucide="coins"></i></div>
                             </div>
                             <div class="kpi-value" id="ovTips">$0.00</div>
                             <div class="kpi-details">
@@ -239,14 +240,14 @@
                     <div class="glass-panel" style="padding: 22px 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title">
-                                <i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Estrutura do Centro de Custos & Despesas (<span id="ovExpensePeriodLabel">Pro-rata Diário</span>)
+                                <i data-lucide="network" style="color: var(--accent-rose);"></i> Estrutura do Centro de Custos & Despesas (<span id="ovExpensePeriodLabel">Pro-rata Diário</span>)
                             </h3>
                         </div>
 
                         <div class="expense-breakdown-grid">
                             <div class="expense-card">
                                 <div class="expense-card-header">
-                                    <span class="expense-card-title"><i class="fa-solid fa-user-group" style="color: var(--primary);"></i> Payroll</span>
+                                    <span class="expense-card-title"><i data-lucide="users" style="color: var(--primary);"></i> Payroll</span>
                                     <span class="expense-card-val" style="color: var(--primary);" id="expPayrollVal">$901.33</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(37, 171, 183, 0.2);">
@@ -260,7 +261,7 @@
 
                             <div class="expense-card">
                                 <div class="expense-card-header">
-                                    <span class="expense-card-title"><i class="fa-solid fa-car" style="color: var(--accent-amber);"></i> Frota (3 Veículos)</span>
+                                    <span class="expense-card-title"><i data-lucide="car" style="color: var(--accent-amber);"></i> Frota (3 Veículos)</span>
                                     <span class="expense-card-val" style="color: var(--accent-amber);" id="expFrotaVal">$99.97</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(217, 119, 6, 0.2);">
@@ -274,7 +275,7 @@
 
                             <div class="expense-card">
                                 <div class="expense-card-header">
-                                    <span class="expense-card-title"><i class="fa-solid fa-bullhorn" style="color: var(--accent-cyan);"></i> Marketing</span>
+                                    <span class="expense-card-title"><i data-lucide="megaphone" style="color: var(--accent-cyan);"></i> Marketing</span>
                                     <span class="expense-card-val" style="color: var(--accent-cyan);" id="expMarketingVal">$33.33</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(19, 137, 150, 0.2);">
@@ -288,7 +289,7 @@
 
                             <div class="expense-card">
                                 <div class="expense-card-header">
-                                    <span class="expense-card-title"><i class="fa-solid fa-laptop-code" style="color: #6366f1;"></i> Tech & CRM</span>
+                                    <span class="expense-card-title"><i data-lucide="laptop" style="color: #6366f1;"></i> Tech & CRM</span>
                                     <span class="expense-card-val" style="color: #6366f1;" id="expTechVal">$19.54</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(99, 102, 241, 0.2);">
@@ -302,7 +303,7 @@
 
                             <div class="expense-card">
                                 <div class="expense-card-header">
-                                    <span class="expense-card-title"><i class="fa-solid fa-pump-soap" style="color: var(--accent-emerald);"></i> Operações</span>
+                                    <span class="expense-card-title"><i data-lucide="sparkles" style="color: var(--accent-emerald);"></i> Operações</span>
                                     <span class="expense-card-val" style="color: var(--accent-emerald);" id="expOpsVal">$18.73</span>
                                 </div>
                                 <div class="expense-progress-bar" style="background: rgba(5, 150, 105, 0.2);">
@@ -320,7 +321,7 @@
                     <div class="charts-grid">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução Mensal: Faturamento Bruto vs Despesas Operacionais</h3>
+                                <h3 class="chart-title"><i data-lucide="area-chart" style="color: var(--primary);"></i> Evolução Mensal: Faturamento Bruto vs Despesas Operacionais</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartRevenueTrend"></canvas>
@@ -329,7 +330,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
+                                <h3 class="chart-title"><i data-lucide="pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartTeamComparison"></canvas>
@@ -340,9 +341,9 @@
                     <!-- RESUMO EXECUTIVO -->
                     <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 14px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Resumo Executivo da Operação</h3>
+                            <h3 class="chart-title"><i data-lucide="clipboard-check" style="color: var(--primary);"></i> Resumo Executivo da Operação</h3>
                             <button id="btnAiSummary" class="btn-primary" style="height: 34px; padding: 0 14px; font-size: 12px;" onclick="window.app.generateExecutiveSummaryAI()">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> Gerar via MiniMax AI
+                                <i data-lucide="sparkles"></i> Gerar via MiniMax AI
                             </button>
                         </div>
                         <div id="executiveSummaryContent" class="executive-summary-text">
@@ -386,7 +387,7 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
                         <div class="glass-panel" style="padding: 22px 24px;">
                             <div class="chart-header" style="margin-bottom: 16px;">
-                                <h3 class="chart-title"><i class="fa-solid fa-users-viewfinder" style="color: var(--primary);"></i> Performance Detalhada das Equipes</h3>
+                                <h3 class="chart-title"><i data-lucide="users" style="color: var(--primary);"></i> Performance Detalhada das Equipes</h3>
                             </div>
                             <div class="table-responsive">
                                 <table class="custom-table">
@@ -414,7 +415,7 @@
                         <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <div class="chart-header" style="margin-bottom: 16px;">
-                                    <h3 class="chart-title"><i class="fa-solid fa-crown" style="color: var(--accent-amber);"></i> Top 5 Clientes VIP</h3>
+                                    <h3 class="chart-title"><i data-lucide="crown" style="color: var(--accent-amber);"></i> Top 5 Clientes VIP</h3>
                                 </div>
                                 <div id="vipClientsList" class="vip-clients-list">
                                     <!-- Loaded dynamically -->
@@ -423,7 +424,7 @@
                             
                             <div class="concentration-badge-card" style="margin-top: 14px; padding: 12px; background: rgba(37, 171, 183, 0.1); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
                                 <div style="font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 2px;">
-                                    <i class="fa-solid fa-chart-pie"></i> Concentração da Carteira
+                                    <i data-lucide="pie-chart"></i> Concentração da Carteira
                                 </div>
                                 <div style="font-size: 12px; color: #0f172a; font-weight: 600;">
                                     Os Top 10 Clientes representam <strong>0,0%</strong> da receita do período.
@@ -437,7 +438,7 @@
                         <div class="glass-panel" style="padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <div class="chart-header" style="margin-bottom: 16px;">
-                                    <h3 class="chart-title"><i class="fa-solid fa-arrows-rotate" style="color: var(--accent-emerald);"></i> Fidelização de Clientes</h3>
+                                    <h3 class="chart-title"><i data-lucide="repeat" style="color: var(--accent-emerald);"></i> Fidelização de Clientes</h3>
                                 </div>
 
                                 <div class="gauge-wrapper" style="text-align: center; margin: 10px 0 20px 0;">
@@ -472,7 +473,7 @@
 
                         <div class="glass-panel" style="padding: 22px 24px;">
                             <div class="chart-header" style="margin-bottom: 16px;">
-                                <h3 class="chart-title"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--accent-rose);"></i> Detalhamento Hierárquico das Despesas</h3>
+                                <h3 class="chart-title"><i data-lucide="file-text" style="color: var(--accent-rose);"></i> Detalhamento Hierárquico das Despesas</h3>
                                 <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Total Pro-rata do Período</span>
                             </div>
 
@@ -486,7 +487,7 @@
                     <div class="charts-grid" style="margin-bottom: 28px;">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-chart-line" style="color: var(--accent-emerald);"></i> Evolução Mensal da Margem de Lucro (%)</h3>
+                                <h3 class="chart-title"><i data-lucide="trending-up" style="color: var(--accent-emerald);"></i> Evolução Mensal da Margem de Lucro (%)</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartMarginTrend"></canvas>
@@ -495,7 +496,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-arrow-trend-up" style="color: var(--primary);"></i> Evolução Mensal do Ticket Médio ($)</h3>
+                                <h3 class="chart-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> Evolução Mensal do Ticket Médio ($)</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartTicketTrend"></canvas>
@@ -506,13 +507,13 @@
                     <!-- INSIGHTS ESTRATÉGICOS -->
                     <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
                         <div class="chart-header" style="margin-bottom: 18px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> Insights & Oportunidades Estratégicas de Negócio</h3>
+                            <h3 class="chart-title"><i data-lucide="lightbulb" style="color: var(--accent-amber);"></i> Insights & Oportunidades Estratégicas de Negócio</h3>
                         </div>
 
                         <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
                             <div class="insight-card insight-high-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Otimização de Preço do Time 5</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="arrow-up-right" style="color: var(--accent-rose);"></i> Otimização de Preço do Time 5</span>
                                     <span class="status-pill status-unpaid">Alta Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -525,7 +526,7 @@
 
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-piggy-bank" style="color: var(--accent-amber);"></i> Redução de Taxas de Pgto</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="piggy-bank" style="color: var(--accent-amber);"></i> Redução de Taxas de Pgto</span>
                                     <span class="status-pill status-pending">Média Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -538,7 +539,7 @@
 
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Cultura de Gorjetas (Tips)</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="star" style="color: var(--accent-amber);"></i> Cultura de Gorjetas (Tips)</span>
                                     <span class="status-pill status-pending">Média Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -551,7 +552,7 @@
 
                             <div class="insight-card insight-low-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-rocket" style="color: var(--primary);"></i> Escala de Marketing (ROAS)</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="rocket" style="color: var(--primary);"></i> Escala de Marketing (ROAS)</span>
                                     <span class="status-pill status-paid">Oportunidade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -582,10 +583,10 @@
                         </div>
                         <div class="header-actions">
                             <button class="btn-secondary" onclick="window.app.syncGoogleSheets()" title="Sincronizar Planilha">
-                                <i class="fa-solid fa-rotate"></i>
+                                <i data-lucide="refresh-cw"></i>
                             </button>
                             <button class="btn-secondary" onclick="window.app.logout()" title="Sair">
-                                <i class="fa-solid fa-power-off"></i>
+                                <i data-lucide="log-out"></i>
                             </button>
                         </div>
                     </header>
@@ -593,21 +594,21 @@
                     <!-- Teams Period Filter Controls Bar (Manter Intacto) -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
-                            <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Período de Análise por Equipe
+                            <i data-lucide="filter" style="color: var(--primary);"></i> Período de Análise por Equipe
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <div class="period-mode-group">
-                                <button type="button" class="period-mode-btn" data-mode="daily">📅 Dia</button>
-                                <button type="button" class="period-mode-btn" data-mode="weekly">🗓️ Semana</button>
-                                <button type="button" class="period-mode-btn" data-mode="monthly">📆 Mês</button>
-                                <button type="button" class="period-mode-btn active" data-mode="annual">🏆 Anual</button>
+                                <button type="button" class="period-mode-btn" data-mode="daily">Dia</button>
+                                <button type="button" class="period-mode-btn" data-mode="weekly">Semana</button>
+                                <button type="button" class="period-mode-btn" data-mode="monthly">Mês</button>
+                                <button type="button" class="period-mode-btn active" data-mode="annual">Anual</button>
                             </div>
 
                             <div id="teamsDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
                                     <input type="text" id="teamsDateInput" class="custom-flatpickr-input" placeholder="Selecionar data...">
                                 </div>
                             </div>
@@ -615,7 +616,7 @@
                             <div id="teamsMonthInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Mês:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <i data-lucide="calendar-check" class="datepicker-icon"></i>
                                     <input type="text" id="teamsMonthInput" class="custom-flatpickr-input" placeholder="Selecionar mês...">
                                 </div>
                             </div>
@@ -635,7 +636,7 @@
                     <div class="table-panel glass-panel" style="margin-top: 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
                             <h3 class="chart-title">
-                                <i class="fa-solid fa-table-list" style="color: var(--primary);"></i> Quadro Comparativo por Equipes (<span id="teamsTablePeriodLabel">Anual 2026</span>)
+                                <i data-lucide="table" style="color: var(--primary);"></i> Quadro Comparativo por Equipes (<span id="teamsTablePeriodLabel">Anual 2026</span>)
                             </h3>
                         </div>
                         <div class="table-responsive">
@@ -665,7 +666,7 @@
                     <!-- 1. RANKING DAS EQUIPES (OURO, PRATA, BRONZE) -->
                     <div class="table-panel glass-panel" style="margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Ranking Oficial das Equipes</h3>
+                            <h3 class="chart-title"><i data-lucide="trophy" style="color: var(--accent-amber);"></i> Ranking Oficial das Equipes</h3>
                             <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">Ordenado por Faturamento Bruto</span>
                         </div>
                         <div class="table-responsive">
@@ -690,31 +691,31 @@
                     <!-- 2. INDICADORES DE PERFORMANCE (LINHA DE MINI CARDS) -->
                     <div class="business-health-strip" style="margin-bottom: 28px;">
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Maior Faturamento</span>
+                            <span class="health-label"><i data-lucide="trophy" style="color: var(--accent-amber);"></i> Maior Faturamento</span>
                             <span class="health-val" style="color: var(--primary);" id="biTopRevenue">Time 2 ($109.315)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-gem" style="color: #ec4899;"></i> Maior Ticket Médio</span>
+                            <span class="health-label"><i data-lucide="gem" style="color: #ec4899;"></i> Maior Ticket Médio</span>
                             <span class="health-val" style="color: #ec4899;" id="biTopTicket">Time 4 ($188,39)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-boxes-stacked" style="color: var(--accent-emerald);"></i> Maior Volume</span>
+                            <span class="health-label"><i data-lucide="layers" style="color: var(--accent-emerald);"></i> Maior Volume</span>
                             <span class="health-val" id="biTopVolume">Time 2 (594 jobs)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-heart" style="color: var(--accent-amber);"></i> Maior Vol. Gorjetas</span>
+                            <span class="health-label"><i data-lucide="heart" style="color: var(--accent-amber);"></i> Maior Vol. Gorjetas</span>
                             <span class="health-val" style="color: var(--accent-amber);" id="biTopTips">Time 4 (76% Tips)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Maior Participação</span>
+                            <span class="health-label"><i data-lucide="pie-chart" style="color: var(--primary);"></i> Maior Participação</span>
                             <span class="health-val" id="biTopShare">Time 2 (23,5%)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose);"></i> Menor Ticket Médio</span>
+                            <span class="health-label"><i data-lucide="alert-triangle" style="color: var(--accent-rose);"></i> Menor Ticket Médio</span>
                             <span class="health-val" style="color: var(--accent-rose);" id="biLowestTicket">Time 5 ($163,72)</span>
                         </div>
                         <div class="health-mini-card glass-panel">
-                            <span class="health-label"><i class="fa-solid fa-calculator" style="color: var(--text-main);"></i> Média da Empresa</span>
+                            <span class="health-label"><i data-lucide="calculator" style="color: var(--text-main);"></i> Média da Empresa</span>
                             <span class="health-val" id="biCompanyAvg">$178,68 / job</span>
                         </div>
                     </div>
@@ -722,7 +723,7 @@
                     <!-- 3. PERFIL DAS EQUIPES & CLIENTE ÂNCORA (5 CARDS GRANDES) -->
                     <div style="margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-id-card" style="color: var(--primary);"></i> Perfil Operacional & Cliente Âncora das 5 Equipes</h3>
+                            <h3 class="chart-title"><i data-lucide="id-card" style="color: var(--primary);"></i> Perfil Operacional & Cliente Âncora das 5 Equipes</h3>
                         </div>
                         <div id="teamProfileCardsContainer" class="team-profile-grid">
                             <!-- Loaded dynamically via app.js -->
@@ -733,7 +734,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-chart-bar" style="color: var(--primary);"></i> Receita por Equipe ($)</h3>
+                                <h3 class="chart-title"><i data-lucide="bar-chart-3" style="color: var(--primary);"></i> Receita por Equipe ($)</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartBIRevenueBar"></canvas>
@@ -742,7 +743,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-arrow-right-arrow-left" style="color: var(--accent-amber);"></i> Ticket Médio por Equipe ($)</h3>
+                                <h3 class="chart-title"><i data-lucide="arrow-left-right" style="color: var(--accent-amber);"></i> Ticket Médio por Equipe ($)</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartBITicketHorizontal"></canvas>
@@ -751,7 +752,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-list-check" style="color: var(--accent-emerald);"></i> Volume de Agendamentos por Equipe</h3>
+                                <h3 class="chart-title"><i data-lucide="check-square" style="color: var(--accent-emerald);"></i> Volume de Agendamentos por Equipe</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartBIVolumeBar"></canvas>
@@ -760,7 +761,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-coins" style="color: #ec4899;"></i> Gorjetas Arrecadadas (Destaque Time 4 76%)</h3>
+                                <h3 class="chart-title"><i data-lucide="coins" style="color: #ec4899;"></i> Gorjetas Arrecadadas (Destaque Time 4 76%)</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="chartBITipsBar"></canvas>
@@ -772,9 +773,9 @@
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px;">
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-compass-drafting" style="color: var(--primary);"></i> Radar de Performance Multi-Eixos</h3>
+                                <h3 class="chart-title"><i data-lucide="compass" style="color: var(--primary);"></i> Radar de Performance Multi-Eixos</h3>
                                 <div class="custom-select-wrapper">
-                                    <i class="fa-solid fa-users select-icon"></i>
+                                    <i data-lucide="users" class="select-icon"></i>
                                     <select id="biRadarTeamSelect" class="input-select" onchange="window.app.renderTeamsRadarChart()">
                                         <option value="ALL">Todas as Equipes Simultâneas</option>
                                         <option value="TIME1">Time 1</option>
@@ -783,7 +784,7 @@
                                         <option value="TIME4">Time 4</option>
                                         <option value="TIME5">Time 5</option>
                                     </select>
-                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
                             </div>
                             <div class="chart-container" style="height: 280px;">
@@ -793,7 +794,7 @@
 
                         <div class="chart-card glass-panel">
                             <div class="chart-header">
-                                <h3 class="chart-title"><i class="fa-solid fa-chart-pie" style="color: var(--accent-cyan);"></i> Participação no Faturamento</h3>
+                                <h3 class="chart-title"><i data-lucide="pie-chart" style="color: var(--accent-cyan);"></i> Participação no Faturamento</h3>
                             </div>
                             <div class="chart-container" style="height: 280px;">
                                 <canvas id="chartBIDonut"></canvas>
@@ -804,7 +805,7 @@
                     <!-- 6. COMPARAÇÃO COM A MÉDIA DA EMPRESA (BENCHMARK TABLE) -->
                     <div class="table-panel glass-panel" style="margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 16px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-scale-balanced" style="color: var(--primary);"></i> Benchmark Comparativo vs Média Geral</h3>
+                            <h3 class="chart-title"><i data-lucide="scale" style="color: var(--primary);"></i> Benchmark Comparativo vs Média Geral</h3>
                         </div>
                         <div class="table-responsive">
                             <table class="custom-table">
@@ -829,7 +830,7 @@
                     <!-- 7. EVOLUÇÃO TEMPORAL DAS EQUIPES (MENSAL LINE TREND CHART) -->
                     <div class="chart-card glass-panel" style="min-height: 380px; max-height: 380px; margin-bottom: 28px;">
                         <div class="chart-header">
-                            <h3 class="chart-title"><i class="fa-solid fa-arrow-trend-up" style="color: var(--primary);"></i> Evolução Mensal da Receita das 5 Equipes (Jan-Dez)</h3>
+                            <h3 class="chart-title"><i data-lucide="trending-up" style="color: var(--primary);"></i> Evolução Mensal da Receita das 5 Equipes (Jan-Dez)</h3>
                         </div>
                         <div class="chart-container" style="height: 290px;">
                             <canvas id="chartBITrendLine"></canvas>
@@ -839,13 +840,13 @@
                     <!-- 8. INSIGHTS ESTRATÉGICOS DAS EQUIPES -->
                     <div class="glass-panel" style="padding: 24px; margin-bottom: 28px;">
                         <div class="chart-header" style="margin-bottom: 18px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> Insights Estratégicos & Recomendações das Equipes</h3>
+                            <h3 class="chart-title"><i data-lucide="lightbulb" style="color: var(--accent-amber);"></i> Insights Estratégicos & Recomendações das Equipes</h3>
                         </div>
 
                         <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
                             <div class="insight-card insight-high-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="arrow-up-right" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
                                     <span class="status-pill status-unpaid">Alta Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -858,7 +859,7 @@
 
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
                                     <span class="status-pill status-pending">Média Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -871,7 +872,7 @@
 
                             <div class="insight-card insight-med-priority">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Proteção dos Clientes Estratégicos</span>
+                                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="shield" style="color: var(--primary);"></i> Proteção dos Clientes Estratégicos</span>
                                     <span class="status-pill status-pending">Média Prioridade</span>
                                 </div>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -887,7 +888,7 @@
                     <!-- 9. RESUMO EXECUTIVO DA ABA EQUIPES -->
                     <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 32px;">
                         <div class="chart-header" style="margin-bottom: 14px;">
-                            <h3 class="chart-title"><i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i> Resumo Executivo das Equipes</h3>
+                            <h3 class="chart-title"><i data-lucide="clipboard-list" style="color: var(--primary);"></i> Resumo Executivo das Equipes</h3>
                         </div>
                         <div id="teamsExecutiveSummaryContent" class="executive-summary-text">
                             O <strong>Time 2</strong> permanece como principal motor financeiro da empresa, respondendo por aproximadamente <strong>23,5% do faturamento anual ($109.315,00)</strong> no período selecionado. O <strong>Time 4</strong> apresenta o maior ticket médio (<strong>$188,39</strong>) e o <strong>Time 4</strong> concentra a maior parte das gorjetas (<strong>$238,00 em tips</strong>), indicando elevado nível de satisfação dos clientes. Já o <strong>Time 5</strong> representa a maior oportunidade de crescimento, pois mantém um alto volume de atendimentos (560 jobs), porém com o menor ticket médio (<strong>$163,72</strong>). Ajustes na precificação podem elevar significativamente a lucratividade sem necessidade de expansão operacional.
@@ -912,10 +913,10 @@
                         </div>
                         <div class="header-actions">
                             <button class="btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;" onclick="window.app.exportCSV()">
-                                <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                                <i data-lucide="file-spreadsheet"></i> Exportar CSV
                             </button>
                             <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
-                                <i class="fa-solid fa-power-off"></i>
+                                <i data-lucide="log-out"></i>
                             </button>
                         </div>
                     </header>
@@ -924,36 +925,36 @@
                     <div class="glass-panel" style="padding: 6px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; border-radius: var(--radius-lg);">
                         <div class="trans-subtabs-group" style="display: flex; gap: 6px;">
                             <button type="button" class="trans-subtab-btn active" data-subtab="entradas">
-                                <i class="fa-solid fa-circle-arrow-down" style="color: var(--accent-emerald);"></i> Entradas (Faturamento)
+                                <i data-lucide="arrow-down-circle" style="color: var(--accent-emerald);"></i> Entradas (Faturamento)
                             </button>
                             <button type="button" class="trans-subtab-btn" data-subtab="saidas">
-                                <i class="fa-solid fa-circle-arrow-up" style="color: var(--accent-rose);"></i> Saídas (Despesas Operacionais)
+                                <i data-lucide="arrow-up-circle" style="color: var(--accent-rose);"></i> Saídas (Despesas Operacionais)
                             </button>
                         </div>
 
                         <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); padding-right: 12px;">
-                            <i class="fa-solid fa-shield-halved" style="color: var(--primary);"></i> Controle Financeiro Auditado
+                            <i data-lucide="shield-check" style="color: var(--primary);"></i> Controle Financeiro Auditado
                         </div>
                     </div>
 
                     <!-- Unified Period Filter Controls Bar -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
-                            <i class="fa-solid fa-filter" style="color: var(--primary);"></i> Período de Análise das Transações
+                            <i data-lucide="filter" style="color: var(--primary);"></i> Período de Análise das Transações
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <div class="period-mode-group">
-                                <button type="button" class="trans-mode-btn" data-mode="daily">📅 Dia</button>
-                                <button type="button" class="trans-mode-btn" data-mode="weekly">🗓️ Semana</button>
-                                <button type="button" class="trans-mode-btn" data-mode="monthly">📆 Mês</button>
-                                <button type="button" class="trans-mode-btn active" data-mode="annual">🏆 Anual</button>
+                                <button type="button" class="trans-mode-btn" data-mode="daily">Dia</button>
+                                <button type="button" class="trans-mode-btn" data-mode="weekly">Semana</button>
+                                <button type="button" class="trans-mode-btn" data-mode="monthly">Mês</button>
+                                <button type="button" class="trans-mode-btn active" data-mode="annual">Anual</button>
                             </div>
 
                             <div id="transDateInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Data:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
                                     <input type="text" id="transDateInput" class="custom-flatpickr-input" placeholder="Selecionar data...">
                                 </div>
                             </div>
@@ -961,7 +962,7 @@
                             <div id="transMonthInputContainer" class="filter-group" style="display: none;">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Mês:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-check datepicker-icon"></i>
+                                    <i data-lucide="calendar-check" class="datepicker-icon"></i>
                                     <input type="text" id="transMonthInput" class="custom-flatpickr-input" placeholder="Selecionar mês...">
                                 </div>
                             </div>
@@ -981,14 +982,14 @@
                     <div class="table-panel glass-panel">
                         <div class="table-header-controls">
                             <div class="search-box">
-                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <i data-lucide="search"></i>
                                 <input type="text" id="tableSearchInput" placeholder="Buscar por cliente, descrição, tipo ou data...">
                             </div>
 
                             <!-- Dynamic Filter Dropdowns (Entradas vs Saídas) -->
                             <div id="entradasFilterGroup" style="display: flex; gap: 12px; align-items: center;">
                                 <div class="custom-select-wrapper">
-                                    <i class="fa-solid fa-users select-icon"></i>
+                                    <i data-lucide="users" class="select-icon"></i>
                                     <select id="transTeamFilterSelect" class="input-select">
                                         <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
                                         <option value="TIME1">Time 1</option>
@@ -997,24 +998,24 @@
                                         <option value="TIME4">Time 4</option>
                                         <option value="TIME5">Time 5</option>
                                     </select>
-                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
 
                                 <div class="custom-select-wrapper">
-                                    <i class="fa-solid fa-circle-check select-icon"></i>
+                                    <i data-lucide="check-circle" class="select-icon"></i>
                                     <select id="transStatusFilterSelect" class="input-select">
                                         <option value="ALL">Todos os Status</option>
                                         <option value="PAID">PAID</option>
                                         <option value="DUE">DUE</option>
                                         <option value="PLANNED">PLANNED</option>
                                     </select>
-                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
                             </div>
 
                             <div id="saidasFilterGroup" style="display: none; gap: 12px; align-items: center;">
                                 <div class="custom-select-wrapper">
-                                    <i class="fa-solid fa-tags select-icon"></i>
+                                    <i data-lucide="tag" class="select-icon"></i>
                                     <select id="transCategoryFilterSelect" class="input-select">
                                         <option value="ALL">Todas as Categorias</option>
                                         <option value="Payroll">Mão de Obra (Payroll)</option>
@@ -1023,7 +1024,7 @@
                                         <option value="Tech">Tech, CRM & Softwares</option>
                                         <option value="Operações">Operações & Limpeza</option>
                                     </select>
-                                    <i class="fa-solid fa-chevron-down select-arrow"></i>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
                             </div>
                         </div>
@@ -1073,9 +1074,9 @@
                         <div class="table-pagination" style="margin-top: 18px;">
                             <span id="tablePaginationInfo">Exibindo 0 - 0 de 0 registros</span>
                             <div class="pagination-controls">
-                                <button id="btnPrevPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(-1)"><i class="fa-solid fa-chevron-left"></i> Anterior</button>
+                                <button id="btnPrevPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(-1)"><i data-lucide="chevron-left"></i> Anterior</button>
                                 <span id="pageNumberDisplay" style="align-self: center; font-weight: 600; padding: 0 12px; font-size: 13px;">Página 1 de 1</span>
-                                <button id="btnNextPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(1)">Próxima <i class="fa-solid fa-chevron-right"></i></button>
+                                <button id="btnNextPage" class="page-btn" style="height: 38px; padding: 0 16px;" onclick="window.app.changePage(1)">Próxima <i data-lucide="chevron-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -1098,10 +1099,10 @@
                         </div>
                         <div class="header-actions">
                             <button class="btn-primary" style="height: 38px; padding: 0 18px; font-size: 13px;" onclick="window.app.exportPDF()">
-                                <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+                                <i data-lucide="file-text"></i> Exportar PDF
                             </button>
                             <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
-                                <i class="fa-solid fa-power-off"></i>
+                                <i data-lucide="log-out"></i>
                             </button>
                         </div>
                     </header>
@@ -1109,7 +1110,7 @@
                     <!-- Date Range Picker & Quick Presets Controls Bar -->
                     <div class="period-bar glass-panel">
                         <div class="period-title">
-                            <i class="fa-solid fa-calendar-range" style="color: var(--primary);"></i> Período do Relatório Executivo
+                            <i data-lucide="calendar-range" style="color: var(--primary);"></i> Período do Relatório Executivo
                         </div>
 
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -1125,7 +1126,7 @@
                             <div class="filter-group">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">De:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
                                     <input type="text" id="repStartDateInput" class="custom-flatpickr-input" style="width: 130px !important;" placeholder="Data inicial...">
                                 </div>
                             </div>
@@ -1133,7 +1134,7 @@
                             <div class="filter-group">
                                 <label style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Até:</label>
                                 <div class="custom-datepicker-wrapper">
-                                    <i class="fa-regular fa-calendar-days datepicker-icon"></i>
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
                                     <input type="text" id="repEndDateInput" class="custom-flatpickr-input" style="width: 130px !important;" placeholder="Data final...">
                                 </div>
                             </div>
@@ -1170,7 +1171,7 @@
                             <div class="kpi-card glass-panel" style="--card-accent: var(--primary);">
                                 <div class="kpi-header">
                                     <span class="kpi-title">Faturamento Total</span>
-                                    <div class="kpi-icon-box"><i class="fa-solid fa-dollar-sign"></i></div>
+                                    <div class="kpi-icon-box"><i data-lucide="dollar-sign"></i></div>
                                 </div>
                                 <div class="kpi-value" id="repKpiFaturamento">$0.00</div>
                                 <div class="kpi-details">
@@ -1183,7 +1184,7 @@
                                 <div class="kpi-header">
                                     <span class="kpi-title">Lucro Líquido</span>
                                     <div class="kpi-icon-box" style="background: rgba(5, 150, 105, 0.12); color: var(--accent-emerald);">
-                                        <i class="fa-solid fa-chart-line"></i>
+                                        <i data-lucide="trending-up"></i>
                                     </div>
                                 </div>
                                 <div class="kpi-value" id="repKpiLucro" style="color: var(--accent-emerald);">$0.00</div>
@@ -1197,7 +1198,7 @@
                                 <div class="kpi-header">
                                     <span class="kpi-title">Despesas Totais</span>
                                     <div class="kpi-icon-box" style="background: rgba(225, 29, 72, 0.12); color: var(--accent-rose);">
-                                        <i class="fa-solid fa-arrow-down-short-wide"></i>
+                                        <i data-lucide="trending-down"></i>
                                     </div>
                                 </div>
                                 <div class="kpi-value" id="repKpiDespesas" style="color: var(--accent-rose);">$0.00</div>
@@ -1210,7 +1211,7 @@
                             <div class="kpi-card glass-panel" style="--card-accent: var(--accent-amber);">
                                 <div class="kpi-header">
                                     <span class="kpi-title">Ticket Médio</span>
-                                    <div class="kpi-icon-box"><i class="fa-solid fa-receipt"></i></div>
+                                    <div class="kpi-icon-box"><i data-lucide="receipt"></i></div>
                                 </div>
                                 <div class="kpi-value" id="repKpiTicket">$0.00</div>
                                 <div class="kpi-details">
@@ -1250,7 +1251,7 @@
                         <!-- 2. RESUMO EXECUTIVO DINÂMICO -->
                         <div class="glass-panel executive-summary-panel" style="padding: 24px; margin-bottom: 28px;">
                             <div class="chart-header" style="margin-bottom: 14px;">
-                                <h3 class="chart-title"><i class="fa-solid fa-clipboard-check" style="color: var(--primary);"></i> Resumo Executivo do Relatório</h3>
+                                <h3 class="chart-title"><i data-lucide="clipboard-check" style="color: var(--primary);"></i> Resumo Executivo do Relatório</h3>
                             </div>
                             <div id="repExecutiveSummaryText" class="executive-summary-text">
                                 <!-- Loaded dynamically -->
@@ -1260,7 +1261,7 @@
                         <!-- 3. PERFORMANCE DAS EQUIPES -->
                         <div class="table-panel glass-panel" style="margin-bottom: 28px;">
                             <div class="chart-header" style="margin-bottom: 16px;">
-                                <h3 class="chart-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Performance Consolidação por Equipe</h3>
+                                <h3 class="chart-title"><i data-lucide="users" style="color: var(--primary);"></i> Performance Consolidação por Equipe</h3>
                             </div>
                             <div class="table-responsive">
                                 <table class="custom-table">
@@ -1290,7 +1291,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
                             <div class="chart-card glass-panel">
                                 <div class="chart-header">
-                                    <h3 class="chart-title"><i class="fa-solid fa-trophy" style="color: var(--accent-amber);"></i> Top 10 Clientes em Faturamento ($)</h3>
+                                    <h3 class="chart-title"><i data-lucide="trophy" style="color: var(--accent-amber);"></i> Top 10 Clientes em Faturamento ($)</h3>
                                 </div>
                                 <div class="chart-container" style="height: 280px;">
                                     <canvas id="chartTopClients"></canvas>
@@ -1299,7 +1300,7 @@
 
                             <div class="table-panel glass-panel">
                                 <div class="chart-header" style="margin-bottom: 16px;">
-                                    <h3 class="chart-title"><i class="fa-solid fa-crown" style="color: var(--accent-amber);"></i> Ranking dos Top Clientes VIP</h3>
+                                    <h3 class="chart-title"><i data-lucide="crown" style="color: var(--accent-amber);"></i> Ranking dos Top Clientes VIP</h3>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="custom-table">
@@ -1324,7 +1325,7 @@
                         <div class="charts-grid" style="margin-bottom: 28px;">
                             <div class="chart-card glass-panel">
                                 <div class="chart-header">
-                                    <h3 class="chart-title"><i class="fa-solid fa-chart-area" style="color: var(--primary);"></i> Evolução da Receita Bruta vs Despesas ($)</h3>
+                                    <h3 class="chart-title"><i data-lucide="area-chart" style="color: var(--primary);"></i> Evolução da Receita Bruta vs Despesas ($)</h3>
                                 </div>
                                 <div class="chart-container">
                                     <canvas id="chartRepRevenueTrend"></canvas>
@@ -1333,7 +1334,7 @@
 
                             <div class="chart-card glass-panel">
                                 <div class="chart-header">
-                                    <h3 class="chart-title"><i class="fa-solid fa-line-chart" style="color: var(--accent-emerald);"></i> Evolução da Margem Líquida (%)</h3>
+                                    <h3 class="chart-title"><i data-lucide="trending-up" style="color: var(--accent-emerald);"></i> Evolução da Margem Líquida (%)</h3>
                                 </div>
                                 <div class="chart-container">
                                     <canvas id="chartRepMarginTrend"></canvas>
@@ -1345,7 +1346,7 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
                             <div class="chart-card glass-panel">
                                 <div class="chart-header">
-                                    <h3 class="chart-title"><i class="fa-solid fa-pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
+                                    <h3 class="chart-title"><i data-lucide="pie-chart" style="color: var(--accent-rose);"></i> Distribuição do Centro de Custos</h3>
                                 </div>
                                 <div class="chart-container" style="height: 260px;">
                                     <canvas id="chartRepExpensesDonut"></canvas>
@@ -1354,7 +1355,7 @@
 
                             <div class="table-panel glass-panel">
                                 <div class="chart-header" style="margin-bottom: 16px;">
-                                    <h3 class="chart-title"><i class="fa-solid fa-sitemap" style="color: var(--accent-rose);"></i> Resumo Estruturado das Despesas</h3>
+                                    <h3 class="chart-title"><i data-lucide="network" style="color: var(--accent-rose);"></i> Resumo Estruturado das Despesas</h3>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="custom-table">
@@ -1377,13 +1378,13 @@
                         <!-- 7. INSIGHTS ESTRATÉGICOS & RECOMENDAÇÕES -->
                         <div class="glass-panel" style="padding: 24px; margin-bottom: 32px;">
                             <div class="chart-header" style="margin-bottom: 18px;">
-                                <h3 class="chart-title"><i class="fa-solid fa-lightbulb" style="color: var(--accent-amber);"></i> Insights Estratégicos & Recomendações Executivas</h3>
+                                <h3 class="chart-title"><i data-lucide="lightbulb" style="color: var(--accent-amber);"></i> Insights Estratégicos & Recomendações Executivas</h3>
                             </div>
 
                             <div class="insights-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
                                 <div class="insight-card insight-high-priority">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-arrow-up-right-dots" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="arrow-up-right" style="color: var(--accent-rose);"></i> Repacotamento do Time 5</span>
                                         <span class="status-pill status-unpaid">Alta Prioridade</span>
                                     </div>
                                     <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -1396,7 +1397,7 @@
 
                                 <div class="insight-card insight-med-priority">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="star" style="color: var(--accent-amber);"></i> Replicação da Cultura de Tips</span>
                                         <span class="status-pill status-pending">Média Prioridade</span>
                                     </div>
                                     <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -1409,7 +1410,7 @@
 
                                 <div class="insight-card insight-med-priority">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-piggy-bank" style="color: var(--accent-amber);"></i> Otimização de Pagamentos</span>
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="piggy-bank" style="color: var(--accent-amber);"></i> Otimização de Pagamentos</span>
                                         <span class="status-pill status-pending">Média Prioridade</span>
                                     </div>
                                     <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -1422,7 +1423,7 @@
 
                                 <div class="insight-card insight-low-priority">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i class="fa-solid fa-rocket" style="color: var(--primary);"></i> Expansão de Marketing</span>
+                                        <span style="font-weight: 700; font-size: 13px; color: #0f172a;"><i data-lucide="rocket" style="color: var(--primary);"></i> Expansão de Marketing</span>
                                         <span class="status-pill status-paid">Oportunidade</span>
                                     </div>
                                     <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
@@ -1446,16 +1447,16 @@
     <!-- Floating Persistent Bottom Navigation Bar [BOTTOM_NAVBAR_PERSISTENCE] -->
     <nav id="bottomNavBar" class="bottom-navbar" style="display: none;">
         <button class="nav-item active" data-tab="overview" onclick="window.app.switchTab('overview')">
-            <i class="fa-solid fa-chart-pie"></i> Visão Geral
+            <i data-lucide="pie-chart"></i> Visão Geral
         </button>
         <button class="nav-item" data-tab="equipes" onclick="window.app.switchTab('equipes')">
-            <i class="fa-solid fa-users"></i> Equipes
+            <i data-lucide="users"></i> Equipes
         </button>
         <button class="nav-item" data-tab="transacoes" onclick="window.app.switchTab('transacoes')">
-            <i class="fa-solid fa-list"></i> Transações
+            <i data-lucide="file-text"></i> Transações
         </button>
         <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
-            <i class="fa-solid fa-chart-bar"></i> Relatórios
+            <i data-lucide="bar-chart-3"></i> Relatórios
         </button>
     </nav>
 
