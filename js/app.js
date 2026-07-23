@@ -143,7 +143,7 @@ class NucleusDashboardApp {
     }
 
     getChartTickColor() {
-        return this.currentTheme === 'dark' ? '#b8b8b8' : '#475569';
+        return this.currentTheme === 'dark' ? '#cbd5e1' : '#475569';
     }
 
     getChartLegendColor() {
@@ -999,7 +999,7 @@ class NucleusDashboardApp {
                         </div>
                     </td>
                     <td style="font-weight: 600;">${tot.count} jobs</td>
-                    <td style="font-weight: 700; color: #0f172a;">${this.formatCurrency(tot.total)}</td>
+                    <td style="font-weight: 700; color: var(--text-main);">${this.formatCurrency(tot.total)}</td>
                     <td style="color: var(--accent-amber); font-weight: 700;">${this.formatCurrency(tot.tip)}</td>
                     <td style="font-weight: 600;">${this.formatCurrency(tot.ticketMedio)}</td>
                     <td style="font-weight: 700; color: var(--primary);">${share}%</td>
@@ -1076,7 +1076,7 @@ class NucleusDashboardApp {
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="vip-rank-badge ${rankClass}">${rank}º</div>
                             <div>
-                                <div style="font-size: 13px; font-weight: 700; color: #0f172a;">${c.name}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">${c.name}</div>
                                 <div style="font-size: 11px; color: var(--text-muted);">${c.count} agendamento(s) no período</div>
                             </div>
                         </div>
@@ -1191,7 +1191,7 @@ class NucleusDashboardApp {
                         ${g.subitems.map(s => `
                             <div class="expense-subitem-row">
                                 <span>${s.label}</span>
-                                <strong style="color: #0f172a;">${this.formatCurrency(s.monthly * expFactor)}</strong>
+                                <strong style="color: var(--text-main);">${this.formatCurrency(s.monthly * expFactor)}</strong>
                             </div>
                         `).join('')}
                     </div>
@@ -1490,7 +1490,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             html += `
                 <tr class="${rowClass}">
                     <td>${posBadge}</td>
-                    <td style="font-weight: 700; color: #0f172a;">
+                    <td style="font-weight: 700; color: var(--text-main);">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <img src="time${item.key.replace('TIME', '')}.jpg" alt="${item.label}" class="team-avatar-img-xs">
                             <span>${item.label}</span>
@@ -1581,7 +1581,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                         <div style="margin-bottom: 10px;">${badgesHtml}</div>
 
                         <div class="profile-section-label">Resumo Executivo</div>
-                        <p style="font-size: 12px; color: #334155; line-height: 1.5; margin-bottom: 12px;">${meta.resumo}</p>
+                        <p style="font-size: 12px; color: var(--text-main); line-height: 1.5; margin-bottom: 12px;">${meta.resumo}</p>
 
                         <div class="profile-section-label">Destaques</div>
                         <ul style="font-size: 11px; color: var(--text-muted); padding-left: 16px; margin-bottom: 10px;">
@@ -1596,7 +1596,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                         <div style="font-size: 10px; font-weight: 800; color: var(--primary); text-transform: uppercase;">
                             <i data-lucide="crown"></i> Cliente Âncora do Time
                         </div>
-                        <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-top: 2px;">
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-top: 2px;">
                             ${topClient[0]}
                         </div>
                         <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
@@ -1776,7 +1776,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
             html += `
                 <tr>
-                    <td style="font-weight: 700; color: #0f172a;">
+                    <td style="font-weight: 700; color: var(--text-main);">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <img src="time${key.replace('TIME', '')}.jpg" alt="${label}" class="team-avatar-img-xs">
                             <span>${label}</span>
@@ -2034,7 +2034,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 cardsHtml += `
                     <div class="health-mini-card glass-panel ${isSelected ? 'health-mini-card-highlight' : ''}">
                         <span class="health-label">${teamLabels[key]}</span>
-                        <span class="health-val" style="color: #0f172a;">${this.formatCurrency(teamTot)}</span>
+                        <span class="health-val" style="color: var(--text-main);">${this.formatCurrency(teamTot)}</span>
                     </div>
                 `;
             });
@@ -2083,7 +2083,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                     <tr>
                         <td style="font-weight: 600;">${this.formatDateBR(r.date)}</td>
                         <td><span class="team-jobs-badge">${r.team}</span></td>
-                        <td style="font-weight: 700; color: #0f172a;">${r.client}</td>
+                        <td style="font-weight: 700; color: var(--text-main);">${r.client}</td>
                         <td>${r.trans_type || 'Cleaning'}</td>
                         <td style="font-weight: 600; text-align: right;">${this.formatCurrency(r.subtotal)}</td>
                         <td style="color: var(--accent-amber); font-weight: 600; text-align: right;">${this.formatCurrency(r.tip)}</td>
@@ -2137,7 +2137,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 cardsHtml += `
                     <div class="health-mini-card glass-panel ${isSelected ? 'health-mini-card-highlight' : ''}">
                         <span class="health-label">${cat.label}</span>
-                        <span class="health-val" style="color: #0f172a;">${this.formatCurrency(cat.val)}</span>
+                        <span class="health-val" style="color: var(--text-main);">${this.formatCurrency(cat.val)}</span>
                     </div>
                 `;
             });
@@ -2183,7 +2183,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                     <tr>
                         <td style="font-weight: 600;">${this.formatDateBR(item.date)}</td>
                         <td><span class="status-pill status-unpaid" style="font-size: 11px;">${item.category}</span></td>
-                        <td style="font-weight: 700; color: #0f172a;">${item.desc}</td>
+                        <td style="font-weight: 700; color: var(--text-main);">${item.desc}</td>
                         <td style="color: var(--text-muted);">${item.centro}</td>
                         <td style="color: var(--accent-rose); font-weight: 800; text-align: right;">${this.formatCurrency(item.scaledValue)}</td>
                         <td style="color: var(--text-muted);">${item.paid_by}</td>
@@ -2328,7 +2328,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             html += `
                 <tr>
                     <td style="font-weight: 700; color: var(--primary);">${rank}º</td>
-                    <td style="font-weight: 700; color: #0f172a;">
+                    <td style="font-weight: 700; color: var(--text-main);">
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <img src="time${t.key.replace('TIME', '')}.jpg" alt="${t.label}" class="team-avatar-img-xs">
                             <span>${t.label}</span>
@@ -2400,7 +2400,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 html += `
                     <tr>
                         <td style="font-weight: 700; color: var(--accent-amber);">${rank}º</td>
-                        <td style="font-weight: 700; color: #0f172a;">${c.name}</td>
+                        <td style="font-weight: 700; color: var(--text-main);">${c.name}</td>
                         <td style="font-weight: 600; text-align: right;">${c.count}</td>
                         <td style="font-weight: 800; color: var(--primary); text-align: right;">${this.formatCurrency(c.total)}</td>
                         <td style="font-weight: 700; text-align: right;">${share}%</td>
@@ -2537,7 +2537,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 const scaledVal = c.monthly * expFactor;
                 html += `
                     <tr>
-                        <td style="font-weight: 700; color: #0f172a;">${c.label}</td>
+                        <td style="font-weight: 700; color: var(--text-main);">${c.label}</td>
                         <td style="color: var(--text-muted);">${c.centro}</td>
                         <td style="font-weight: 800; color: var(--accent-rose); text-align: right;">${this.formatCurrency(scaledVal)}</td>
                         <td style="font-weight: 700; text-align: right;">${c.pct}</td>
