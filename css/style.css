@@ -351,23 +351,27 @@ body {
     border-radius: var(--radius-full);
     border: 1px solid var(--border-color);
     gap: 3px;
+    flex-shrink: 0;
 }
 
 .period-mode-btn, .overview-mode-btn, .trans-mode-btn, .rep-preset-btn {
     background: transparent;
     border: none;
     height: 32px;
-    padding: 0 14px;
+    min-width: 76px;
+    padding: 0 12px;
     border-radius: var(--radius-full);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700 !important;
     color: var(--text-muted);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover, .rep-preset-btn:hover {
@@ -378,6 +382,14 @@ body {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
     box-shadow: 0 3px 10px rgba(37, 171, 183, 0.3);
+}
+
+.period-inputs-slot {
+    min-width: 210px;
+    display: flex;
+    align-items: center;
+    height: 38px;
+    flex-shrink: 0;
 }
 
 .filter-group {
