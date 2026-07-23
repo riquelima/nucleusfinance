@@ -311,8 +311,10 @@ ${topClients || 'Nenhum cliente registrado.'}
         // Modal / Bottom Sheet Chat Interface
         const modalHtml = `
             <div id="copilotModal" class="copilot-modal" style="display: none;" role="dialog" aria-modal="true" aria-label="Nucleus IA">
-                <!-- Resizer na borda esquerda para Desktop -->
-                <div id="copilotResizer" class="copilot-resizer"></div>
+                <!-- Resizers para Desktop -->
+                <div id="copilotResizerLeft" class="copilot-resizer left"></div>
+                <div id="copilotResizerTop" class="copilot-resizer top"></div>
+                <div id="copilotResizerCorner" class="copilot-resizer-corner"></div>
                 <!-- Header Chat -->
                 <div class="copilot-header">
                     <div class="copilot-brand-info">
@@ -530,62 +532,101 @@ ${topClients || 'Nenhum cliente registrado.'}
         // Scroll listener com debounce para FAB
         window.addEventListener('scroll', this.handleScroll, { passive: true });
 
-        // Redimensionamento horizontal do modal do Copilot (Desktop)
-        const resizer = document.getElementById('copilotResizer');
+        // Redimensionamento bidimensional do modal do Copilot (Desktop)
+        const resizerLeft = document.getElementById('copilotResizerLeft');
+        const resizerTop = document.getElementById('copilotResizerTop');
+        const resizerCorner = document.getElementById('copilotResizerCorner');
         const modal = document.getElementById('copilotModal');
 
-        if (resizer && modal) {
-            const handleMouseDownOrTouchStart = (e) => {
-                e.preventDefault();
-                
-                // Suporte para mouse e toque
-                const isTouch = e.type === 'touchstart';
-                const startX = isTouch ? e.touches[0].clientX : e.clientX;
-                const startWidth = modal.getBoundingClientRect().width;
+        if (modal) {
+            const setupResizer = (resizerEl, direction) => {
+                if (!resizerEl) return;
 
-                modal.classList.add('resizing');
-                document.body.classList.add('resizing-active');
+                const handleMouseDownOrTouchStart = (e) => {
+                    e.preventDefault();
 
-                const handleMove = (moveEvent) => {
-                    const currentX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                    const dx = currentX - startX;
-                    let newWidth = startWidth - dx;
+                    const isTouch = e.type === 'touchstart';
+                    const startX = isTouch ? e.touches[0].clientX : e.clientX;
+                    const startY = isTouch ? e.touches[0].clientY : e.clientY;
+                    
+                    const startWidth = modal.getBoundingClientRect().width;
+                    const startHeight = modal.getBoundingClientRect().height;
 
-                    // Limites de tamanho (mínimo de 320px, máximo de 900px ou quase a largura total da janela)
-                    const minWidth = 320;
-                    const maxWidth = Math.min(900, window.innerWidth - 48);
+                    modal.classList.add('resizing');
+                    document.body.classList.add('resizing-active');
 
-                    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-                    modal.style.width = newWidth + 'px';
-                };
+                    // Define o cursor global de acordo com a direção do arrasto
+                    if (direction === 'left') {
+                        document.body.setAttribute('data-resizing-dir', 'ew');
+                    } else if (direction === 'top') {
+                        document.body.setAttribute('data-resizing-dir', 'ns');
+                    } else if (direction === 'corner') {
+                        document.body.setAttribute('data-resizing-dir', 'nwse');
+                    }
 
-                const handleEnd = () => {
-                    modal.classList.remove('resizing');
-                    document.body.classList.remove('resizing-active');
+                    const handleMove = (moveEvent) => {
+                        const currentX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const currentY = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientY : moveEvent.clientY;
 
-                    // Salva a largura definida no localStorage
-                    localStorage.setItem('nucleus_ia_chat_width', modal.style.width);
+                        // --- REDIMENSIONAR LARGURA (Esquerda ou Canto) ---
+                        if (direction === 'left' || direction === 'corner') {
+                            const dx = currentX - startX;
+                            let newWidth = startWidth - dx;
+                            const minWidth = 320;
+                            const maxWidth = Math.min(900, window.innerWidth - 48);
+                            newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+                            modal.style.width = newWidth + 'px';
+                        }
+
+                        // --- REDIMENSIONAR ALTURA (Topo ou Canto) ---
+                        if (direction === 'top' || direction === 'corner') {
+                            const dy = currentY - startY;
+                            let newHeight = startHeight - dy;
+                            const minHeight = 350;
+                            const maxHeight = Math.min(900, window.innerHeight - 120);
+                            newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+                            modal.style.height = newHeight + 'px';
+                        }
+                    };
+
+                    const handleEnd = () => {
+                        modal.classList.remove('resizing');
+                        document.body.classList.remove('resizing-active');
+                        document.body.removeAttribute('data-resizing-dir');
+
+                        // Salva as dimensões definidas no localStorage
+                        if (direction === 'left' || direction === 'corner') {
+                            localStorage.setItem('nucleus_ia_chat_width', modal.style.width);
+                        }
+                        if (direction === 'top' || direction === 'corner') {
+                            localStorage.setItem('nucleus_ia_chat_height', modal.style.height);
+                        }
+
+                        if (isTouch) {
+                            document.removeEventListener('touchmove', handleMove);
+                            document.removeEventListener('touchend', handleEnd);
+                        } else {
+                            document.removeEventListener('mousemove', handleMove);
+                            document.removeEventListener('mouseup', handleEnd);
+                        }
+                    };
 
                     if (isTouch) {
-                        document.removeEventListener('touchmove', handleMove);
-                        document.removeEventListener('touchend', handleEnd);
+                        document.addEventListener('touchmove', handleMove, { passive: false });
+                        document.addEventListener('touchend', handleEnd);
                     } else {
-                        document.removeEventListener('mousemove', handleMove);
-                        document.removeEventListener('mouseup', handleEnd);
+                        document.addEventListener('mousemove', handleMove);
+                        document.addEventListener('mouseup', handleEnd);
                     }
                 };
 
-                if (isTouch) {
-                    document.addEventListener('touchmove', handleMove, { passive: false });
-                    document.addEventListener('touchend', handleEnd);
-                } else {
-                    document.addEventListener('mousemove', handleMove);
-                    document.addEventListener('mouseup', handleEnd);
-                }
+                resizerEl.addEventListener('mousedown', handleMouseDownOrTouchStart);
+                resizerEl.addEventListener('touchstart', handleMouseDownOrTouchStart, { passive: false });
             };
 
-            resizer.addEventListener('mousedown', handleMouseDownOrTouchStart);
-            resizer.addEventListener('touchstart', handleMouseDownOrTouchStart, { passive: false });
+            setupResizer(resizerLeft, 'left');
+            setupResizer(resizerTop, 'top');
+            setupResizer(resizerCorner, 'corner');
         }
     }
 
@@ -649,13 +690,19 @@ ${topClients || 'Nenhum cliente registrado.'}
 
         modal.style.display = 'flex';
 
-        // Restaura a largura salva do chat no localStorage (somente se for Desktop)
+        // Restaura a largura e altura salvas do chat no localStorage (somente se for Desktop)
         if (window.innerWidth > 768) {
             const savedWidth = localStorage.getItem('nucleus_ia_chat_width');
             if (savedWidth) {
                 const parsedWidth = parseInt(savedWidth, 10);
                 const maxWidth = window.innerWidth - 48;
                 modal.style.width = Math.max(320, Math.min(maxWidth, parsedWidth)) + 'px';
+            }
+            const savedHeight = localStorage.getItem('nucleus_ia_chat_height');
+            if (savedHeight) {
+                const parsedHeight = parseInt(savedHeight, 10);
+                const maxHeight = window.innerHeight - 120;
+                modal.style.height = Math.max(350, Math.min(maxHeight, parsedHeight)) + 'px';
             }
         }
 
