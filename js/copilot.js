@@ -841,63 +841,197 @@ ${topClients || 'Nenhum cliente registrado.'}
     parseMarkdown(text) {
         if (!text) return '';
 
+        // 1. Escapar caracteres HTML básicos para evitar injeção
         let escaped = text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
 
+        // 2. Extrair blocos de código markdown
+        const codeBlocks = [];
         escaped = escaped.replace(/```([\s\S]*?)```/g, function(match, code) {
-            return `<pre class="copilot-code-block"><code>${code.trim()}</code></pre>`;
+            const placeholder = `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
+            codeBlocks.push(`<pre class="copilot-code-block"><code>${code.trim()}</code></pre>`);
+            return placeholder;
         });
 
-        escaped = escaped.replace(/`([^`]+)`/g, '<code class="copilot-inline-code">$1</code>');
-
-        escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-        escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-
+        // 3. Processar linha por linha para criar a estrutura HTML
         const lines = escaped.split('\n');
+        let htmlResult = [];
+        
+        let inUl = false;
+        let inOl = false;
         let inTable = false;
-        let tableHtml = '';
-        let processedLines = [];
+        let tableHeaderRead = false;
 
-        lines.forEach(line => {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
-                if (!inTable) {
-                    inTable = true;
-                    tableHtml = '<div class="copilot-table-wrapper"><table class="copilot-table">';
-                }
-
-                if (trimmed.includes('---')) return;
-
-                const cells = trimmed.slice(1, -1).split('|').map(c => c.trim());
-                tableHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
-            } else {
-                if (inTable) {
-                    inTable = false;
-                    tableHtml += '</table></div>';
-                    processedLines.push(tableHtml);
-                    tableHtml = '';
-                }
-                processedLines.push(line);
+        function closeOpenBlocks() {
+            if (inUl) {
+                htmlResult.push('</ul>');
+                inUl = false;
             }
-        });
-
-        if (inTable) {
-            tableHtml += '</table>div>';
-            processedLines.push(tableHtml);
+            if (inOl) {
+                htmlResult.push('</ol>');
+                inOl = false;
+            }
+            if (inTable) {
+                htmlResult.push('</tbody></table></div>');
+                inTable = false;
+                tableHeaderRead = false;
+            }
         }
 
-        escaped = processedLines.join('\n');
+        // Função auxiliar para aplicar estilos inline (links, negrito, itálico, code) em uma linha de texto
+        function applyInlineStyles(lineText) {
+            let processed = lineText;
+            
+            // Links: [texto](url)
+            processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="copilot-link">$1</a>');
+            
+            // Inline code: `code`
+            processed = processed.replace(/`([^`]+)`/g, '<code class="copilot-inline-code">$1</code>');
+            
+            // Negrito: **text** ou __text__
+            processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            processed = processed.replace(/__(.*?)__/g, '<strong>$1</strong>');
+            
+            // Itálico: *text* ou _text_
+            processed = processed.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            processed = processed.replace(/_(.*?)_/g, '<em>$1</em>');
+            
+            return processed;
+        }
 
-        escaped = escaped.replace(/^- (.*)$/gim, '<li>$1</li>');
-        escaped = escaped.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmed = line.trim();
 
-        escaped = escaped.replace(/\n\n/g, '<br><br>');
-        escaped = escaped.replace(/\n/g, '<br>');
+            // Pular separadores de tabela markdown
+            if (inTable && trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('---')) {
+                continue;
+            }
 
-        return escaped;
+            // --- HEADINGS ---
+            const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+            if (headingMatch) {
+                closeOpenBlocks();
+                const level = headingMatch[1].length;
+                const content = applyInlineStyles(headingMatch[2]);
+                htmlResult.push(`<h${level}>${content}</h${level}>`);
+                continue;
+            }
+
+            // --- LINHA HORIZONTAL ---
+            if (trimmed === '---' || trimmed === '***' || trimmed === '___') {
+                closeOpenBlocks();
+                htmlResult.push('<hr class="copilot-hr">');
+                continue;
+            }
+
+            // --- TABELAS ---
+            if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+                if (inUl || inOl) {
+                    closeOpenBlocks();
+                }
+                if (!inTable) {
+                    inTable = true;
+                    htmlResult.push('<div class="copilot-table-wrapper"><table class="copilot-table">');
+                    htmlResult.push('<thead>');
+                }
+
+                const cells = trimmed.slice(1, -1).split('|').map(c => applyInlineStyles(c.trim()));
+                
+                if (inTable && !tableHeaderRead) {
+                    htmlResult.push('<tr>' + cells.map(c => `<th>${c}</th>`).join('') + '</tr>');
+                    htmlResult.push('</thead><tbody>');
+                    tableHeaderRead = true;
+                } else {
+                    htmlResult.push('<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>');
+                }
+                continue;
+            }
+
+            // --- LISTAS DESORDENADAS ---
+            // Suporta asterisco (*), hífen (-), mais (+) ou bullet (•)
+            const ulMatch = line.match(/^(\s*)([*+-]|•)\s+(.*)$/);
+            if (ulMatch) {
+                if (inOl || inTable) {
+                    closeOpenBlocks();
+                }
+                if (!inUl) {
+                    htmlResult.push('<ul>');
+                    inUl = true;
+                }
+                const content = applyInlineStyles(ulMatch[3]);
+                htmlResult.push(`<li>${content}</li>`);
+                continue;
+            }
+
+            // --- LISTAS ORDENADAS ---
+            const olMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+            if (olMatch) {
+                if (inUl || inTable) {
+                    closeOpenBlocks();
+                }
+                if (!inOl) {
+                    htmlResult.push('<ol>');
+                    inOl = true;
+                }
+                const content = applyInlineStyles(olMatch[3]);
+                htmlResult.push(`<li>${content}</li>`);
+                continue;
+            }
+
+            // --- LINHA VAZIA ---
+            if (trimmed === '') {
+                closeOpenBlocks();
+                if (htmlResult.length > 0 && htmlResult[htmlResult.length - 1] !== '<br>') {
+                    htmlResult.push('<br>');
+                }
+                continue;
+            }
+
+            // --- LINHA DE TEXTO NORMAL ---
+            closeOpenBlocks();
+            const content = applyInlineStyles(line);
+            
+            // Verificar se precisamos de <br> no final para manter quebras simples de parágrafo
+            let appendBr = false;
+            if (i < lines.length - 1) {
+                const nextLine = lines[i + 1].trim();
+                const isNextSpecial = nextLine === '' || 
+                                     nextLine.match(/^(#{1,6})\s+/) || 
+                                     nextLine.startsWith('|') || 
+                                     nextLine.match(/^(\s*)([*+-]|•|\d+\.)\s+/);
+                if (!isNextSpecial) {
+                    appendBr = true;
+                }
+            }
+            
+            htmlResult.push(content + (appendBr ? '<br>' : ''));
+        }
+
+        // Fechar qualquer bloco ainda aberto no final
+        closeOpenBlocks();
+
+        // 4. Juntar as linhas
+        let parsed = htmlResult.join('\n');
+
+        // Limpar quebras de linha (<br>) duplicadas adjacentes a elementos de bloco
+        parsed = parsed.replace(/(<\/h[1-6]>)\n*<br>/gi, '$1');
+        parsed = parsed.replace(/(<\/ul>)\n*<br>/gi, '$1');
+        parsed = parsed.replace(/(<\/ol>)\n*<br>/gi, '$1');
+        parsed = parsed.replace(/(<\/div>)\n*<br>/gi, '$1'); // div do table-wrapper
+        parsed = parsed.replace(/<br>\n*(<h[1-6]>)/gi, '$1');
+        parsed = parsed.replace(/<br>\n*(<ul>)/gi, '$1');
+        parsed = parsed.replace(/<br>\n*(<ol>)/gi, '$1');
+        parsed = parsed.replace(/<br>\n*(<div class="copilot-table-wrapper">)/gi, '$1');
+
+        // 5. Restaurar blocos de código
+        codeBlocks.forEach((codeHtml, idx) => {
+            parsed = parsed.replace(`__CODE_BLOCK_PLACEHOLDER_${idx}__`, codeHtml);
+        });
+
+        return parsed;
     }
 }
 
