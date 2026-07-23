@@ -2582,58 +2582,81 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
     }
 
     /**
-     * 📄 PROFESSIONAL EXECUTIVE A4 PDF EXPORT
+     * 📄 PROFESSIONAL EXECUTIVE A4 PDF EXPORT (THEME INDEPENDENT, ZERO OVERFLOW)
      */
-    exportPDF() {
+    async exportPDF() {
         const reportElement = document.getElementById('pdfReportPrintContainer');
         if (!reportElement) {
             this.showToast('Erro ao exportar PDF: Elemento não encontrado.', 'error');
             return;
         }
 
-        this.showToast('Gerando relatório executivo PDF ajustado em A4...');
+        if (this.activeTab !== 'relatorios') {
+            this.switchTab('relatorios');
+        }
 
-        // Update issue date
+        this.showToast('Gerando relatório executivo PDF em alta definição...');
+
+        // Preserve current UI theme state
+        const originalTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const printHeader = document.querySelector('.pdf-only-header');
+
+        // Update header details
+        const periodBadge = document.getElementById('repPeriodBadge');
+        const pdfHeaderPeriod = document.getElementById('pdfHeaderPeriod');
+        if (periodBadge && pdfHeaderPeriod) {
+            pdfHeaderPeriod.textContent = periodBadge.textContent.trim();
+        }
+
         const issueElem = document.getElementById('pdfHeaderIssueDate');
         if (issueElem) issueElem.textContent = this.formatDateBR(new Date().toISOString().split('T')[0]);
 
-        const printHeader = document.querySelector('.pdf-only-header');
-
-        if (typeof html2pdf !== 'undefined') {
-            reportElement.classList.add('pdf-rendering-a4');
+        try {
+            // Apply temporary light mode for A4 document export
+            document.documentElement.setAttribute('data-theme', 'light');
+            reportElement.classList.add('pdf-export-mode');
             if (printHeader) printHeader.style.display = 'block';
+
+            // Re-render charts for light canvas export
+            this.renderReportsView();
             this.refreshLucideIcons();
 
-            const opt = {
-                margin:       [8, 8, 8, 8],
-                filename:     `Nucleus_Relatorio_Executivo_${this.repStartDate}_a_${this.repEndDate}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    logging: false, 
-                    windowWidth: 790,
-                    scrollX: 0, 
-                    scrollY: 0 
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-            };
+            // Short frame delay for canvas re-paint
+            await new Promise(resolve => setTimeout(resolve, 300));
 
-            html2pdf().set(opt).from(reportElement).save().then(() => {
-                reportElement.classList.remove('pdf-rendering-a4');
-                if (printHeader) printHeader.style.display = 'none';
-                this.refreshLucideIcons();
-                this.showToast('Relatório PDF exportado com sucesso no formato A4!');
-            }).catch(err => {
-                console.error('PDF Export error:', err);
-                reportElement.classList.remove('pdf-rendering-a4');
-                if (printHeader) printHeader.style.display = 'none';
-                this.refreshLucideIcons();
+            if (typeof html2pdf !== 'undefined') {
+                const opt = {
+                    margin:       [10, 10, 10, 10], // 10mm margins on A4
+                    filename:     `Nucleus_Relatorio_Executivo_${this.repStartDate}_a_${this.repEndDate}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        logging: false, 
+                        windowWidth: 794,
+                        scrollX: 0, 
+                        scrollY: 0 
+                    },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+                };
+
+                await html2pdf().set(opt).from(reportElement).save();
+                this.showToast('Relatório PDF A4 exportado com sucesso!');
+            } else {
                 window.print();
-            });
-        } else {
+            }
+        } catch (err) {
+            console.error('PDF Export error:', err);
+            this.showToast('Erro ao gerar PDF via html2pdf. Abrindo janela de impressão.', 'error');
             window.print();
+        } finally {
+            // Restore original UI state and theme
+            reportElement.classList.remove('pdf-export-mode');
+            if (printHeader) printHeader.style.display = 'none';
+            document.documentElement.setAttribute('data-theme', originalTheme);
+            this.renderReportsView();
+            this.refreshLucideIcons();
         }
     }
 

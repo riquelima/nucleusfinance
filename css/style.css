@@ -1725,62 +1725,49 @@ body {
 }
 
 /* ==========================================================================
-   📄 PROFESSIONAL A4 PDF & PRINT STYLING (ZERO OVERFLOW, PERFECT A4 FIT)
+   📄 DEDICATED LIGHT A4 PDF EXPORT MODE (THEME-INDEPENDENT & ZERO CUTOFF)
    ========================================================================== */
-#pdfReportPrintContainer.pdf-rendering-a4 {
-    width: 750px !important;
-    max-width: 750px !important;
-    min-width: 750px !important;
+#pdfReportPrintContainer.pdf-export-mode {
+    width: 718px !important;
+    max-width: 718px !important;
+    min-width: 718px !important;
     margin: 0 auto !important;
     padding: 0 !important;
     background: #ffffff !important;
     color: #0f172a !important;
     box-sizing: border-box !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 * {
+#pdfReportPrintContainer.pdf-export-mode * {
     box-sizing: border-box !important;
+    animation: none !important;
+    transition: none !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .glass-panel,
-#pdfReportPrintContainer.pdf-rendering-a4 .kpi-card,
-#pdfReportPrintContainer.pdf-rendering-a4 .secondary-kpi-card,
-#pdfReportPrintContainer.pdf-rendering-a4 .chart-card,
-#pdfReportPrintContainer.pdf-rendering-a4 .table-panel,
-#pdfReportPrintContainer.pdf-rendering-a4 .executive-summary-panel {
+#pdfReportPrintContainer.pdf-export-mode .glass-panel,
+#pdfReportPrintContainer.pdf-export-mode .kpi-card,
+#pdfReportPrintContainer.pdf-export-mode .secondary-kpi-card,
+#pdfReportPrintContainer.pdf-export-mode .chart-card,
+#pdfReportPrintContainer.pdf-export-mode .table-panel,
+#pdfReportPrintContainer.pdf-export-mode .executive-summary-panel {
     background: #ffffff !important;
     border: 1px solid #cbd5e1 !important;
     box-shadow: none !important;
     color: #0f172a !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 16px !important;
     max-width: 100% !important;
     overflow: hidden !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .kpi-grid {
+#pdfReportPrintContainer.pdf-export-mode .kpi-grid,
+#pdfReportPrintContainer.pdf-export-mode .secondary-kpi-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-bottom: 16px !important;
-}
-
-#pdfReportPrintContainer.pdf-rendering-a4 .secondary-kpi-grid {
-    display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-bottom: 16px !important;
-}
-
-#pdfReportPrintContainer.pdf-rendering-a4 .charts-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px !important;
+    gap: 10px !important;
     width: 100% !important;
     max-width: 100% !important;
     margin-bottom: 16px !important;
@@ -1788,32 +1775,69 @@ body {
     page-break-inside: avoid !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .insights-grid {
+#pdfReportPrintContainer.pdf-export-mode .charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
+
+#pdfReportPrintContainer.pdf-export-mode .insights-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 12px !important;
     width: 100% !important;
     max-width: 100% !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .custom-table {
+#pdfReportPrintContainer.pdf-export-mode .kpi-title,
+#pdfReportPrintContainer.pdf-export-mode .secondary-kpi-title,
+#pdfReportPrintContainer.pdf-export-mode .chart-title,
+#pdfReportPrintContainer.pdf-export-mode .period-title,
+#pdfReportPrintContainer.pdf-export-mode h2,
+#pdfReportPrintContainer.pdf-export-mode h3 {
+    color: #0f172a !important;
+}
+
+#pdfReportPrintContainer.pdf-export-mode .kpi-value,
+#pdfReportPrintContainer.pdf-export-mode .secondary-kpi-val {
+    color: #0f172a !important;
+}
+
+#pdfReportPrintContainer.pdf-export-mode .custom-table {
     width: 100% !important;
     font-size: 11px !important;
     table-layout: auto !important;
+    background: #ffffff !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .custom-table th,
-#pdfReportPrintContainer.pdf-rendering-a4 .custom-table td {
+#pdfReportPrintContainer.pdf-export-mode .custom-table th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-weight: 700 !important;
+}
+
+#pdfReportPrintContainer.pdf-export-mode .custom-table td {
+    color: #0f172a !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     padding: 6px 8px !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 .chart-container {
-    height: 220px !important;
-    max-height: 220px !important;
+#pdfReportPrintContainer.pdf-export-mode .chart-container {
+    height: 210px !important;
+    max-height: 210px !important;
 }
 
-#pdfReportPrintContainer.pdf-rendering-a4 h3.chart-title {
-    font-size: 13px !important;
+#pdfReportPrintContainer.pdf-export-mode svg.lucide {
+    stroke-width: 2px !important;
 }
 
 @media print {
