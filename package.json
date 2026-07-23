@@ -5,9 +5,7 @@
   "description": "Nucleus Financial Control & Executive BI Dashboard",
   "main": "dashboard.html",
   "scripts": {
-    "dev": "npx serve ./",
-    "build": "echo 'Static build ready for Vercel'",
-    "start": "npx serve ./"
+    "dev": "npx serve ./"
   },
   "keywords": [
     "nucleus",

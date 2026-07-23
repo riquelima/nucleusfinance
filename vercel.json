@@ -2,7 +2,7 @@
   "version": 2,
   "name": "nucleus-cleaning-services",
   "cleanUrls": true,
-  "framework": null,
+  "outputDirectory": ".",
   "routes": [
     {
       "src": "^/$",
