@@ -5,8 +5,8 @@
 
 class NucleusIAEngine {
     constructor() {
-        this.storageKeyHistory = 'nucleus_ia_history_v3';
-        this.storageKeyPrefs = 'nucleus_ia_prefs_v3';
+        this.storageKeyHistory = 'nucleus_ia_history_v4';
+        this.storageKeyPrefs = 'nucleus_ia_prefs_v4';
         this.isOpen = false;
         this.isThinking = false;
         this.scrollTimer = null;
@@ -28,7 +28,7 @@ class NucleusIAEngine {
         this.bindEvents();
         this.updateVisibility(window.app ? window.app.activeTab : 'overview');
         this.initialized = true;
-        console.log('🤖 Nucleus IA inicializado com sucesso.');
+        console.log('🤖 Nucleus IA inicializado com consulta direta à base completa da planilha Google Sheets.');
     }
 
     // =========================================================================
@@ -44,7 +44,7 @@ class NucleusIAEngine {
                 this.messages = [
                     {
                         role: 'assistant',
-                        content: 'Olá! Eu sou o **Nucleus IA**.\n\nSou o assistente inteligente da Nucleus Cleaning Services.\n\nPosso analisar seu faturamento, despesas, equipes, clientes, indicadores, relatórios e responder perguntas utilizando os dados reais da sua empresa.\n\nComo posso ajudar você hoje?',
+                        content: 'Olá! Eu sou o **Nucleus IA**.\n\nSou o assistente inteligente da Nucleus Cleaning Services.\n\nTenho acesso completo à base de dados da sua planilha no Google Sheets (faturamento, despesas, equipes, clientes, indicadores e relatórios).\n\nComo posso ajudar você hoje?',
                         timestamp: new Date().toISOString()
                     }
                 ];
@@ -68,7 +68,7 @@ class NucleusIAEngine {
         this.messages = [
             {
                 role: 'assistant',
-                content: 'Nova conversa iniciada! Como posso te ajudar a analisar os indicadores da sua empresa agora?',
+                content: 'Nova conversa iniciada! Como posso te ajudar a analisar os dados da sua planilha agora?',
                 timestamp: new Date().toISOString()
             }
         ];
@@ -144,7 +144,7 @@ class NucleusIAEngine {
     }
 
     // =========================================================================
-    // 2. CONTEXTO AUTOMÁTICO EM TEMPO REAL
+    // 2. CONTEXTO AUTOMÁTICO COMPLETO DA PLANILHA GOOGLE SHEETS
     // =========================================================================
 
     buildCurrentContext() {
@@ -156,18 +156,80 @@ class NucleusIAEngine {
         const selDate = app.overviewSelectedDate || new Date().toISOString().split('T')[0];
         const selMonth = app.overviewSelectedMonth || selDate.substring(0, 7);
 
+        // Obter TODOS os registros da planilha sem filtros restritivos
         let allRecords = [];
         if (typeof app.getAllRecords === 'function') {
             allRecords = app.getAllRecords();
         }
 
-        let filteredRecords = [];
-        let expTotal = 0;
+        // 1. TOTAIS CONSOLIDADOS GLOBAIS DA PLANILHA (BASE COMPLETA)
+        const globalTotals = app.calculateTotals ? app.calculateTotals(allRecords) : { subtotal: 0, tip: 0, total: 0, count: 0, ticketMedio: 0, tipPercent: 0 };
+        const globalGrossRevenue = globalTotals.total;
+        const DESPESAS_ANNUAL = 377487.36;
         const DESPESAS_MONTHLY = 31457.28;
+        const globalNetProfit = globalGrossRevenue - DESPESAS_ANNUAL;
+        const globalMarginPct = globalGrossRevenue > 0 ? ((globalNetProfit / globalGrossRevenue) * 100) : 0;
 
+        // 2. DESEMPENHO POR EQUIPE EM TODA A PLANILHA (TIME 1 A TIME 5)
+        const teamBreakdown = {};
+        allRecords.forEach(r => {
+            const t = r.team || 'Não Categorizado';
+            if (!teamBreakdown[t]) teamBreakdown[t] = { total: 0, count: 0, tip: 0, subtotal: 0 };
+            teamBreakdown[t].total += (r.total || 0);
+            teamBreakdown[t].subtotal += (r.subtotal || 0);
+            teamBreakdown[t].count += 1;
+            teamBreakdown[t].tip += (r.tip || 0);
+        });
+
+        let teamGlobalSummary = '';
+        for (const [tName, tStats] of Object.entries(teamBreakdown)) {
+            const ticket = tStats.count > 0 ? (tStats.total / tStats.count) : 0;
+            const tipPct = tStats.subtotal > 0 ? ((tStats.tip / tStats.subtotal) * 100) : 0;
+            teamGlobalSummary += `- ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} | Jobs: ${tStats.count} | Ticket Médio: $${ticket.toFixed(2)} | Gorjetas (Tips): $${tStats.tip.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${tipPct.toFixed(1)}%)\n`;
+        }
+
+        // 3. EVOLUÇÃO MENSAL ACUMULADA NA PLANILHA
+        const monthlyMap = {};
+        allRecords.forEach(r => {
+            if (r.date && r.date.length >= 7) {
+                const m = r.date.substring(0, 7);
+                if (!monthlyMap[m]) monthlyMap[m] = { total: 0, count: 0, tip: 0 };
+                monthlyMap[m].total += (r.total || 0);
+                monthlyMap[m].count += 1;
+                monthlyMap[m].tip += (r.tip || 0);
+            }
+        });
+
+        let monthlySummaryStr = '';
+        const sortedMonths = Object.keys(monthlyMap).sort();
+        sortedMonths.forEach(m => {
+            const mData = monthlyMap[m];
+            const mProfit = mData.total - DESPESAS_MONTHLY;
+            const mMargin = mData.total > 0 ? ((mProfit / mData.total) * 100) : 0;
+            monthlySummaryStr += `- Mês ${m}: Faturamento $${mData.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mData.count} jobs) | Lucro Líquido: $${mProfit.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mMargin.toFixed(1)}%)\n`;
+        });
+
+        // 4. TOP CLIENTES VIP NA PLANILHA
+        const clientMap = {};
+        allRecords.forEach(r => {
+            const c = r.client || 'Outros';
+            if (!clientMap[c]) clientMap[c] = { total: 0, count: 0 };
+            clientMap[c].total += (r.total || 0);
+            clientMap[c].count += 1;
+        });
+
+        const topClients = Object.entries(clientMap)
+            .sort((a, b) => b[1].total - a[1].total)
+            .slice(0, 5)
+            .map(([cName, cStats], idx) => `${idx + 1}. ${cName}: $${cStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${cStats.count} limpezas)`)
+            .join('\n');
+
+        // 5. RECORTE ESPECÍFICO SELECIONADO NA INTERFACE (VISÃO DO DASHBOARD)
+        let filteredRecords = [];
+        let expSelected = 0;
         if (ovMode === 'daily') {
             filteredRecords = allRecords.filter(r => r.date === selDate);
-            expTotal = DESPESAS_MONTHLY / 30;
+            expSelected = DESPESAS_MONTHLY / 30;
         } else if (ovMode === 'weekly') {
             const selDateObj = new Date(selDate);
             const dayOfWeek = selDateObj.getDay();
@@ -180,63 +242,51 @@ class NucleusIAEngine {
             const endStr = lastDayOfWeek.toISOString().split('T')[0];
 
             filteredRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
-            expTotal = (DESPESAS_MONTHLY / 30) * 7;
+            expSelected = (DESPESAS_MONTHLY / 30) * 7;
         } else if (ovMode === 'monthly') {
             filteredRecords = allRecords.filter(r => r.date && r.date.startsWith(selMonth));
-            expTotal = DESPESAS_MONTHLY;
+            expSelected = DESPESAS_MONTHLY;
         } else {
             filteredRecords = allRecords;
-            expTotal = DESPESAS_MONTHLY * 12;
+            expSelected = DESPESAS_ANNUAL;
         }
 
-        const totals = app.calculateTotals ? app.calculateTotals(filteredRecords) : { subtotal: 0, tip: 0, total: 0, count: 0, ticketMedio: 0, tipPercent: 0 };
-        const grossRevenue = totals.total;
-        const netProfit = grossRevenue - expTotal;
-        const marginPct = grossRevenue > 0 ? ((netProfit / grossRevenue) * 100) : 0;
-
-        const teamBreakdown = {};
-        filteredRecords.forEach(r => {
-            const t = r.team || 'Não Categorizado';
-            if (!teamBreakdown[t]) teamBreakdown[t] = { total: 0, count: 0, tip: 0 };
-            teamBreakdown[t].total += (r.total || 0);
-            teamBreakdown[t].count += 1;
-            teamBreakdown[t].tip += (r.tip || 0);
-        });
-
-        let teamSummaryStr = '';
-        for (const [tName, tStats] of Object.entries(teamBreakdown)) {
-            const ticket = tStats.count > 0 ? (tStats.total / tStats.count) : 0;
-            teamSummaryStr += `- ${tName}: $${tStats.total.toFixed(2)} (${tStats.count} agendamentos, Ticket Médio: $${ticket.toFixed(2)}, Tips: $${tStats.tip.toFixed(2)})\n`;
-        }
-
-        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        const selTotals = app.calculateTotals ? app.calculateTotals(filteredRecords) : { subtotal: 0, tip: 0, total: 0, count: 0, ticketMedio: 0, tipPercent: 0 };
+        const selProfit = selTotals.total - expSelected;
+        const selMargin = selTotals.total > 0 ? ((selProfit / selTotals.total) * 100) : 0;
 
         return `
-[ESTADO ATUAL DO DASHBOARD DA APLICAÇÃO]:
-- Aba Ativa na Interface: "${currentTab}"
-- Modo de Período Selecionado na Visão Geral: "${ovMode.toUpperCase()}"
-- Data Selecionada: "${selDate}" | Mês Selecionado: "${selMonth}"
-- Tema Visual Atual: "${theme.toUpperCase()}"
+[BANCO DE DADOS COMPLETO DA PLANILHA GOOGLE SHEETS (ID: 1WuwFpLmklVJTfI4xDKRzdXZw2-zJ40lcDfpzyG1D8Mc)]:
+- Faturamento Bruto Total da Planilha: $${globalGrossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Subtotal Acumulado dos Serviços: $${globalTotals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Gorjetas Totais (Tips Acumuladas): $${globalTotals.tip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${globalTotals.tipPercent.toFixed(1)}% do subtotal)
+- Número Total de Limpezas Concluídas na Planilha: ${globalTotals.count}
+- Ticket Médio Geral da Empresa: $${globalTotals.ticketMedio.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Despesas Operacionais Totais Anuais: $377.487,36 ($31.457,28/mês)
+- Lucro Líquido Global Acumulado: $${globalNetProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Margem Líquida Acumulada da Empresa: ${globalMarginPct.toFixed(2)}%
 
-[KPIs E MÉTRICAS FINANCEIRAS DO PERÍODO SELECIONADO]:
-- Faturamento Bruto (Total Revenue): $${grossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Subtotal dos Serviços: $${totals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Gorjetas (Tips): $${totals.tip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${totals.tipPercent.toFixed(1)}% do subtotal)
-- Número de Limpezas / Jobs Concluídos: ${totals.count}
-- Ticket Médio por Trabalho: $${totals.ticketMedio.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Despesas Pro-rata Estimadas no Período: $${expTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Lucro Líquido Estimado: $${netProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Margem Líquida (%): ${marginPct.toFixed(2)}%
+[CONSOLIDAÇÃO DE TODAS AS EQUIPES NA PLANILHA (TIME 1 A TIME 5)]:
+${teamGlobalSummary}
 
-[RESUMO DO DESEMPENHO DAS EQUIPES NO PERÍODO]:
-${teamSummaryStr || 'Nenhuma transação de equipe registrada para este período específico.'}
+[EVOLUÇÃO MENSAL NA PLANILHA]:
+${monthlySummaryStr || 'Nenhum histórico mensal disponível.'}
 
-[ESTRUTURA DE CUSTOS PADRÃO MENSAL]:
+[RANKING DOS TOP 5 CLIENTES VIP NA PLANILHA]:
+${topClients || 'Nenhum cliente registrado.'}
+
+[ESTRUTURA DE CENTRO DE CUSTOS MENSAL]:
 - Payroll (85.96%): $27.040,00/mês
-- Frota (9.53%): $2.999,00/mês (3 veículos, seguros e gasolina)
+- Frota (9.53%): $2.999,00/mês (3 veículos, seguros comerciais e combustível)
 - Marketing (3.18%): $1.000,00/mês (Thumbtack, Ads, ROAS ~38.8x)
 - Tech & Softwares (1.86%): $586,28/mês (CRM Maidpad, licenças, telefonia)
 - Operações (1.79%): $562,00/mês (Insumos, EPIs, fardamento)
+
+[RECORTE ATUALMENTE EM FOCO NO DASHBOARD (REFERÊNCIA ADICIONAL)]:
+- Modo Selecionado na Tela: "${ovMode.toUpperCase()}"
+- Data Focalizada: "${selDate}" | Mês Focalizado: "${selMonth}"
+- Faturamento do Recorte: $${selTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${selTotals.count} limpezas, Ticket Médio: $${selTotals.ticketMedio.toFixed(2)}, Tips: $${selTotals.tip.toFixed(2)})
+- Lucro Líquido do Recorte: $${selProfit.toLocaleString('en-US', {minimumFractionDigits: 2})} (Margem: ${selMargin.toFixed(1)}%)
 `;
     }
 
@@ -311,26 +361,26 @@ ${teamSummaryStr || 'Nenhuma transação de equipe registrada para este período
 
                 <!-- Prompt Suggestions Chips -->
                 <div class="copilot-suggestions-bar">
-                    <button class="copilot-chip" data-prompt="📊 Como está meu faturamento?">
-                        📊 Como está meu faturamento?
+                    <button class="copilot-chip" data-prompt="📊 Como está meu faturamento total na planilha?">
+                        📊 Faturamento Geral
                     </button>
-                    <button class="copilot-chip" data-prompt="💰 Onde estou gastando mais?">
-                        💰 Onde estou gastando mais?
+                    <button class="copilot-chip" data-prompt="💰 Onde estou gastando mais dinheiro?">
+                        💰 Gastos & Despesas
                     </button>
-                    <button class="copilot-chip" data-prompt="👥 Qual equipe teve melhor desempenho?">
+                    <button class="copilot-chip" data-prompt="👥 Qual equipe teve o melhor desempenho acumulado?">
                         👥 Desempenho das Equipes
                     </button>
-                    <button class="copilot-chip" data-prompt="📈 Analise minha margem de lucro.">
+                    <button class="copilot-chip" data-prompt="📈 Analise minha margem de lucro acumulada.">
                         📈 Margem de Lucro
                     </button>
-                    <button class="copilot-chip" data-prompt="⭐ Quem são meus clientes VIP?">
+                    <button class="copilot-chip" data-prompt="⭐ Quem são meus maiores clientes VIP?">
                         ⭐ Clientes VIP
                     </button>
-                    <button class="copilot-chip" data-prompt="📋 Resuma este período.">
-                        📋 Resumo do Período
+                    <button class="copilot-chip" data-prompt="📋 Resuma os dados consolidados da planilha.">
+                        📋 Resumo da Planilha
                     </button>
-                    <button class="copilot-chip" data-prompt="🚀 Como posso aumentar meu lucro?">
-                        🚀 Como aumentar o lucro
+                    <button class="copilot-chip" data-prompt="🚀 Como posso aumentar meu lucro no geral?">
+                        🚀 Dicas de Lucro
                     </button>
                 </div>
 
@@ -597,7 +647,7 @@ ${teamSummaryStr || 'Nenhuma transação de equipe registrada para este período
         this.setThinking(true);
 
         try {
-            // 3. Monta Contexto Atual da Aplicação
+            // 3. Monta Contexto Atual da Aplicação (Base Completa da Planilha)
             const contextStr = this.buildCurrentContext();
             const systemPrompt = (window.NUCLEUS_SYSTEM_PROMPT || '') + '\n\n' + contextStr;
 
@@ -835,7 +885,7 @@ ${teamSummaryStr || 'Nenhuma transação de equipe registrada para este período
         });
 
         if (inTable) {
-            tableHtml += '</table></div>';
+            tableHtml += '</table>div>';
             processedLines.push(tableHtml);
         }
 
