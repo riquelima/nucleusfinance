@@ -2737,4 +2737,66 @@ body {
     margin: 16px 0;
 }
 
+/* ==========================================================================
+   Chat Resizer (Redimensionamento Horizontal)
+   ========================================================================== */
+.copilot-resizer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: ew-resize;
+    z-index: 10010;
+    background: transparent;
+    transition: background 0.25s ease, border-left 0.25s ease;
+}
+
+/* Alça visual discreta no centro da borda */
+.copilot-resizer::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 40px;
+    background: var(--border-color);
+    border-radius: var(--radius-full);
+    opacity: 0;
+    transition: opacity 0.25s ease, background-color 0.25s ease;
+}
+
+.copilot-resizer:hover::after,
+.copilot-modal.resizing .copilot-resizer::after {
+    opacity: 1;
+    background: var(--primary);
+}
+
+.copilot-resizer:hover,
+.copilot-modal.resizing .copilot-resizer {
+    background: rgba(37, 171, 183, 0.05);
+    border-left: 1px dashed rgba(37, 171, 183, 0.35);
+}
+
+.copilot-modal.resizing {
+    transition: none !important;
+    user-select: none !important;
+}
+
+/* Cursor e bloqueio de seleção global durante o redimensionamento */
+.resizing-active, 
+.resizing-active * {
+    cursor: ew-resize !important;
+    user-select: none !important;
+}
+
+/* Ocultar resizer em telas mobile e forçar largura 100% */
+@media (max-width: 768px) {
+    .copilot-resizer {
+        display: none !important;
+    }
+}
+
+
 

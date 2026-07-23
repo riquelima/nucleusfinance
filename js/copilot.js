@@ -311,6 +311,8 @@ ${topClients || 'Nenhum cliente registrado.'}
         // Modal / Bottom Sheet Chat Interface
         const modalHtml = `
             <div id="copilotModal" class="copilot-modal" style="display: none;" role="dialog" aria-modal="true" aria-label="Nucleus IA">
+                <!-- Resizer na borda esquerda para Desktop -->
+                <div id="copilotResizer" class="copilot-resizer"></div>
                 <!-- Header Chat -->
                 <div class="copilot-header">
                     <div class="copilot-brand-info">
@@ -527,6 +529,64 @@ ${topClients || 'Nenhum cliente registrado.'}
 
         // Scroll listener com debounce para FAB
         window.addEventListener('scroll', this.handleScroll, { passive: true });
+
+        // Redimensionamento horizontal do modal do Copilot (Desktop)
+        const resizer = document.getElementById('copilotResizer');
+        const modal = document.getElementById('copilotModal');
+
+        if (resizer && modal) {
+            const handleMouseDownOrTouchStart = (e) => {
+                e.preventDefault();
+                
+                // Suporte para mouse e toque
+                const isTouch = e.type === 'touchstart';
+                const startX = isTouch ? e.touches[0].clientX : e.clientX;
+                const startWidth = modal.getBoundingClientRect().width;
+
+                modal.classList.add('resizing');
+                document.body.classList.add('resizing-active');
+
+                const handleMove = (moveEvent) => {
+                    const currentX = moveEvent.type === 'touchmove' ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                    const dx = currentX - startX;
+                    let newWidth = startWidth - dx;
+
+                    // Limites de tamanho (mínimo de 320px, máximo de 900px ou quase a largura total da janela)
+                    const minWidth = 320;
+                    const maxWidth = Math.min(900, window.innerWidth - 48);
+
+                    newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+                    modal.style.width = newWidth + 'px';
+                };
+
+                const handleEnd = () => {
+                    modal.classList.remove('resizing');
+                    document.body.classList.remove('resizing-active');
+
+                    // Salva a largura definida no localStorage
+                    localStorage.setItem('nucleus_ia_chat_width', modal.style.width);
+
+                    if (isTouch) {
+                        document.removeEventListener('touchmove', handleMove);
+                        document.removeEventListener('touchend', handleEnd);
+                    } else {
+                        document.removeEventListener('mousemove', handleMove);
+                        document.removeEventListener('mouseup', handleEnd);
+                    }
+                };
+
+                if (isTouch) {
+                    document.addEventListener('touchmove', handleMove, { passive: false });
+                    document.addEventListener('touchend', handleEnd);
+                } else {
+                    document.addEventListener('mousemove', handleMove);
+                    document.addEventListener('mouseup', handleEnd);
+                }
+            };
+
+            resizer.addEventListener('mousedown', handleMouseDownOrTouchStart);
+            resizer.addEventListener('touchstart', handleMouseDownOrTouchStart, { passive: false });
+        }
     }
 
     handleScroll() {
@@ -588,6 +648,17 @@ ${topClients || 'Nenhum cliente registrado.'}
         if (!modal) return;
 
         modal.style.display = 'flex';
+
+        // Restaura a largura salva do chat no localStorage (somente se for Desktop)
+        if (window.innerWidth > 768) {
+            const savedWidth = localStorage.getItem('nucleus_ia_chat_width');
+            if (savedWidth) {
+                const parsedWidth = parseInt(savedWidth, 10);
+                const maxWidth = window.innerWidth - 48;
+                modal.style.width = Math.max(320, Math.min(maxWidth, parsedWidth)) + 'px';
+            }
+        }
+
         requestAnimationFrame(() => {
             modal.classList.add('active');
         });
