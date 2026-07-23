@@ -2565,32 +2565,45 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             return;
         }
 
-        this.showToast('Gerando relatório executivo PDF em alta resolução...');
+        this.showToast('Gerando relatório executivo PDF ajustado em A4...');
 
         // Update issue date
         const issueElem = document.getElementById('pdfHeaderIssueDate');
         if (issueElem) issueElem.textContent = this.formatDateBR(new Date().toISOString().split('T')[0]);
 
+        const printHeader = document.querySelector('.pdf-only-header');
+
         if (typeof html2pdf !== 'undefined') {
+            reportElement.classList.add('pdf-rendering-a4');
+            if (printHeader) printHeader.style.display = 'block';
+            this.refreshLucideIcons();
+
             const opt = {
                 margin:       [8, 8, 8, 8],
                 filename:     `Nucleus_Relatorio_Executivo_${this.repStartDate}_a_${this.repEndDate}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    logging: false, 
+                    windowWidth: 790,
+                    scrollX: 0, 
+                    scrollY: 0 
+                },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            // Temporary print header display
-            const printHeader = document.querySelector('.pdf-only-header');
-            if (printHeader) printHeader.style.display = 'block';
-
             html2pdf().set(opt).from(reportElement).save().then(() => {
+                reportElement.classList.remove('pdf-rendering-a4');
                 if (printHeader) printHeader.style.display = 'none';
-                this.showToast('Relatório PDF exportado com sucesso!');
+                this.refreshLucideIcons();
+                this.showToast('Relatório PDF exportado com sucesso no formato A4!');
             }).catch(err => {
                 console.error('PDF Export error:', err);
+                reportElement.classList.remove('pdf-rendering-a4');
                 if (printHeader) printHeader.style.display = 'none';
+                this.refreshLucideIcons();
                 window.print();
             });
         } else {

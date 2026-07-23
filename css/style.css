@@ -1690,3 +1690,142 @@ body {
     background: var(--primary) !important;
     color: #ffffff !important;
 }
+
+/* ==========================================================================
+   📄 PROFESSIONAL A4 PDF & PRINT STYLING (ZERO OVERFLOW, PERFECT A4 FIT)
+   ========================================================================== */
+#pdfReportPrintContainer.pdf-rendering-a4 {
+    width: 750px !important;
+    max-width: 750px !important;
+    min-width: 750px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-sizing: border-box !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 * {
+    box-sizing: border-box !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .glass-panel,
+#pdfReportPrintContainer.pdf-rendering-a4 .kpi-card,
+#pdfReportPrintContainer.pdf-rendering-a4 .secondary-kpi-card,
+#pdfReportPrintContainer.pdf-rendering-a4 .chart-card,
+#pdfReportPrintContainer.pdf-rendering-a4 .table-panel,
+#pdfReportPrintContainer.pdf-rendering-a4 .executive-summary-panel {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 18px !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .secondary-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .charts-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .insights-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .custom-table {
+    width: 100% !important;
+    font-size: 11px !important;
+    table-layout: auto !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .custom-table th,
+#pdfReportPrintContainer.pdf-rendering-a4 .custom-table td {
+    padding: 6px 8px !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 .chart-container {
+    height: 220px !important;
+    max-height: 220px !important;
+}
+
+#pdfReportPrintContainer.pdf-rendering-a4 h3.chart-title {
+    font-size: 13px !important;
+}
+
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    .bottom-navbar,
+    .top-header,
+    .period-bar,
+    #appSplashScreen,
+    #appToastNotification {
+        display: none !important;
+    }
+
+    #pdfReportPrintContainer,
+    #pdfReportPrintContainer * {
+        visibility: visible;
+    }
+
+    #pdfReportPrintContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        max-width: 190mm !important;
+        margin: 0 auto !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .pdf-only-header {
+        display: block !important;
+    }
+
+    .glass-panel, .kpi-card, .chart-card, .table-panel {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+    }
+}
