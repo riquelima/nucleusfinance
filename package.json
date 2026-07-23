@@ -1,0 +1,20 @@
+{
+  "name": "nucleus-cleaning-services",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nucleus Financial Control & Executive BI Dashboard",
+  "main": "dashboard.html",
+  "scripts": {
+    "dev": "npx serve ./",
+    "build": "echo 'Static build ready for Vercel'",
+    "start": "npx serve ./"
+  },
+  "keywords": [
+    "nucleus",
+    "cleaning-services",
+    "dashboard",
+    "financeiro"
+  ],
+  "author": "Nucleus Systems",
+  "license": "MIT"
+}

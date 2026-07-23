@@ -1,0 +1,6 @@
+# Exclude local scratch files and PDFs from Vercel deployment payload
+*.pdf
+*.log
+scratch_*
+.tempmediaStorage/
+.system_generated/
