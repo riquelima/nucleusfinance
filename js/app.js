@@ -162,6 +162,9 @@ class NucleusDashboardApp {
             this.activeTab = 'login';
         }
         this.applySliderTransform(this.activeTab);
+        if (window.NucleusIA && typeof window.NucleusIA.updateVisibility === 'function') {
+            window.NucleusIA.updateVisibility(this.activeTab);
+        }
     }
 
     initFlatpickrs() {
@@ -657,6 +660,11 @@ class NucleusDashboardApp {
         }
 
         this.refreshLucideIcons();
+
+        // Notifica o Nucleus IA para controlar a visibilidade do FAB flutuante
+        if (window.NucleusIA && typeof window.NucleusIA.updateVisibility === 'function') {
+            window.NucleusIA.updateVisibility(tabId);
+        }
     }
 
     applySliderTransform(tabId) {
