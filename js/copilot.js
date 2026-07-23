@@ -573,7 +573,7 @@ ${topClients || 'Nenhum cliente registrado.'}
                             const dx = currentX - startX;
                             let newWidth = startWidth - dx;
                             const minWidth = 320;
-                            const maxWidth = Math.min(900, window.innerWidth - 48);
+                            const maxWidth = window.innerWidth - 32; // Limite expandido para dar flexibilidade total
                             newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
                             modal.style.width = newWidth + 'px';
                         }
@@ -583,7 +583,7 @@ ${topClients || 'Nenhum cliente registrado.'}
                             const dy = currentY - startY;
                             let newHeight = startHeight - dy;
                             const minHeight = 350;
-                            const maxHeight = Math.min(900, window.innerHeight - 120);
+                            const maxHeight = window.innerHeight - 100; // Limite expandido
                             newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
                             modal.style.height = newHeight + 'px';
                         }
@@ -695,13 +695,13 @@ ${topClients || 'Nenhum cliente registrado.'}
             const savedWidth = localStorage.getItem('nucleus_ia_chat_width');
             if (savedWidth) {
                 const parsedWidth = parseInt(savedWidth, 10);
-                const maxWidth = window.innerWidth - 48;
+                const maxWidth = window.innerWidth - 32;
                 modal.style.width = Math.max(320, Math.min(maxWidth, parsedWidth)) + 'px';
             }
             const savedHeight = localStorage.getItem('nucleus_ia_chat_height');
             if (savedHeight) {
                 const parsedHeight = parseInt(savedHeight, 10);
-                const maxHeight = window.innerHeight - 120;
+                const maxHeight = window.innerHeight - 100;
                 modal.style.height = Math.max(350, Math.min(maxHeight, parsedHeight)) + 'px';
             }
         }
