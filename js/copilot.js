@@ -44,7 +44,7 @@ class NucleusIAEngine {
                 this.messages = [
                     {
                         role: 'assistant',
-                        content: 'Olá! Eu sou o **Nucleus IA**.\n\nSou o assistente inteligente da Nucleus Cleaning Services.\n\nTenho acesso completo à base de dados da sua planilha no Google Sheets (faturamento, despesas, equipes, clientes, indicadores e relatórios).\n\nComo posso ajudar você hoje?',
+                        content: 'Olá! Eu sou o **Nucleus IA**.\n\nSou o assistente inteligente da Nucleus Cleaning Services.\n\nTenho acesso completo à base de dados da sua planilha no Google Sheets e também aos **dados em tempo real da API do MaidPad** (agendamentos futuros, clientes, e-mails, telefones, endereços e equipes designadas).\n\nComo posso ajudar você hoje?',
                         timestamp: new Date().toISOString()
                     }
                 ];
@@ -151,12 +151,11 @@ class NucleusIAEngine {
         if (!window.app) return 'Contexto da aplicação indisponível.';
 
         const app = window.app;
-        const currentTab = app.activeTab || 'overview';
-        const ovMode = app.overviewPeriodMode || 'daily';
-        const selDate = app.overviewSelectedDate || new Date().toISOString().split('T')[0];
-        const selMonth = app.overviewSelectedMonth || selDate.substring(0, 7);
+        const todayStr = window.getUSDateString();
+        const currentMonthStr = todayStr.substring(0, 7);
+        const manualExpenses = app.manualExpenses || [];
 
-        // Obter TODOS os registros da planilha sem filtros restritivos
+        // Obter TODOS os registros da base
         let allRecords = [];
         if (typeof app.getAllRecords === 'function') {
             allRecords = app.getAllRecords();
@@ -167,10 +166,13 @@ class NucleusIAEngine {
         const globalGrossRevenue = globalTotals.total;
         const DESPESAS_ANNUAL = 377487.36;
         const DESPESAS_MONTHLY = 31457.28;
-        const globalNetProfit = globalGrossRevenue - DESPESAS_ANNUAL;
+        
+        // Calcula despesas anuais dinamicamente (Sistema + Manuais, computando overrides)
+        const globalExpensesTotal = app.calculateExpensesForRange ? app.calculateExpensesForRange('2026-01-01', '2026-12-31') : (DESPESAS_ANNUAL + manualExpenses.reduce((acc, e) => acc + (e.value || 0), 0));
+        const globalNetProfit = globalGrossRevenue - globalExpensesTotal;
         const globalMarginPct = globalGrossRevenue > 0 ? ((globalNetProfit / globalGrossRevenue) * 100) : 0;
 
-        // 2. DESEMPENHO POR EQUIPE EM TODA A PLANILHA (TIME 1 A TIME 5)
+        // 2. DESEMPENHO ACUMULADO POR EQUIPE EM TODA A BASE
         const teamBreakdown = {};
         allRecords.forEach(r => {
             const t = r.team || 'Não Categorizado';
@@ -188,7 +190,81 @@ class NucleusIAEngine {
             teamGlobalSummary += `- ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} | Jobs: ${tStats.count} | Ticket Médio: $${ticket.toFixed(2)} | Gorjetas (Tips): $${tStats.tip.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} (${tipPct.toFixed(1)}%)\n`;
         }
 
-        // 3. EVOLUÇÃO MENSAL ACUMULADA NA PLANILHA
+        // 3. CÁLCULO DE DATAS CHAVES (PRECISÃO MATEMÁTICA ABSOLUTA PARA A IA)
+        
+        // --- HOJE ---
+        const hojeRecords = allRecords.filter(r => r.date === todayStr);
+        const hojeTotals = app.calculateTotals ? app.calculateTotals(hojeRecords) : { total: 0, count: 0 };
+        const hojeTeamMap = {};
+        hojeRecords.forEach(r => {
+            const t = r.team || 'Não Categorizado';
+            if (!hojeTeamMap[t]) hojeTeamMap[t] = { total: 0, count: 0 };
+            hojeTeamMap[t].total += (r.total || 0);
+            hojeTeamMap[t].count += 1;
+        });
+        let hojeTeamSummary = '';
+        for (const [tName, tStats] of Object.entries(hojeTeamMap)) {
+            hojeTeamSummary += `  * ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} | ${tStats.count} serviços\n`;
+        }
+
+        // --- AMANHÃ ---
+        const tomorrowObj = new Date();
+        tomorrowObj.setHours(tomorrowObj.getHours() - 1 + 24); // fuso EUA amanhã
+        const tomorrowStr = tomorrowObj.toISOString().split('T')[0];
+        const amanhaRecords = allRecords.filter(r => r.date === tomorrowStr);
+        const amanhaTotals = app.calculateTotals ? app.calculateTotals(amanhaRecords) : { total: 0, count: 0 };
+        const amanhaTeamMap = {};
+        amanhaRecords.forEach(r => {
+            const t = r.team || 'Não Categorizado';
+            if (!amanhaTeamMap[t]) amanhaTeamMap[t] = { total: 0, count: 0 };
+            amanhaTeamMap[t].total += (r.total || 0);
+            amanhaTeamMap[t].count += 1;
+        });
+        let amanhaTeamSummary = '';
+        for (const [tName, tStats] of Object.entries(amanhaTeamMap)) {
+            amanhaTeamSummary += `  * ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} | ${tStats.count} serviços\n`;
+        }
+
+        // --- SEMANA ATUAL ---
+        const todayObj = new Date();
+        todayObj.setHours(todayObj.getHours() - 1);
+        const dayOfWeek = todayObj.getDay();
+        const firstDayOfWeek = new Date(todayObj);
+        firstDayOfWeek.setDate(todayObj.getDate() - dayOfWeek);
+        const lastDayOfWeek = new Date(firstDayOfWeek);
+        lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+        const startStr = firstDayOfWeek.toISOString().split('T')[0];
+        const endStr = lastDayOfWeek.toISOString().split('T')[0];
+        const semanaRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
+        const semanaTotals = app.calculateTotals ? app.calculateTotals(semanaRecords) : { total: 0, count: 0 };
+        const semanaTeamMap = {};
+        semanaRecords.forEach(r => {
+            const t = r.team || 'Não Categorizado';
+            if (!semanaTeamMap[t]) semanaTeamMap[t] = { total: 0, count: 0 };
+            semanaTeamMap[t].total += (r.total || 0);
+            semanaTeamMap[t].count += 1;
+        });
+        let semanaTeamSummary = '';
+        for (const [tName, tStats] of Object.entries(semanaTeamMap)) {
+            semanaTeamSummary += `  * ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} | ${tStats.count} serviços\n`;
+        }
+
+        // --- MÊS ATUAL ---
+        const mesRecords = allRecords.filter(r => r.date && r.date.startsWith(currentMonthStr));
+        const mesTotals = app.calculateTotals ? app.calculateTotals(mesRecords) : { total: 0, count: 0 };
+        const mesTeamMap = {};
+        mesRecords.forEach(r => {
+            const t = r.team || 'Não Categorizado';
+            if (!mesTeamMap[t]) mesTeamMap[t] = { total: 0, count: 0 };
+            mesTeamMap[t].total += (r.total || 0);
+            mesTeamMap[t].count += 1;
+        });
+        let mesTeamSummary = '';
+        for (const [tName, tStats] of Object.entries(mesTeamMap)) {
+            mesTeamSummary += `  * ${tName}: Faturamento $${tStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} | ${tStats.count} serviços\n`;
+        }
+
+        // 4. EVOLUÇÃO MENSAL ACUMULADA
         const monthlyMap = {};
         allRecords.forEach(r => {
             if (r.date && r.date.length >= 7) {
@@ -199,80 +275,143 @@ class NucleusIAEngine {
                 monthlyMap[m].tip += (r.tip || 0);
             }
         });
-
         let monthlySummaryStr = '';
         const sortedMonths = Object.keys(monthlyMap).sort();
         sortedMonths.forEach(m => {
             const mData = monthlyMap[m];
-            const mProfit = mData.total - DESPESAS_MONTHLY;
+            const mExpenses = app.calculateExpensesForPeriod ? app.calculateExpensesForPeriod('monthly', m + '-01', m) : (DESPESAS_MONTHLY + (manualExpenses.filter(e => e.date && e.date.startsWith(m) && !(e.id && e.id.startsWith('SYS-'))).reduce((acc, e) => acc + (e.value || 0), 0)));
+            const mProfit = mData.total - mExpenses;
             const mMargin = mData.total > 0 ? ((mProfit / mData.total) * 100) : 0;
-            monthlySummaryStr += `- Mês ${m}: Faturamento $${mData.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mData.count} jobs) | Lucro Líquido: $${mProfit.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mMargin.toFixed(1)}%)\n`;
+            monthlySummaryStr += `- Mês ${m}: Faturamento $${mData.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mData.count} jobs) | Despesas Operacionais: $${mExpenses.toLocaleString('en-US', {minimumFractionDigits: 2})} | Lucro Líquido: $${mProfit.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mMargin.toFixed(1)}%)\n`;
         });
 
-        // 4. TOP CLIENTES VIP NA PLANILHA
-        const clientMap = {};
+        // 5. TOP CLIENTES VIP
+        const clientsVolumeMap = {};
         allRecords.forEach(r => {
             const c = r.client || 'Outros';
-            if (!clientMap[c]) clientMap[c] = { total: 0, count: 0 };
-            clientMap[c].total += (r.total || 0);
-            clientMap[c].count += 1;
+            if (!clientsVolumeMap[c]) clientsVolumeMap[c] = { total: 0, count: 0 };
+            clientsVolumeMap[c].total += (r.total || 0);
+            clientsVolumeMap[c].count += 1;
         });
-
-        const topClients = Object.entries(clientMap)
+        const topClients = Object.entries(clientsVolumeMap)
             .sort((a, b) => b[1].total - a[1].total)
             .slice(0, 5)
             .map(([cName, cStats], idx) => `${idx + 1}. ${cName}: $${cStats.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${cStats.count} limpezas)`)
             .join('\n');
 
-        // 5. RECORTE ESPECÍFICO SELECIONADO NA INTERFACE (VISÃO DO DASHBOARD)
-        let filteredRecords = [];
-        let expSelected = 0;
-        if (ovMode === 'daily') {
-            filteredRecords = allRecords.filter(r => r.date === selDate);
-            expSelected = DESPESAS_MONTHLY / 30;
-        } else if (ovMode === 'weekly') {
-            const selDateObj = new Date(selDate);
-            const dayOfWeek = selDateObj.getDay();
-            const firstDayOfWeek = new Date(selDateObj);
-            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
-            const lastDayOfWeek = new Date(firstDayOfWeek);
-            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-
-            const startStr = firstDayOfWeek.toISOString().split('T')[0];
-            const endStr = lastDayOfWeek.toISOString().split('T')[0];
-
-            filteredRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
-            expSelected = (DESPESAS_MONTHLY / 30) * 7;
-        } else if (ovMode === 'monthly') {
-            filteredRecords = allRecords.filter(r => r.date && r.date.startsWith(selMonth));
-            expSelected = DESPESAS_MONTHLY;
+        // Formatação dos dados em tempo real da API do MaidPad
+        let maidpadClientsStr = '';
+        if (app.maidpadClients && app.maidpadClients.length > 0) {
+            app.maidpadClients.forEach(c => {
+                const addrs = c.Addresses && c.Addresses.length > 0
+                    ? c.Addresses.map(a => `${a.Street}, ${a.City}, ${a.State} (Valor: $${a.Charge}, Equipe Padrão: TIME ${a.DefaultTeam || 'N/A'})`).join(' | ')
+                    : 'Sem Endereço';
+                maidpadClientsStr += `- Cliente ID #${c.ID}: **${c.FirstName} ${c.LastName}** | Ref: ${c.Reference || 'Nenhuma'} | E-mail: ${c.Email || 'N/A'} | Tel: ${c.Phone1 || 'N/A'} | Freq. Pref: ${c.PreferredFrequency || 'N/A'} | Dia Pref: ${c.PreferredDayOfWeek || 'N/A'} | Endereço(s): [${addrs}]\n`;
+            });
         } else {
-            filteredRecords = allRecords;
-            expSelected = DESPESAS_ANNUAL;
+            maidpadClientsStr = 'Nenhum cliente carregado via API do MaidPad ainda.';
         }
 
-        const selTotals = app.calculateTotals ? app.calculateTotals(filteredRecords) : { subtotal: 0, tip: 0, total: 0, count: 0, ticketMedio: 0, tipPercent: 0 };
-        const selProfit = selTotals.total - expSelected;
-        const selMargin = selTotals.total > 0 ? ((selProfit / selTotals.total) * 100) : 0;
+        let maidpadJobsStr = '';
+        if (app.maidpadJobs && app.maidpadJobs.length > 0) {
+            const clientMap = {};
+            if (app.maidpadClients) {
+                app.maidpadClients.forEach(c => {
+                    clientMap[c.ID] = `${c.FirstName} ${c.LastName}`.trim();
+                });
+            }
+            app.maidpadJobs.forEach(j => {
+                const cName = clientMap[j.ClientID] || `Cliente #${j.ClientID}`;
+                maidpadJobsStr += `- Serviço ID #${j.ID}: Cliente: ${cName} (ID: ${j.ClientID}) | Data: ${j.JobDate} | Horário: ${j.JobTimeFrom} - ${j.JobTimeTo} | Freq: ${j.Frequency} | Valor: $${j.Charge} | Cobrança: ${j.ChargeBy}\n`;
+            });
+        } else {
+            maidpadJobsStr = 'Nenhum agendamento futuro carregado via API do MaidPad ainda.';
+        }
+
+        // Calcular despesas manuais para os períodos chaves
+        const hojeManualExp = manualExpenses.filter(e => e.date === todayStr);
+        const hojeManualTotal = hojeManualExp.reduce((acc, e) => acc + (e.value || 0), 0);
+        let hojeManualSummary = '';
+        hojeManualExp.forEach(e => {
+            hojeManualSummary += `  * [Manual] Categoria: ${e.category} | Centro: ${e.centro} | Descrição: ${e.desc} | Valor: $${e.value.toFixed(2)}\n`;
+        });
+
+        const amanhaManualExp = manualExpenses.filter(e => e.date === tomorrowStr);
+        const amanhaManualTotal = amanhaManualExp.reduce((acc, e) => acc + (e.value || 0), 0);
+        let amanhaManualSummary = '';
+        amanhaManualExp.forEach(e => {
+            amanhaManualSummary += `  * [Manual] Categoria: ${e.category} | Centro: ${e.centro} | Descrição: ${e.desc} | Valor: $${e.value.toFixed(2)}\n`;
+        });
+
+        const semanaManualExp = manualExpenses.filter(e => e.date >= startStr && e.date <= endStr);
+        const semanaManualTotal = semanaManualExp.reduce((acc, e) => acc + (e.value || 0), 0);
+        let semanaManualSummary = '';
+        semanaManualExp.forEach(e => {
+            semanaManualSummary += `  * [Manual] Data: ${e.date} | Categoria: ${e.category} | Centro: ${e.centro} | Descrição: ${e.desc} | Valor: $${e.value.toFixed(2)}\n`;
+        });
+
+        const mesManualExp = manualExpenses.filter(e => e.date && e.date.startsWith(currentMonthStr));
+        const mesManualTotal = mesManualExp.reduce((acc, e) => acc + (e.value || 0), 0);
+        let mesManualSummary = '';
+        mesManualExp.forEach(e => {
+            mesManualSummary += `  * [Manual] Data: ${e.date} | Categoria: ${e.category} | Centro: ${e.centro} | Descrição: ${e.desc} | Valor: $${e.value.toFixed(2)}\n`;
+        });
 
         return `
-[BANCO DE DADOS COMPLETO DA PLANILHA GOOGLE SHEETS (ID: 1WuwFpLmklVJTfI4xDKRzdXZw2-zJ40lcDfpzyG1D8Mc)]:
-- Faturamento Bruto Total da Planilha: $${globalGrossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+[DADOS ATUAIS PRÉ-CALCULADOS (HOJE, AMANHÃ, SEMANA E MÊS)]:
+- Dia de Hoje nos EUA: "${todayStr}"
+- Faturamento Consolidado de Hoje: $${hojeTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${hojeTotals.count} limpezas)
+- Faturamento por Equipe Hoje:
+${hojeTeamSummary || '  * Sem faturamento nas equipes Hoje.'}
+
+- Dia de Amanhã nos EUA: "${tomorrowStr}"
+- Faturamento Consolidado de Amanhã: $${amanhaTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${amanhaTotals.count} limpezas)
+- Faturamento por Equipe Amanhã:
+${amanhaTeamSummary || '  * Sem faturamento nas equipes Amanhã.'}
+
+- Semana Atual (${startStr} até ${endStr}):
+- Faturamento Consolidado da Semana: $${semanaTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${semanaTotals.count} limpezas)
+- Faturamento por Equipe na Semana:
+${semanaTeamSummary || '  * Sem faturamento nas equipes nesta semana.'}
+
+- Mês Atual (${currentMonthStr}):
+- Faturamento Consolidado do Mês: $${mesTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${mesTotals.count} limpezas)
+- Faturamento por Equipe no Mês:
+${mesTeamSummary || '  * Sem faturamento nas equipes neste mês.'}
+
+[DESPESAS OPERACIONAIS MANUAIS REGISTRADAS PELO USUÁRIO]:
+- Total de Despesas Manuais Cadastradas Hoje: $${hojeManualTotal.toFixed(2)}
+${hojeManualSummary || '  * Nenhuma despesa manual cadastrada Hoje.'}
+
+- Total de Despesas Manuais Cadastradas Amanhã: $${amanhaManualTotal.toFixed(2)}
+${amanhaManualSummary || '  * Nenhuma despesa manual cadastrada Amanhã.'}
+
+- Total de Despesas Manuais na Semana Atual: $${semanaManualTotal.toFixed(2)}
+${semanaManualSummary || '  * Nenhuma despesa manual cadastrada nesta semana.'}
+
+- Total de Despesas Manuais no Mês Atual: $${mesManualTotal.toFixed(2)}
+${mesManualSummary || '  * Nenhuma despesa manual cadastrada neste mês.'}
+
+- Histórico de Todas as Despesas Cadastradas (Manuais e Overrides de Sistema):
+${manualExpenses.length > 0 ? manualExpenses.map(e => `- ID: ${e.id} | Data: ${e.date} | Categoria: ${e.category} | Centro: ${e.centro} | Desc: ${e.desc} | Valor: $${e.value.toFixed(2)} | Pgto: ${e.paid_by} | Status: ${e.status} | Criado: ${e.created_at} | Tipo: ${e.id.startsWith('SYS-') ? 'Sobrescrita de Sistema' : 'Manual'}`).join('\n') : 'Nenhuma despesa gravada na base.'}
+
+[BANCO DE DADOS COMPLETO DO SISTEMA (GOOGLE SHEETS & MAIDPAD API)]:
+- Faturamento Bruto Total Histórico: $${globalGrossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Subtotal Acumulado dos Serviços: $${globalTotals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
 - Gorjetas Totais (Tips Acumuladas): $${globalTotals.tip.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${globalTotals.tipPercent.toFixed(1)}% do subtotal)
-- Número Total de Limpezas Concluídas na Planilha: ${globalTotals.count}
-- Ticket Médio Geral da Empresa: $${globalTotals.ticketMedio.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Despesas Operacionais Totais Anuais: $377.487,36 ($31.457,28/mês)
-- Lucro Líquido Global Acumulado: $${globalNetProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-- Margem Líquida Acumulada da Empresa: ${globalMarginPct.toFixed(2)}%
+- Número Total de Limpezas: ${globalTotals.count}
+- Ticket Médio Geral: $${globalTotals.ticketMedio.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Despesas Operacionais Totais Anuais (Computando Overrides de Sistema & Manuais): $${globalExpensesTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Lucro Líquido Global: $${globalNetProfit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+- Margem Líquida Geral da Empresa: ${globalMarginPct.toFixed(2)}%
 
-[CONSOLIDAÇÃO DE TODAS AS EQUIPES NA PLANILHA (TIME 1 A TIME 5)]:
+[CONSOLIDAÇÃO HISTÓRICA POR EQUIPE]:
 ${teamGlobalSummary}
 
-[EVOLUÇÃO MENSAL NA PLANILHA]:
+[EVOLUÇÃO MENSAL]:
 ${monthlySummaryStr || 'Nenhum histórico mensal disponível.'}
 
-[RANKING DOS TOP 5 CLIENTES VIP NA PLANILHA]:
+[RANKING DOS TOP 5 CLIENTES VIP]:
 ${topClients || 'Nenhum cliente registrado.'}
 
 [ESTRUTURA DE CENTRO DE CUSTOS MENSAL]:
@@ -282,11 +421,12 @@ ${topClients || 'Nenhum cliente registrado.'}
 - Tech & Softwares (1.86%): $586,28/mês (CRM Maidpad, licenças, telefonia)
 - Operações (1.79%): $562,00/mês (Insumos, EPIs, fardamento)
 
-[RECORTE ATUALMENTE EM FOCO NO DASHBOARD (REFERÊNCIA ADICIONAL)]:
-- Modo Selecionado na Tela: "${ovMode.toUpperCase()}"
-- Data Focalizada: "${selDate}" | Mês Focalizado: "${selMonth}"
-- Faturamento do Recorte: $${selTotals.total.toLocaleString('en-US', {minimumFractionDigits: 2})} (${selTotals.count} limpezas, Ticket Médio: $${selTotals.ticketMedio.toFixed(2)}, Tips: $${selTotals.tip.toFixed(2)})
-- Lucro Líquido do Recorte: $${selProfit.toLocaleString('en-US', {minimumFractionDigits: 2})} (Margem: ${selMargin.toFixed(1)}%)
+[DADOS EM TEMPO REAL DA API DO MAIDPAD (INTEGRAÇÃO ATIVA)]:
+### Clientes Cadastrados no MaidPad:
+${maidpadClientsStr}
+
+### Agendamentos Futuros no MaidPad:
+${maidpadJobsStr}
 `;
     }
 
@@ -660,9 +800,8 @@ ${topClients || 'Nenhum cliente registrado.'}
         if (!fab) return;
 
         const isLoginTab = this.activeTab === 'login';
-        const isOverviewTab = this.activeTab === 'overview' || this.activeTab === 'visao-geral';
 
-        if (isOverviewTab && !isLoginTab) {
+        if (!isLoginTab) {
             fab.classList.remove('copilot-fab-hidden');
             fab.classList.add('copilot-fab-enter');
             fab.style.display = 'flex';

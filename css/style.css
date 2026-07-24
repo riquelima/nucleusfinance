@@ -174,7 +174,7 @@ body {
 
 #view-slider {
     display: flex;
-    width: 500vw; /* 5 Tabs: login, overview, equipes, transacoes, relatorios */
+    width: 600vw; /* 6 Tabs: login, overview, equipes, transacoes, relatorios, maidpad */
     min-height: 100vh;
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform;
@@ -1001,7 +1001,7 @@ body {
 
 .custom-table th {
     text-align: left;
-    padding: 12px 14px;
+    padding: 9px 10px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -1018,7 +1018,7 @@ body {
 }
 
 .custom-table td {
-    padding: 12px 14px;
+    padding: 9px 10px;
     border-bottom: 1px solid var(--divider-color);
     color: var(--text-main);
     vertical-align: middle;
@@ -2868,5 +2868,635 @@ body {
     }
 }
 
+/* ==========================================================================
+   MaidPad Hub Integration Styles
+   ========================================================================== */
+.maidpad-hub-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    margin-top: 20px;
+    align-items: start;
+}
 
+@media (max-width: 1024px) {
+    .maidpad-hub-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.maidpad-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.api-status-card {
+    padding: 20px;
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-glass);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-dot.connected {
+    background-color: var(--accent-emerald);
+    box-shadow: 0 0 10px rgba(5, 150, 105, 0.5);
+}
+
+.status-dot.disconnected {
+    background-color: var(--accent-rose);
+    box-shadow: 0 0 10px rgba(225, 29, 72, 0.5);
+}
+
+.status-dot.checking {
+    background-color: var(--accent-amber);
+    box-shadow: 0 0 10px rgba(217, 119, 6, 0.5);
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+}
+
+.maidpad-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.maidpad-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.maidpad-menu-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+.maidpad-menu-item.active {
+    background: var(--primary-glow);
+    color: var(--primary);
+    border-color: var(--border-color-glow);
+    font-weight: 600;
+}
+
+.maidpad-main-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-glass);
+    min-height: 500px;
+}
+
+.maidpad-tab-content {
+    display: none;
+}
+
+.maidpad-tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.maidpad-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.maidpad-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.maidpad-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+.maidpad-table th {
+    padding: 12px 16px;
+    background: var(--table-header-bg);
+    color: var(--text-dim);
+    font-weight: 600;
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.maidpad-table td {
+    padding: 14px 16px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--divider-color);
+}
+
+.maidpad-table tr:hover td {
+    background: var(--table-row-hover);
+}
+
+.maidpad-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 640px) {
+    .maidpad-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.maidpad-form-section {
+    grid-column: 1 / -1;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 6px;
+    margin-top: 10px;
+}
+
+.maidpad-btn-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    grid-column: 1 / -1;
+}
+
+.address-item-box {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    background: var(--bg-secondary);
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.address-item-box .remove-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    color: var(--accent-rose);
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+/* Manual Expenses Module Styles */
+.origin-badge {
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.origin-system {
+    background: rgba(156, 163, 175, 0.12);
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.2);
+}
+
+.origin-manual {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0ea5e9;
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+}
+
+.action-btn.edit-btn:hover {
+    color: var(--accent-emerald);
+}
+
+.action-btn.delete-btn:hover {
+    color: var(--accent-rose);
+}
+
+.action-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    color: var(--text-muted) !important;
+    background: none !important;
+}
+
+/* Inline Editing Styles */
+.editing-cell {
+    padding: 0 !important;
+    position: relative;
+    background: rgba(37, 171, 183, 0.08) !important;
+    outline: 2px solid var(--primary) !important;
+    box-shadow: 0 0 8px rgba(37, 171, 183, 0.4) !important;
+    z-index: 10;
+}
+
+.editing-cell input,
+.editing-cell select {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 38px;
+    padding: 8px 10px !important;
+    border: none !important;
+    background: transparent !important;
+    color: var(--text-main) !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Hover Discreto para Botões de Ações em Desktop */
+@media (min-width: 769px) {
+    #expensesTbody tr .action-btn {
+        opacity: 0;
+        transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+    #expensesTbody tr:hover .action-btn {
+        opacity: 1;
+    }
+}
+
+/* Inline Spinner para feedback de gravação por linha */
+.inline-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: inline-spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes inline-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Estilos para a linha de inserção temporária e seus inputs */
+.temp-insertion-row {
+    transition: all 0.2s ease;
+}
+
+.temp-insertion-row td {
+    padding: 6px 8px !important;
+}
+
+.temp-insertion-row .inline-input,
+.temp-insertion-row .inline-select {
+    width: 100% !important;
+    height: 34px !important;
+    padding: 6px 8px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    background: rgba(30, 41, 59, 0.5) !important;
+    color: var(--text-main) !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.temp-insertion-row .inline-input:focus,
+.temp-insertion-row .inline-select:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px rgba(37, 171, 183, 0.25) !important;
+}
+
+.temp-insertion-row .action-btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.temp-insertion-row .action-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.temp-insertion-row .action-btn:active {
+    transform: scale(0.95);
+}
+
+.temp-insertion-row .save-new-btn:hover {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: var(--accent-emerald) !important;
+}
+
+.temp-insertion-row .cancel-new-btn:hover {
+    background: rgba(225, 29, 72, 0.15) !important;
+    border-color: var(--accent-rose) !important;
+}
+
+/* Destaque elegante para linhas sob inserção e edição inline */
+.temp-insertion-row,
+.editing-row {
+    background: rgba(37, 171, 183, 0.04) !important; /* ciano institucional extremamente sutil */
+    box-shadow: 0 4px 12px rgba(37, 171, 183, 0.06) !important;
+    animation: slide-in-row 250ms ease-out forwards;
+}
+
+@keyframes slide-in-row {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.temp-insertion-row td,
+.editing-row td {
+    padding: 6px 8px !important;
+    border-top: 1px solid rgba(37, 171, 183, 0.12) !important;
+    border-bottom: 1px solid rgba(37, 171, 183, 0.12) !important;
+    vertical-align: middle !important;
+}
+
+/* Borda lateral esquerda elegante */
+.temp-insertion-row td:first-child,
+.editing-row td:first-child {
+    border-left: 4px solid var(--primary) !important;
+}
+
+.temp-insertion-row td:last-child,
+.editing-row td:last-child {
+    border-right: 1px solid rgba(37, 171, 183, 0.12) !important;
+}
+
+/* Indicador visual discreto de edição na primeira célula */
+.editing-row td:first-child::before {
+    content: "●";
+    color: var(--primary);
+    margin-right: 6px;
+    font-size: 10px;
+    animation: pulse-edit-dot 1.2s infinite;
+}
+
+@keyframes pulse-edit-dot {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+/* Componente de Input Inline integrado ao Design System */
+.temp-insertion-row .inline-input,
+.editing-row .inline-input,
+.temp-insertion-row .input-select,
+.editing-row .input-select {
+    width: 100% !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-sm) !important;
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    font-family: var(--font-family) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Placeholders com contraste adequado */
+.temp-insertion-row .inline-input::placeholder,
+.editing-row .inline-input::placeholder {
+    color: var(--text-dim) !important;
+    opacity: 0.55 !important;
+}
+
+/* Hover e Foco dos inputs inline */
+.temp-insertion-row .inline-input:focus,
+.editing-row .inline-input:focus,
+.temp-insertion-row .inline-input:hover,
+.editing-row .inline-input:hover,
+.temp-insertion-row .input-select:focus,
+.editing-row .input-select:focus,
+.temp-insertion-row .input-select:hover,
+.editing-row .input-select:hover {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(37, 171, 183, 0.18) !important;
+    background-color: var(--bg-card) !important;
+}
+
+/* Remove o indicador de data nativo do Chrome/Safari/Webkit/Edge */
+input::-webkit-calendar-picker-indicator {
+    background: transparent !important;
+    color: transparent !important;
+    cursor: pointer !important;
+    display: none !important;
+    -webkit-appearance: none !important;
+}
+
+/* Ajuste específico para wrappers de select e datepicker na tabela */
+.temp-insertion-row .custom-select-wrapper,
+.editing-row .custom-select-wrapper,
+.temp-insertion-row .custom-datepicker-wrapper,
+.editing-row .custom-datepicker-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    height: 34px !important;
+}
+
+/* Garante padding esquerdo para o input de data na tabela para não sobrepor o ícone do calendário */
+.temp-insertion-row .custom-datepicker-wrapper .custom-flatpickr-input,
+.editing-row .custom-datepicker-wrapper .custom-flatpickr-input {
+    padding-left: 32px !important;
+    padding-right: 10px !important;
+    text-align: center !important;
+}
+
+/* Ajustes finos nos ícones select-arrow da tabela */
+.temp-insertion-row .select-arrow,
+.editing-row .select-arrow {
+    position: absolute;
+    right: 8px;
+    color: var(--primary);
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Alinhamento de valor financeiro */
+.temp-insertion-row #newExpValue,
+.editing-row [id^="editValue-"] {
+    text-align: right !important;
+    font-weight: 800 !important;
+    color: var(--accent-rose) !important;
+}
+
+/* Botões de Ações minimalistas na tabela inline */
+.temp-insertion-row .action-btn,
+.editing-row .action-btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm) !important;
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid var(--border-color) !important;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+}
+
+.temp-insertion-row .action-btn:active,
+.editing-row .action-btn:active {
+    transform: scale(0.95);
+}
+
+.temp-insertion-row .save-new-btn:hover,
+.editing-row .save-new-btn:hover {
+    background: rgba(5, 150, 105, 0.1) !important;
+    border-color: rgba(5, 150, 105, 0.25) !important;
+}
+
+.temp-insertion-row .cancel-new-btn:hover,
+.editing-row .cancel-new-btn:hover {
+    background: rgba(225, 29, 72, 0.1) !important;
+    border-color: rgba(225, 29, 72, 0.25) !important;
+}
+
+/* ==========================================================================
+   Refinamentos Pixel-Perfect da Aba Transações
+   ========================================================================== */
+
+/* Grid de 6 colunas para os Mini-Cards Superiores de Transações */
+#transSummaryCardsContainer {
+    display: grid !important;
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 16px !important;
+    width: 100% !important;
+}
+
+@media (max-width: 1200px) {
+    #transSummaryCardsContainer {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+@media (max-width: 768px) {
+    #transSummaryCardsContainer {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Altura e padding fixos para todos os Mini-Cards */
+#transSummaryCardsContainer .health-mini-card {
+    height: 76px !important;
+    padding: 12px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    background: var(--bg-card) !important;
+    border-radius: var(--radius-md) !important;
+    box-sizing: border-box !important;
+    border: 1px solid var(--border-color) !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Unificação dos Badges (Categoria, Status e Origem) */
+.status-pill, 
+.origin-badge {
+    height: 20px !important;
+    padding: 0 8px !important;
+    border-radius: var(--radius-full) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    text-transform: uppercase !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+/* Unificação do hover de botões de ação normais da tabela */
+.action-btn {
+    transition: all 0.2s ease !important;
+}
+
+.action-btn:hover {
+    background: rgba(37, 171, 183, 0.08) !important;
+}
 

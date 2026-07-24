@@ -106,7 +106,7 @@
                             </div>
                         </div>
                         <div class="header-actions">
-                            <button id="btnSyncSheets" class="btn-secondary" onclick="window.app.syncGoogleSheets()" title="Sincronizar Planilha">
+                            <button id="btnSyncMaidPad" class="btn-secondary" onclick="window.app.syncMaidPad()" title="Sincronizar da API MaidPad">
                                 <i data-lucide="refresh-cw"></i>
                             </button>
                             <button id="btnThemeToggle" class="btn-secondary" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
@@ -985,14 +985,15 @@
                     <!-- Main Table Panel -->
                     <div class="table-panel glass-panel">
                         <div class="table-header-controls">
-                            <div class="search-box">
-                                <i data-lucide="search"></i>
-                                <input type="text" id="tableSearchInput" placeholder="Buscar por cliente, descrição, tipo ou data...">
+                            <!-- Lupa externa ao campo de busca, alinhada à esquerda -->
+                            <div class="search-box-wrapper" style="display: flex; align-items: center; gap: 10px; flex-grow: 1; max-width: 400px;">
+                                <i data-lucide="search" style="color: var(--primary); flex-shrink: 0; width: 18px; height: 18px;"></i>
+                                <input type="text" id="tableSearchInput" class="custom-flatpickr-input" placeholder="Buscar por cliente, descrição, tipo ou data..." style="width: 100%; height: 38px !important; border-radius: var(--radius-md) !important; padding: 0 14px !important; font-size: 13px !important; font-family: var(--font-family) !important; font-weight: 500 !important; outline: none !important; box-sizing: border-box !important;">
                             </div>
 
                             <!-- Dynamic Filter Dropdowns (Entradas vs Saídas) -->
                             <div id="entradasFilterGroup" style="display: flex; gap: 12px; align-items: center;">
-                                <div class="custom-select-wrapper">
+                                <div class="custom-select-wrapper" style="width: 210px !important;">
                                     <i data-lucide="users" class="select-icon"></i>
                                     <select id="transTeamFilterSelect" class="input-select">
                                         <option value="ALL">Todas as Equipes (Time 1 a 5)</option>
@@ -1005,7 +1006,7 @@
                                     <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
 
-                                <div class="custom-select-wrapper">
+                                <div class="custom-select-wrapper" style="width: 210px !important;">
                                     <i data-lucide="check-circle" class="select-icon"></i>
                                     <select id="transStatusFilterSelect" class="input-select">
                                         <option value="ALL">Todos os Status</option>
@@ -1018,18 +1019,40 @@
                             </div>
 
                             <div id="saidasFilterGroup" style="display: none; gap: 12px; align-items: center;">
-                                <div class="custom-select-wrapper">
+                                <!-- Filtro Categoria -->
+                                <div class="custom-select-wrapper" style="width: 210px !important;">
                                     <i data-lucide="tag" class="select-icon"></i>
                                     <select id="transCategoryFilterSelect" class="input-select">
                                         <option value="ALL">Todas as Categorias</option>
                                         <option value="Payroll">Mão de Obra (Payroll)</option>
                                         <option value="Frota">Frota de Veículos</option>
                                         <option value="Marketing">Marketing & Aquisição</option>
-                                        <option value="Tech">Tech, CRM & Softwares</option>
+                                        <option value="Tech & CRM">Tech, CRM & Softwares</option>
                                         <option value="Operações">Operações & Limpeza</option>
+                                        <option value="Administrativo">Administrativo</option>
+                                        <option value="Impostos">Impostos & Taxas</option>
+                                        <option value="Equipamentos">Equipamentos</option>
+                                        <option value="Escritório">Escritório</option>
+                                        <option value="Outros">Outros</option>
                                     </select>
                                     <i data-lucide="chevron-down" class="select-arrow"></i>
                                 </div>
+
+                                <!-- Filtro Origem (Novo) -->
+                                <div class="custom-select-wrapper" style="width: 210px !important;">
+                                    <i data-lucide="database" class="select-icon"></i>
+                                    <select id="transSourceFilterSelect" class="input-select">
+                                        <option value="ALL">Todas as Origens</option>
+                                        <option value="SYSTEM">Sistema</option>
+                                        <option value="MANUAL">Manual</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                                </div>
+
+                                <!-- Botão + Nova Despesa (Novo) -->
+                                <button class="btn-primary" style="height: 38px; padding: 0 16px; border-radius: var(--radius-md) !important; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; font-weight: 600;" onclick="window.app.startInlineInsertion()">
+                                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Nova Despesa
+                                </button>
                             </div>
                         </div>
 
@@ -1038,15 +1061,15 @@
                             <table class="custom-table">
                                 <thead>
                                     <tr>
-                                        <th>Data</th>
-                                        <th>Equipe</th>
-                                        <th>Cliente</th>
-                                        <th>Tipo Serviço</th>
-                                        <th class="text-right">Subtotal</th>
-                                        <th class="text-right">Tip (Gorjeta)</th>
-                                        <th class="text-right">Total Pago</th>
-                                        <th>Status</th>
-                                        <th>Forma Pgto</th>
+                                        <th style="width: 110px;">Data</th>
+                                        <th style="width: 100px;">Equipe</th>
+                                        <th style="width: auto;">Cliente</th>
+                                        <th style="width: 140px;">Tipo Serviço</th>
+                                        <th class="text-right" style="width: 110px; text-align: right;">Subtotal</th>
+                                        <th class="text-right" style="width: 110px; text-align: right;">Tip (Gorjeta)</th>
+                                        <th class="text-right" style="width: 110px; text-align: right;">Total Pago</th>
+                                        <th style="width: 115px;">Status</th>
+                                        <th style="width: 130px;">Forma Pgto</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionsTbody">
@@ -1060,13 +1083,15 @@
                             <table class="custom-table">
                                 <thead>
                                     <tr>
-                                        <th>Data</th>
-                                        <th>Categoria</th>
-                                        <th>Descrição do Item</th>
-                                        <th>Centro de Custo</th>
-                                        <th class="text-right">Valor ($)</th>
-                                        <th>Forma Pgto</th>
-                                        <th>Status</th>
+                                        <th style="width: 110px;">Data</th>
+                                        <th style="width: 130px;">Categoria</th>
+                                        <th style="width: auto;">Descrição do Item</th>
+                                        <th style="width: 140px;">Centro de Custo</th>
+                                        <th class="text-right" style="width: 110px; text-align: right;">Valor ($)</th>
+                                        <th style="width: 130px;">Forma Pgto</th>
+                                        <th style="width: 115px;">Status</th>
+                                        <th style="width: 100px;">Origem</th>
+                                        <th style="width: 100px; text-align: center;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="expensesTbody">
@@ -1445,6 +1470,11 @@
                 </div>
             </section>
 
+            <!-- TAB 5: MAIDPAD HUB [SPA_HORIZONTAL_MANDATE] -->
+            <section id="view-maidpad" class="view-section">
+                <!-- O conteúdo HTML é gerado dinamicamente no js/app.js para evitar poluição visual de templates no HTML principal -->
+            </section>
+
         </div>
     </div>
 
@@ -1462,11 +1492,137 @@
         <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
             <i data-lucide="bar-chart-3"></i> Relatórios
         </button>
+        <button class="nav-item" data-tab="maidpad" onclick="window.app.switchTab('maidpad')">
+            <i data-lucide="refresh-cw"></i> MaidPad
+        </button>
     </nav>
+
+    <!-- Modal para Cadastro e Edição de Despesas Manuais -->
+    <div id="expenseModal" class="copilot-modal" style="display: none; width: 480px; height: auto; max-height: 90vh; overflow-y: auto; z-index: 10000; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid var(--border-color); background: var(--bg-panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);" role="dialog" aria-modal="true" aria-label="Cadastro de Despesa">
+        <div class="copilot-header" style="padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i data-lucide="wallet" style="color: var(--accent-rose); width: 20px; height: 20px;"></i>
+                <h3 id="expenseModalTitle" style="font-size: 16px; font-weight: 700; color: var(--text-main); margin: 0;">Nova Despesa Manual</h3>
+            </div>
+            <button class="copilot-btn-close" onclick="window.app.closeExpenseModal()" style="background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%;"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+        
+        <form id="expenseForm" onsubmit="event.preventDefault(); window.app.saveExpense();" style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+            <input type="hidden" id="expId">
+            <input type="hidden" id="expCreatedAt">
+
+            <div style="display: flex; gap: 16px;">
+                <!-- Data -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Data *</label>
+                    <input type="text" id="expDate" class="form-input" style="height: 38px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main);" placeholder="Selecione a data..." required>
+                </div>
+                <!-- Categoria -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Categoria *</label>
+                    <div class="custom-select-wrapper" style="width: 100%;">
+                        <select id="expCategory" class="input-select" style="height: 38px; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main); padding: 0 12px;" required>
+                            <option value="Payroll">Mão de Obra (Payroll)</option>
+                            <option value="Frota">Frota de Veículos</option>
+                            <option value="Marketing">Marketing & Aquisição</option>
+                            <option value="Tech & CRM">Tech, CRM & Softwares</option>
+                            <option value="Operações">Operações & Limpeza</option>
+                            <option value="Administrativo">Administrativo</option>
+                            <option value="Impostos">Impostos & Taxas</option>
+                            <option value="Equipamentos">Equipamentos</option>
+                            <option value="Escritório">Escritório</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="select-arrow" style="right: 12px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px;">
+                <!-- Centro de Custo -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Centro de Custo</label>
+                    <div style="position: relative;">
+                        <input type="text" id="expCentroInput" class="form-input" style="height: 38px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main);" placeholder="Digite ou selecione..." list="centroOptions">
+                        <datalist id="centroOptions">
+                            <option value="Mão de Obra">
+                            <option value="Frota">
+                            <option value="Marketing">
+                            <option value="Tech & Softwares">
+                            <option value="Operações">
+                            <option value="Administração">
+                            <option value="Impostos">
+                        </datalist>
+                    </div>
+                </div>
+                <!-- Valor -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Valor ($) *</label>
+                    <input type="text" id="expValue" class="form-input" style="height: 38px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main);" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <!-- Descrição -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Descrição *</label>
+                <input type="text" id="expDesc" class="form-input" style="height: 38px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main);" placeholder="Ex: Compra de panos de microfibra, taxas..." required>
+            </div>
+
+            <div style="display: flex; gap: 16px;">
+                <!-- Forma de Pagamento -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Forma de Pagamento</label>
+                    <div class="custom-select-wrapper" style="width: 100%;">
+                        <select id="expPaidBy" class="input-select" style="height: 38px; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main); padding: 0 12px;">
+                            <option value="Pix">Pix</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                            <option value="Cartão Corporativo">Cartão Corporativo</option>
+                            <option value="Cartão Crédito">Cartão de Crédito</option>
+                            <option value="Cartão Débito">Cartão de Débito</option>
+                            <option value="ACH">ACH / Direct Deposit</option>
+                            <option value="Transferência">Transferência Bancária</option>
+                            <option value="Check">Check (Cheque)</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="select-arrow" style="right: 12px;"></i>
+                    </div>
+                </div>
+                <!-- Status -->
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
+                    <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Status</label>
+                    <div class="custom-select-wrapper" style="width: 100%;">
+                        <select id="expStatus" class="input-select" style="height: 38px; width: 100%; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main); padding: 0 12px;">
+                            <option value="Pago">Pago</option>
+                            <option value="Pendente">Pendente</option>
+                            <option value="Agendado">Agendado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="select-arrow" style="right: 12px;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observações -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label class="form-label" style="font-size: 11px; font-weight: 600; color: var(--text-dim);">Observações (Opcional)</label>
+                <textarea id="expNotes" class="form-input" style="height: 60px; padding: 10px; resize: none; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-body); color: var(--text-main);" placeholder="Informações adicionais..."></textarea>
+            </div>
+
+            <!-- Botões -->
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                <button type="button" class="btn-secondary" style="height: 38px; padding: 0 16px; margin: 0; border-radius: 8px;" onclick="window.app.closeExpenseModal()">Cancelar</button>
+                <button type="submit" id="btnSubmitExpense" class="btn-primary" style="height: 38px; padding: 0 16px; margin: 0; border-radius: 8px;">Salvar Despesa</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Fundo Overlay -->
+    <div id="modalOverlay" class="copilot-modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 9999;" onclick="window.app.closeExpenseModal()"></div>
 
     <!-- Load JavaScript Assets -->
     <script src="js/data.js"></script>
     <script src="js/sheets-sync.js"></script>
+    <script src="js/maidpad-sync.js"></script>
     <script src="js/app.js"></script>
     <script src="js/copilot-prompt.js"></script>
     <script src="js/copilot.js"></script>

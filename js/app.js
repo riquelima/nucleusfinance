@@ -4,6 +4,18 @@
  * 100% Dynamic Engine for Visão Geral, Aba Equipes Executiva BI Expansion, Módulo de Transações & Centro de Relatórios Executivo PDF.
  */
 
+// Obtém a data atual formatada como YYYY-MM-DD no fuso horário dos EUA (Nova York, UTC-4/5), que é 1 hora antes do Brasil (UTC-3)
+window.getUSDateString = function() {
+    try {
+        return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch (e) {
+        // Fallback simples caso dê algum erro no Intl
+        const d = new Date();
+        d.setHours(d.getHours() - 1);
+        return d.toISOString().split('T')[0];
+    }
+};
+
 // Audit Base Monthly Expenses (Aba Despesas)
 const DESPESAS_MONTHLY_TOTAL = 31457.28;
 const DESPESAS_ANNUAL_TOTAL = 377487.36;
@@ -53,7 +65,7 @@ class NucleusDashboardApp {
         this.minimaxApiKey = 'sk-cp-meaN0PHZdGi3-5gZffia9b6PyDIh27vyk54LwG6gw965dFLWoIHowFo19rTqoHdbxhaQezJlMMBgTEYhNni51sJnMWCcPHIKtCg4GRY-pGMmrXarNIxxGQA';
 
         // Overview Tab Default Period Mode ('daily' / 'Dia' by default)
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = window.getUSDateString();
         this.overviewPeriodMode = 'daily';
         this.overviewSelectedDate = todayStr;
         this.overviewSelectedMonth = todayStr.substring(0, 7);
@@ -74,6 +86,11 @@ class NucleusDashboardApp {
         this.transSearchQuery = '';
         this.transCurrentPage = 1;
         this.transPageSize = 15;
+        
+        // Manual Expenses State
+        this.manualExpenses = [];
+        this.editingExpenseRowId = null;
+        this.transSelectedSource = 'ALL';
 
         // Relatórios Executive Center Date Range State
         this.repStartDate = '2026-01-01';
@@ -102,6 +119,13 @@ class NucleusDashboardApp {
             this.switchTab(targetTab);
         }
         this.initialized = true;
+
+        // Se o usuário estiver autenticado no carregamento da página, sincroniza silenciosamente do MaidPad por padrão
+        if (this.isAuthenticated) {
+            this.syncMaidPad(true);
+            this.loadManualExpenses();
+        }
+
         this.refreshLucideIcons();
     }
 
@@ -413,6 +437,24 @@ class NucleusDashboardApp {
                 this.renderTransactionsModule();
             });
         }
+
+        // Transações Source (Origem) Filter
+        const sourceFilter = document.getElementById('transSourceFilterSelect');
+        if (sourceFilter) {
+            sourceFilter.addEventListener('change', (e) => {
+                this.transSelectedSource = e.target.value;
+                this.transCurrentPage = 1;
+                this.renderTransactionsModule();
+            });
+        }
+
+        // Inline Editing double click delegation
+        const expensesTbody = document.getElementById('expensesTbody');
+        if (expensesTbody) {
+            expensesTbody.addEventListener('dblclick', (e) => {
+                this.handleCellDblClick(e);
+            });
+        }
     }
 
     applyReportsPreset(preset) {
@@ -612,12 +654,18 @@ class NucleusDashboardApp {
                         splash.style.display = 'none';
                         this.isLoggingIn = false;
                         this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
+                        // Sincroniza do MaidPad imediatamente após o login de forma silenciosa
+                        this.syncMaidPad(true);
+                        this.loadManualExpenses();
                     }, 400);
                 }, 1500);
             } else {
                 this.switchTab('overview');
                 this.isLoggingIn = false;
                 this.showToast('Login realizado com sucesso! Bem-vindo, Admin Nucleus.');
+                // Sincroniza do MaidPad imediatamente após o login de forma silenciosa
+                this.syncMaidPad(true);
+                this.loadManualExpenses();
             }
         } else {
             if (alertBox) {
@@ -657,6 +705,8 @@ class NucleusDashboardApp {
         } else if (tabId === 'relatorios') {
             this.updateReportsPeriodUI();
             this.renderReportsView();
+        } else if (tabId === 'maidpad') {
+            this.renderMaidPadView();
         }
 
         this.refreshLucideIcons();
@@ -676,7 +726,8 @@ class NucleusDashboardApp {
             'overview': 1,
             'equipes': 2,
             'transacoes': 3,
-            'relatorios': 4
+            'relatorios': 4,
+            'maidpad': 5
         };
 
         const index = tabIndexMap[tabId] !== undefined ? tabIndexMap[tabId] : 1;
@@ -726,10 +777,11 @@ class NucleusDashboardApp {
         let expFactor = 1;
         let periodNameLabel = '';
 
+        expTotal = this.calculateExpensesForPeriod(this.overviewPeriodMode, this.overviewSelectedDate, this.overviewSelectedMonth);
+
         if (this.overviewPeriodMode === 'daily') {
             filteredRecords = allRecords.filter(r => r.date === this.overviewSelectedDate);
             expFactor = 1 / 30;
-            expTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
             periodNameLabel = `Dia ${this.formatDateBR(this.overviewSelectedDate)}`;
         } else if (this.overviewPeriodMode === 'weekly') {
             const selDateObj = new Date(this.overviewSelectedDate);
@@ -744,17 +796,14 @@ class NucleusDashboardApp {
 
             filteredRecords = allRecords.filter(r => r.date >= startStr && r.date <= endStr);
             expFactor = 7 / 30;
-            expTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
             periodNameLabel = `Semana de ${this.formatDateBR(startStr)} a ${this.formatDateBR(endStr)}`;
         } else if (this.overviewPeriodMode === 'monthly') {
             filteredRecords = allRecords.filter(r => r.date.startsWith(this.overviewSelectedMonth));
             expFactor = 1;
-            expTotal = DESPESAS_MONTHLY_TOTAL;
             periodNameLabel = `Mês de ${this.formatMonthLabel(this.overviewSelectedMonth)}`;
         } else {
             filteredRecords = allRecords.filter(r => r.date.startsWith('2026'));
             expFactor = 12;
-            expTotal = DESPESAS_ANNUAL_TOTAL;
             periodNameLabel = `Consolidação Anual 2026`;
         }
 
@@ -790,11 +839,12 @@ class NucleusDashboardApp {
         document.getElementById('ovClientesUnicos').textContent = uniqueClients.toLocaleString('pt-BR');
         document.getElementById('ovLTVMedio').textContent = this.formatCurrency(ltvPeriod);
 
-        document.getElementById('expPayrollVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.payroll * expFactor);
-        document.getElementById('expFrotaVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.frota * expFactor);
-        document.getElementById('expMarketingVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.marketing * expFactor);
-        document.getElementById('expTechVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.tech * expFactor);
-        document.getElementById('expOpsVal').textContent = this.formatCurrency(DESPESAS_CATEGORIES_MONTHLY.ops * expFactor);
+        const catTotals = this.calculateCategoryExpensesForPeriod(this.overviewPeriodMode, this.overviewSelectedDate, this.overviewSelectedMonth);
+        document.getElementById('expPayrollVal').textContent = this.formatCurrency(catTotals.payroll);
+        document.getElementById('expFrotaVal').textContent = this.formatCurrency(catTotals.frota);
+        document.getElementById('expMarketingVal').textContent = this.formatCurrency(catTotals.marketing);
+        document.getElementById('expTechVal').textContent = this.formatCurrency(catTotals.tech);
+        document.getElementById('expOpsVal').textContent = this.formatCurrency(catTotals.ops);
 
         this.renderExecutiveExpansion(filteredRecords, totals, expTotal, expFactor, periodNameLabel);
     }
@@ -811,7 +861,9 @@ class NucleusDashboardApp {
             return recs.reduce((acc, r) => acc + r.total, 0);
         });
 
-        const monthlyExpenses = months.map(() => DESPESAS_MONTHLY_TOTAL);
+        const monthlyExpenses = months.map(m => {
+            return this.calculateExpensesForPeriod('monthly', m + '-01', m);
+        });
 
         const ctxTrend = document.getElementById('chartRevenueTrend');
         if (ctxTrend) {
@@ -831,7 +883,7 @@ class NucleusDashboardApp {
                         },
                         {
                             type: 'line',
-                            label: 'Despesas Operacionais ($31.4k/mês)',
+                            label: 'Despesas Operacionais ($)',
                             data: monthlyExpenses,
                             borderColor: '#e11d48',
                             borderWidth: 3,
@@ -2091,13 +2143,13 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                     <tr>
                         <td style="font-weight: 600;">${this.formatDateBR(r.date)}</td>
                         <td><span class="team-jobs-badge">${r.team}</span></td>
-                        <td style="font-weight: 700; color: var(--text-main);">${r.client}</td>
-                        <td>${r.trans_type || 'Cleaning'}</td>
+                        <td style="font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;" title="${r.client}">${r.client}</td>
+                        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="${r.trans_type || 'Cleaning'}">${r.trans_type || 'Cleaning'}</td>
                         <td style="font-weight: 600; text-align: right;">${this.formatCurrency(r.subtotal)}</td>
                         <td style="color: var(--accent-amber); font-weight: 600; text-align: right;">${this.formatCurrency(r.tip)}</td>
                         <td style="color: var(--primary); font-weight: 800; text-align: right;">${this.formatCurrency(r.total)}</td>
                         <td><span class="status-pill ${statusClass}">${r.status || 'PAID'}</span></td>
-                        <td style="color: var(--text-muted);">${r.paid_by || 'Dinheiro/Cartão'}</td>
+                        <td style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;" title="${r.paid_by || 'Dinheiro/Cartão'}">${r.paid_by || 'Dinheiro/Cartão'}</td>
                     </tr>
                 `;
             });
@@ -2121,16 +2173,50 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         else if (this.transPeriodMode === 'weekly') expFactor = 7 / 30;
         else if (this.transPeriodMode === 'monthly') expFactor = 1;
 
-        // Render Summary Mini-Cards for Saídas
-        const totalDespesasPeriod = DESPESAS_MONTHLY_TOTAL * expFactor;
+        // 1. Filtrar despesas manuais pelo período ativo (excluindo overrides de sistema)
+        let periodManualExpenses = [];
+        if (this.manualExpenses && this.manualExpenses.length > 0) {
+            let startStr = '';
+            let endStr = '';
+            
+            if (this.transPeriodMode === 'weekly') {
+                const selDateObj = new Date(this.transSelectedDate);
+                const dayOfWeek = selDateObj.getDay();
+                const firstDayOfWeek = new Date(selDateObj);
+                firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+                startStr = firstDayOfWeek.toISOString().split('T')[0];
+                endStr = lastDayOfWeek.toISOString().split('T')[0];
+            }
+
+            periodManualExpenses = this.manualExpenses.filter(e => {
+                if (!e.date) return false;
+                if (e.id && e.id.startsWith('SYS-')) return false; // Omitir overrides de sistema das manuais puras
+                
+                if (this.transPeriodMode === 'daily') {
+                    return e.date === this.transSelectedDate;
+                } else if (this.transPeriodMode === 'weekly') {
+                    return e.date >= startStr && e.date <= endStr;
+                } else if (this.transPeriodMode === 'monthly') {
+                    return e.date.startsWith(this.transSelectedMonth);
+                } else { // annual
+                    return e.date.startsWith('2026');
+                }
+            });
+        }
+
+        const totalManualPeriod = periodManualExpenses.reduce((acc, e) => acc + (e.value || 0), 0);
+        const totalDespesasPeriod = this.calculateExpensesForPeriod(this.transPeriodMode, this.transSelectedDate, this.transSelectedMonth);
+        const activeCatTotals = this.calculateCategoryExpensesForPeriod(this.transPeriodMode, this.transSelectedDate, this.transSelectedMonth);
 
         if (summaryContainer) {
             const categories = [
-                { key: 'Payroll', label: 'Payroll', val: DESPESAS_CATEGORIES_MONTHLY.payroll * expFactor },
-                { key: 'Frota', label: 'Frota', val: DESPESAS_CATEGORIES_MONTHLY.frota * expFactor },
-                { key: 'Marketing', label: 'Marketing', val: DESPESAS_CATEGORIES_MONTHLY.marketing * expFactor },
-                { key: 'Tech', label: 'Tech & CRM', val: DESPESAS_CATEGORIES_MONTHLY.tech * expFactor },
-                { key: 'Operações', label: 'Operações', val: DESPESAS_CATEGORIES_MONTHLY.ops * expFactor }
+                { key: 'Payroll', label: 'Payroll', val: activeCatTotals.payroll },
+                { key: 'Frota', label: 'Frota', val: activeCatTotals.frota },
+                { key: 'Marketing', label: 'Marketing', val: activeCatTotals.marketing },
+                { key: 'Tech & CRM', label: 'Tech & CRM', val: activeCatTotals.tech },
+                { key: 'Operações', label: 'Operações', val: activeCatTotals.ops }
             ];
 
             let cardsHtml = `
@@ -2153,51 +2239,185 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             summaryContainer.innerHTML = cardsHtml;
         }
 
-        // Scaled Items for Saídas Table
-        let scaledItems = DESPESAS_DETAILED_ITEMS.map(item => ({
-            ...item,
-            scaledValue: item.monthly * expFactor,
-            date: this.transSelectedDate
+        // 3. Montar a lista unificada de registros de despesa para a tabela
+        const periodKey = this.transPeriodMode === 'monthly' ? this.transSelectedMonth : 
+                          (this.transPeriodMode === 'annual' ? '2026' : this.transSelectedDate);
+
+        let systemItems = DESPESAS_DETAILED_ITEMS.map(item => {
+            const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
+            const override = (this.manualExpenses || []).find(e => e.id === itemId);
+
+            // Se o item do sistema foi deletado para este período, remove da listagem
+            if (override && override.status === 'DELETED') {
+                return null;
+            }
+
+            return {
+                id: itemId,
+                category: override ? override.category : item.category,
+                desc: override ? override.desc : item.desc,
+                centro: override ? override.centro : item.centro,
+                value: override ? override.value : (item.monthly * expFactor),
+                date: override ? override.date : this.transSelectedDate,
+                paid_by: override ? override.paid_by : (item.paid_by || 'Cartão'),
+                status: override ? override.status : (item.status || 'PAID'),
+                origin: 'SYSTEM',
+                notes: override ? override.notes : 'Despesa rateada estimativa'
+            };
+        }).filter(Boolean);
+
+        let manualItems = periodManualExpenses.map(e => ({
+            id: e.id,
+            category: e.category,
+            desc: e.desc,
+            centro: e.centro || 'Administrativo',
+            value: e.value,
+            date: e.date,
+            paid_by: e.paid_by || 'Outro',
+            status: e.status || 'Pago',
+            origin: 'MANUAL',
+            notes: e.notes || '',
+            created_at: e.created_at,
+            updated_at: e.updated_at
         }));
 
-        // Filter by Selected Category
-        if (this.transSelectedCategory !== 'ALL') {
-            scaledItems = scaledItems.filter(item => item.category === this.transSelectedCategory);
+        let allPeriodItems = [...systemItems, ...manualItems];
+
+        // 4. Aplicar Filtro de Origem
+        if (this.transSelectedSource && this.transSelectedSource !== 'ALL') {
+            allPeriodItems = allPeriodItems.filter(item => item.origin === this.transSelectedSource);
         }
 
-        // Search Query Filter
+        // 5. Aplicar Filtro de Categoria
+        if (this.transSelectedCategory !== 'ALL') {
+            allPeriodItems = allPeriodItems.filter(item => {
+                const cat = item.category;
+                if (this.transSelectedCategory === 'Tech & CRM' && (cat === 'Tech' || cat === 'Tech & CRM')) return true;
+                return cat === this.transSelectedCategory;
+            });
+        }
+
+        // 6. Aplicar Busca de Texto
         if (this.transSearchQuery) {
-            scaledItems = scaledItems.filter(item => 
-                item.desc.toLowerCase().includes(this.transSearchQuery) ||
-                item.category.toLowerCase().includes(this.transSearchQuery) ||
-                item.centro.toLowerCase().includes(this.transSearchQuery)
+            allPeriodItems = allPeriodItems.filter(item => 
+                (item.desc && item.desc.toLowerCase().includes(this.transSearchQuery)) ||
+                (item.category && item.category.toLowerCase().includes(this.transSearchQuery)) ||
+                (item.centro && item.centro.toLowerCase().includes(this.transSearchQuery)) ||
+                (item.notes && item.notes.toLowerCase().includes(this.transSearchQuery))
             );
         }
 
-        // Pagination
-        const totalItems = scaledItems.length;
+        // 7. Paginação
+        const totalItems = allPeriodItems.length;
         const totalPages = Math.ceil(totalItems / this.transPageSize) || 1;
         if (this.transCurrentPage > totalPages) this.transCurrentPage = totalPages;
 
         const startIndex = (this.transCurrentPage - 1) * this.transPageSize;
-        const paginatedItems = scaledItems.slice(startIndex, startIndex + this.transPageSize);
+        const paginatedItems = allPeriodItems.slice(startIndex, startIndex + this.transPageSize);
 
         if (paginatedItems.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhuma despesa encontrada para os filtros aplicados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 32px; color: var(--text-muted);">Nenhuma despesa encontrada para os filtros aplicados.</td></tr>`;
         } else {
             let html = '';
             paginatedItems.forEach(item => {
-                html += `
-                    <tr>
-                        <td style="font-weight: 600;">${this.formatDateBR(item.date)}</td>
-                        <td><span class="status-pill status-unpaid" style="font-size: 11px;">${item.category}</span></td>
-                        <td style="font-weight: 700; color: var(--text-main);">${item.desc}</td>
-                        <td style="color: var(--text-muted);">${item.centro}</td>
-                        <td style="color: var(--accent-rose); font-weight: 800; text-align: right;">${this.formatCurrency(item.scaledValue)}</td>
-                        <td style="color: var(--text-muted);">${item.paid_by}</td>
-                        <td><span class="status-pill status-paid">${item.status}</span></td>
-                    </tr>
-                `;
+                const isManual = item.origin === 'MANUAL';
+                const badgeClass = isManual ? 'origin-manual' : 'origin-system';
+                const isEditingThis = item.id === this.editingExpenseRowId;
+
+                if (isEditingThis) {
+                    const categories = ['Payroll', 'Frota', 'Marketing', 'Tech & CRM', 'Operações', 'Administrativo', 'Impostos', 'Equipamentos', 'Escritório', 'Outros'];
+                    let catOptions = '';
+                    categories.forEach(c => {
+                        catOptions += `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`;
+                    });
+
+                    const payments = ['Pix', 'Dinheiro', 'ACH', 'Check', 'Cartão Crédito', 'Cartão Débito', 'Cartão Corporativo', 'Transferência', 'Venmo', 'Zelle'];
+                    let paidOptions = '';
+                    payments.forEach(p => {
+                        paidOptions += `<option value="${p}" ${item.paid_by === p ? 'selected' : ''}>${p}</option>`;
+                    });
+
+                    const statuses = ['Pago', 'Pendente', 'Agendado', 'Cancelado'];
+                    let statusOptions = '';
+                    statuses.forEach(s => {
+                        statusOptions += `<option value="${s}" ${item.status === s ? 'selected' : ''}>${s}</option>`;
+                    });
+
+                    const actionsHtml = `<div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                            <button class="action-btn save-new-btn" onclick="window.app.saveRowEdit('${item.id}')" title="Concluir e Salvar (Enter)">
+                                <i data-lucide="check" style="width: 14px; height: 14px; color: var(--accent-emerald);"></i>
+                            </button>
+                            <button class="action-btn cancel-new-btn" onclick="window.app.cancelRowEdit('${item.id}')" title="Cancelar (ESC)">
+                                <i data-lucide="x" style="width: 14px; height: 14px; color: var(--accent-rose);"></i>
+                            </button>
+                       </div>`;
+
+                    html += `
+                        <tr data-id="${item.id}" data-origin="${item.origin}" class="editing-row">
+                            <td>
+                                <div class="custom-datepicker-wrapper">
+                                    <i data-lucide="calendar" class="datepicker-icon" style="width: 12px; height: 12px;"></i>
+                                    <input type="text" id="editDate-${item.id}" class="custom-flatpickr-input inline-input" value="${item.date}" style="padding-left: 32px !important; text-align: center !important; font-weight: 600;">
+                                </div>
+                            </td>
+                            <td>
+                                <div class="custom-select-wrapper">
+                                    <select id="editCategory-${item.id}" class="input-select">
+                                        ${catOptions}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                                </div>
+                            </td>
+                            <td><input type="text" id="editDesc-${item.id}" class="inline-input" value="${item.desc}" style="font-weight: 700;"></td>
+                            <td><input type="text" id="editCentro-${item.id}" class="inline-input" value="${item.centro}" list="centroOptions"></td>
+                            <td><input type="text" id="editValue-${item.id}" class="inline-input" value="${item.value.toFixed(2)}"></td>
+                            <td>
+                                <div class="custom-select-wrapper">
+                                    <select id="editPaidBy-${item.id}" class="input-select">
+                                        ${paidOptions}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="custom-select-wrapper">
+                                    <select id="editStatus-${item.id}" class="input-select">
+                                        ${statusOptions}
+                                    </select>
+                                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                                </div>
+                            </td>
+                            <td><span class="origin-badge ${badgeClass}">${isManual ? 'Manual' : 'Sistema'}</span></td>
+                            <td class="action-cell-slot">${actionsHtml}</td>
+                        </tr>
+                    `;
+                } else {
+                    // Botões de Ações (habilitados para todas as despesas)
+                    const actionsHtml = `<div style="display: flex; gap: 4px; justify-content: center;">
+                            <button class="action-btn edit-btn" onclick="window.app.startRowEdit('${item.id}')" title="Editar despesa">
+                                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="action-btn delete-btn" onclick="window.app.deleteExpense('${item.id}')" title="Excluir despesa">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                       </div>`;
+
+                    html += `
+                        <tr data-id="${item.id}" data-origin="${item.origin}">
+                            <td data-field="date" data-id="${item.id}" data-origin="${item.origin}" style="font-weight: 600;">${this.formatDateBR(item.date)}</td>
+                            <td data-field="category" data-id="${item.id}" data-origin="${item.origin}"><span class="status-pill status-unpaid">${item.category}</span></td>
+                            <td data-field="desc" data-id="${item.id}" data-origin="${item.origin}" style="font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;" title="${item.desc}">${item.desc}</td>
+                            <td data-field="centro" data-id="${item.id}" data-origin="${item.origin}" style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="${item.centro}">${item.centro}</td>
+                            <td data-field="value" data-id="${item.id}" data-origin="${item.origin}" style="color: var(--accent-rose); font-weight: 800; text-align: right;" data-value="${item.value}">${this.formatCurrency(item.value)}</td>
+                            <td data-field="paid_by" data-id="${item.id}" data-origin="${item.origin}" style="color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;" title="${item.paid_by}">${item.paid_by}</td>
+                            <td data-field="status" data-id="${item.id}" data-origin="${item.origin}">
+                                <span class="status-pill ${item.status === 'Pago' || item.status === 'PAID' ? 'status-paid' : (item.status === 'Cancelado' ? 'status-unpaid' : 'status-pending')}">${item.status}</span>
+                            </td>
+                            <td><span class="origin-badge ${badgeClass}">${isManual ? 'Manual' : 'Sistema'}</span></td>
+                            <td class="action-cell-slot">${actionsHtml}</td>
+                        </tr>
+                    `;
+                }
             });
             tbody.innerHTML = html;
         }
@@ -2206,6 +2426,1277 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         document.getElementById('btnPrevPage').disabled = this.transCurrentPage <= 1;
         document.getElementById('btnNextPage').disabled = this.transCurrentPage >= totalPages;
         document.getElementById('pageNumberDisplay').textContent = `Página ${this.transCurrentPage} de ${totalPages}`;
+        
+        // Ativar inputs adicionais se houver linha de edição ativa
+        if (this.editingExpenseRowId) {
+            const id = this.editingExpenseRowId;
+            const tr = tbody.querySelector(`tr[data-id="${id}"]`);
+            if (tr) {
+                flatpickr(`#editDate-${id}`, {
+                    dateFormat: 'Y-m-d',
+                    disableMobile: true,
+                    locale: {
+                        firstDayOfWeek: 0,
+                        weekdays: {
+                            shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                            longhand: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+                        },
+                        months: {
+                            shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                            longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                        }
+                    }
+                });
+
+                const valInput = document.getElementById(`editValue-${id}`);
+                if (valInput) {
+                    valInput.addEventListener('input', (e) => {
+                        let v = e.target.value;
+                        v = v.replace(/[^0-9.]/g, '');
+                        const parts = v.split('.');
+                        if (parts.length > 2) {
+                            v = parts[0] + '.' + parts.slice(1).join('');
+                        }
+                        e.target.value = v;
+                    });
+                }
+
+                tr.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.saveRowEdit(id);
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        this.cancelRowEdit(id);
+                    }
+                });
+
+                const descInput = document.getElementById(`editDesc-${id}`);
+                if (descInput) descInput.focus();
+            }
+        }
+
+        this.refreshLucideIcons();
+    }
+
+    // =========================================================================
+    // INLINE EDITING & HOVER DELETION FOR MANUALLY ENTERED EXPENSES
+    // =========================================================================
+
+    handleCellDblClick(e) {
+        const tr = e.target.closest('tr');
+        if (!tr) return;
+
+        const id = tr.getAttribute('data-id');
+        if (!id) return;
+
+        if (td.classList.contains('editing-cell')) return;
+
+        this.startInlineEdit(td);
+    }
+
+    startInlineEdit(td) {
+        const field = td.getAttribute('data-field');
+        const id = td.getAttribute('data-id');
+        const originalValue = td.getAttribute('data-value') !== null ? td.getAttribute('data-value') : td.textContent.trim();
+
+        td.dataset.originalValue = originalValue;
+        td.classList.add('editing-cell');
+        td.innerHTML = '';
+
+        let inputElement;
+
+        if (field === 'category') {
+            inputElement = document.createElement('select');
+            const categories = ['Payroll', 'Frota', 'Marketing', 'Tech & CRM', 'Operações', 'Administrativo', 'Impostos', 'Equipamentos', 'Escritório', 'Outros'];
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                if (cat === originalValue) opt.selected = true;
+                inputElement.appendChild(opt);
+            });
+
+            let isSaving = false;
+            const triggerSave = () => {
+                if (isSaving) return;
+                isSaving = true;
+                this.saveCellInline(td, inputElement.value);
+            };
+
+            inputElement.addEventListener('change', triggerSave);
+            inputElement.addEventListener('blur', triggerSave);
+        }
+        else if (field === 'paid_by') {
+            inputElement = document.createElement('select');
+            const methods = ['Pix', 'Dinheiro', 'ACH', 'Check', 'Cartão Crédito', 'Cartão Débito', 'Cartão Corporativo', 'Transferência', 'Venmo', 'Zelle', 'Outro'];
+            methods.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                if (m === originalValue) opt.selected = true;
+                inputElement.appendChild(opt);
+            });
+
+            let isSaving = false;
+            const triggerSave = () => {
+                if (isSaving) return;
+                isSaving = true;
+                this.saveCellInline(td, inputElement.value);
+            };
+
+            inputElement.addEventListener('change', triggerSave);
+            inputElement.addEventListener('blur', triggerSave);
+        }
+        else if (field === 'status') {
+            inputElement = document.createElement('select');
+            const statuses = ['Pago', 'Pendente', 'Agendado', 'Cancelado'];
+            statuses.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                const normOrigVal = (originalValue === 'PAID' ? 'Pago' : (originalValue === 'DUE' ? 'Pendente' : originalValue));
+                if (s === normOrigVal) opt.selected = true;
+                inputElement.appendChild(opt);
+            });
+
+            let isSaving = false;
+            const triggerSave = () => {
+                if (isSaving) return;
+                isSaving = true;
+                this.saveCellInline(td, inputElement.value);
+            };
+
+            inputElement.addEventListener('change', triggerSave);
+            inputElement.addEventListener('blur', triggerSave);
+        }
+        else if (field === 'date') {
+            inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.value = originalValue;
+            td.appendChild(inputElement);
+
+            const fp = flatpickr(inputElement, {
+                locale: 'pt',
+                dateFormat: 'Y-m-d',
+                defaultDate: originalValue,
+                clickOpens: true,
+                onClose: (selectedDates, dateStr) => {
+                    this.saveCellInline(td, dateStr);
+                    fp.destroy();
+                }
+            });
+
+            setTimeout(() => inputElement.focus(), 50);
+
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    fp.destroy();
+                    this.cancelInlineEdit(td);
+                }
+            });
+            return;
+        }
+        else if (field === 'centro') {
+            inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.value = originalValue;
+            inputElement.setAttribute('placeholder', 'Digite ou selecione...');
+            inputElement.setAttribute('list', 'centroOptions');
+
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.saveCellInline(td, inputElement.value);
+                } else if (e.key === 'Escape') {
+                    this.cancelInlineEdit(td);
+                }
+            });
+            
+            let blurTimeout;
+            inputElement.addEventListener('blur', () => {
+                blurTimeout = setTimeout(() => this.saveCellInline(td, inputElement.value), 180);
+            });
+        }
+        else if (field === 'value') {
+            inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.value = originalValue;
+
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.saveCellInline(td, inputElement.value);
+                } else if (e.key === 'Escape') {
+                    this.cancelInlineEdit(td);
+                }
+            });
+            inputElement.addEventListener('blur', () => this.saveCellInline(td, inputElement.value));
+        }
+        else {
+            inputElement = document.createElement('input');
+            inputElement.type = 'text';
+            inputElement.value = originalValue;
+
+            inputElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.saveCellInline(td, inputElement.value);
+                } else if (e.key === 'Escape') {
+                    this.cancelInlineEdit(td);
+                }
+            });
+            inputElement.addEventListener('blur', () => this.saveCellInline(td, inputElement.value));
+        }
+
+        // Teclas de atalho para navegação: TAB, ArrowUp, ArrowDown
+        inputElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const nextField = e.shiftKey ? this.getPrevEditableTd(td) : this.getNextEditableTd(td);
+                this.saveCellInline(td, inputElement.value).then(() => {
+                    if (nextField) {
+                        setTimeout(() => this.startInlineEdit(nextField), 50);
+                    }
+                });
+            }
+            else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const parentTr = td.parentElement;
+                const nextTr = parentTr.nextElementSibling;
+                if (nextTr && nextTr.getAttribute('data-origin') === 'MANUAL') {
+                    const cellIndex = td.cellIndex;
+                    const targetTd = nextTr.cells[cellIndex];
+                    if (targetTd && targetTd.hasAttribute('data-field')) {
+                        this.saveCellInline(td, inputElement.value).then(() => {
+                            setTimeout(() => this.startInlineEdit(targetTd), 50);
+                        });
+                    }
+                }
+            }
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const parentTr = td.parentElement;
+                const prevTr = parentTr.previousElementSibling;
+                if (prevTr && prevTr.getAttribute('data-origin') === 'MANUAL') {
+                    const cellIndex = td.cellIndex;
+                    const targetTd = prevTr.cells[cellIndex];
+                    if (targetTd && targetTd.hasAttribute('data-field')) {
+                        this.saveCellInline(td, inputElement.value).then(() => {
+                            setTimeout(() => this.startInlineEdit(targetTd), 50);
+                        });
+                    }
+                }
+            }
+        });
+
+        td.appendChild(inputElement);
+        setTimeout(() => inputElement.focus(), 50);
+    }
+
+    cancelInlineEdit(td) {
+        const originalValue = td.dataset.originalValue;
+        td.classList.remove('editing-cell');
+
+        const field = td.getAttribute('data-field');
+        if (field === 'category') {
+            td.innerHTML = `<span class="status-pill status-unpaid" style="font-size: 11px;">${originalValue}</span>`;
+        } else if (field === 'status') {
+            const badgeClass = originalValue === 'Pago' || originalValue === 'PAID' ? 'status-paid' : (originalValue === 'Cancelado' ? 'status-unpaid' : 'status-pending');
+            td.innerHTML = `<span class="status-pill ${badgeClass}">${originalValue}</span>`;
+        } else if (field === 'value') {
+            td.innerHTML = this.formatCurrency(parseFloat(originalValue));
+        } else if (field === 'date') {
+            td.innerHTML = this.formatDateBR(originalValue);
+        } else {
+            td.textContent = originalValue;
+        }
+    }
+
+    async saveCellInline(td, newValue) {
+        if (!td.classList.contains('editing-cell')) return;
+
+        const field = td.getAttribute('data-field');
+        const id = td.getAttribute('data-id');
+        const originalValue = td.dataset.originalValue;
+
+        newValue = newValue.trim();
+
+        if (field === 'value') {
+            const parsedVal = parseFloat(newValue.replace(/[^0-9.-]/g, ''));
+            if (isNaN(parsedVal) || parsedVal <= 0) {
+                this.showToast("O valor da despesa deve ser um número positivo maior que zero.", "error");
+                this.cancelInlineEdit(td);
+                return;
+            }
+            newValue = parsedVal;
+        }
+
+        if (field === 'desc' && newValue === '') {
+            this.showToast("A descrição da despesa não pode estar vazia.", "error");
+            this.cancelInlineEdit(td);
+            return;
+        }
+
+        if (field === 'date' && newValue === '') {
+            this.showToast("A data da despesa é obrigatória.", "error");
+            this.cancelInlineEdit(td);
+            return;
+        }
+
+        if (String(newValue) === String(originalValue)) {
+            this.cancelInlineEdit(td);
+            return;
+        }
+
+        const tr = td.closest('tr');
+        const actionCell = tr.querySelector('.action-cell-slot');
+        let originalActionsHtml = '';
+        if (actionCell) {
+            originalActionsHtml = actionCell.innerHTML;
+            actionCell.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; min-height: 26px;"><div class="inline-spinner"></div></div>`;
+        }
+
+        td.classList.remove('editing-cell');
+        if (field === 'category') {
+            td.innerHTML = `<span class="status-pill status-unpaid" style="font-size: 11px;">${newValue}</span>`;
+        } else if (field === 'status') {
+            const badgeClass = newValue === 'Pago' || newValue === 'PAID' ? 'status-paid' : (newValue === 'Cancelado' ? 'status-unpaid' : 'status-pending');
+            td.innerHTML = `<span class="status-pill ${badgeClass}">${newValue}</span>`;
+        } else if (field === 'value') {
+            td.innerHTML = this.formatCurrency(newValue);
+            td.setAttribute('data-value', newValue);
+        } else if (field === 'date') {
+            td.innerHTML = this.formatDateBR(newValue);
+        } else {
+            td.textContent = newValue;
+        }
+
+        let updatedExpense;
+        let isNewOverride = false;
+        let expenseIndex = this.manualExpenses.findIndex(e => e.id === id || String(e.id) === String(id));
+
+        if (expenseIndex === -1 && id.startsWith('SYS-')) {
+            isNewOverride = true;
+            // Cria um novo override na base correspondente ao item de sistema
+            const parts = id.split('-');
+            const category = parts[1];
+            const descPrefix = parts[2];
+
+            const item = DESPESAS_DETAILED_ITEMS.find(d => d.category === category && d.desc.substring(0,5) === descPrefix);
+
+            let expFactor = 12;
+            if (this.transPeriodMode === 'daily') expFactor = 1 / 30;
+            else if (this.transPeriodMode === 'weekly') expFactor = 7 / 30;
+            else if (this.transPeriodMode === 'monthly') expFactor = 1;
+
+            updatedExpense = {
+                id: id,
+                date: this.transSelectedDate,
+                category: item ? item.category : category,
+                centro: item ? item.centro : 'Administrativo',
+                desc: item ? item.desc : 'Despesa do sistema',
+                value: item ? (item.monthly * expFactor) : 0,
+                paid_by: item ? (item.paid_by || 'Cartão') : 'Cartão',
+                status: item ? (item.status || 'PAID') : 'PAID',
+                notes: 'Edição de despesa do sistema',
+                created_at: new Date().toISOString()
+            };
+
+            updatedExpense[field === 'centro' ? 'centro' : (field === 'notes' ? 'notes' : field)] = newValue;
+        } else if (expenseIndex !== -1) {
+            const originalExpense = this.manualExpenses[expenseIndex];
+            updatedExpense = {
+                ...originalExpense,
+                [field === 'centro' ? 'centro' : (field === 'notes' ? 'notes' : field)]: newValue
+            };
+        } else {
+            this.showToast("Despesa não encontrada localmente.", "error");
+            if (actionCell) actionCell.innerHTML = originalActionsHtml;
+            this.cancelInlineEdit(td);
+            return;
+        }
+
+        try {
+            const actionParam = isNewOverride ? 'create' : 'update';
+            const res = await fetch(`/api/manual-expenses?action=${actionParam}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expense: updatedExpense })
+            });
+
+            if (!res.ok) throw new Error('Erro na gravação.');
+            const data = await res.json();
+
+            if (data.useFallback) {
+                const stored = localStorage.getItem('nucleus_manual_expenses');
+                let list = stored ? JSON.parse(stored) : [];
+                if (isNewOverride) {
+                    list.push(updatedExpense);
+                } else {
+                    const idx = list.findIndex(e => e.id === id || String(e.id) === String(id));
+                    if (idx !== -1) {
+                        list[idx] = { ...list[idx], ...updatedExpense, updated_at: new Date().toISOString() };
+                    }
+                }
+                localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+            }
+
+            if (isNewOverride) {
+                this.manualExpenses.push({
+                    ...updatedExpense,
+                    updated_at: new Date().toISOString()
+                });
+            } else {
+                this.manualExpenses[expenseIndex] = {
+                    ...this.manualExpenses[expenseIndex],
+                    ...updatedExpense,
+                    updated_at: new Date().toISOString()
+                };
+            }
+
+            this.showToast("Despesa salva com sucesso!");
+
+            this.renderClosureMetrics();
+            if (this.activeTab === 'relatorios') this.renderReportsView();
+            this.renderSaidasExpenses();
+
+            if (window.NucleusIA && typeof window.NucleusIA.buildCurrentContext === 'function') {
+                window.NucleusIA.contextData = window.NucleusIA.buildCurrentContext();
+            }
+
+        } catch (err) {
+            console.error("Erro ao salvar alteração inline:", err);
+            this.showToast("Erro ao conectar com o servidor. A alteração foi desfeita.", "error");
+            this.cancelInlineEdit(td);
+        } finally {
+            if (actionCell && document.body.contains(tr)) {
+                actionCell.innerHTML = originalActionsHtml;
+                this.refreshLucideIcons();
+            }
+        }
+    }
+
+    getNextEditableTd(td) {
+        let next = td.nextElementSibling;
+        while (next) {
+            if (next.hasAttribute('data-field')) {
+                return next;
+            }
+            next = next.nextElementSibling;
+        }
+        return null;
+    }
+
+    getPrevEditableTd(td) {
+        let prev = td.previousElementSibling;
+        while (prev) {
+            if (prev.hasAttribute('data-field')) {
+                return prev;
+            }
+            prev = prev.previousElementSibling;
+        }
+        return null;
+    }
+
+    calculateExpensesForPeriod(mode, selectedDate, selectedMonth) {
+        let expFactor = 12;
+        if (mode === 'daily') expFactor = 1 / 30;
+        else if (mode === 'weekly') expFactor = 7 / 30;
+        else if (mode === 'monthly') expFactor = 1;
+
+        // 1. Filtrar despesas manuais do período (excluindo overrides do sistema)
+        let startStr = '';
+        let endStr = '';
+        
+        if (mode === 'weekly') {
+            const selDateObj = new Date(selectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+            startStr = firstDayOfWeek.toISOString().split('T')[0];
+            endStr = lastDayOfWeek.toISOString().split('T')[0];
+        }
+
+        const periodManualExpenses = (this.manualExpenses || []).filter(e => {
+            if (!e.date) return false;
+            if (e.id && e.id.startsWith('SYS-')) return false;
+
+            if (mode === 'daily') {
+                return e.date === selectedDate;
+            } else if (mode === 'weekly') {
+                return e.date >= startStr && e.date <= endStr;
+            } else if (mode === 'monthly') {
+                return e.date.startsWith(selectedMonth);
+            } else { // annual
+                return e.date.startsWith('2026');
+            }
+        });
+
+        const totalManualPeriod = periodManualExpenses.reduce((acc, e) => acc + (e.value || 0), 0);
+
+        // 2. Calcular despesas de sistema considerando overrides (edições/exclusões)
+        const periodKey = mode === 'monthly' ? selectedMonth : 
+                          (mode === 'annual' ? '2026' : selectedDate);
+
+        let totalSystemPeriod = 0;
+        DESPESAS_DETAILED_ITEMS.forEach(item => {
+            const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
+            const override = (this.manualExpenses || []).find(e => e.id === itemId);
+
+            if (override) {
+                if (override.status !== 'DELETED' && override.status !== 'Cancelado') {
+                    totalSystemPeriod += (override.value || 0);
+                }
+            } else {
+                totalSystemPeriod += (item.monthly * expFactor);
+            }
+        });
+
+        return totalSystemPeriod + totalManualPeriod;
+    }
+
+    calculateCategoryExpensesForPeriod(mode, selectedDate, selectedMonth) {
+        let expFactor = 12;
+        if (mode === 'daily') expFactor = 1 / 30;
+        else if (mode === 'weekly') expFactor = 7 / 30;
+        else if (mode === 'monthly') expFactor = 1;
+
+        let startStr = '';
+        let endStr = '';
+        if (mode === 'weekly') {
+            const selDateObj = new Date(selectedDate);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+            startStr = firstDayOfWeek.toISOString().split('T')[0];
+            endStr = lastDayOfWeek.toISOString().split('T')[0];
+        }
+
+        const catTotals = {
+            payroll: 0,
+            frota: 0,
+            marketing: 0,
+            tech: 0,
+            ops: 0,
+            outros: 0
+        };
+
+        const periodKey = mode === 'monthly' ? selectedMonth : 
+                          (mode === 'annual' ? '2026' : selectedDate);
+
+        // Itens de sistema com overrides
+        DESPESAS_DETAILED_ITEMS.forEach(item => {
+            const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
+            const override = (this.manualExpenses || []).find(e => e.id === itemId);
+
+            let val = item.monthly * expFactor;
+            let cat = item.category;
+
+            if (override) {
+                if (override.status === 'DELETED' || override.status === 'Cancelado') {
+                    val = 0;
+                } else {
+                    val = override.value;
+                    cat = override.category;
+                }
+            }
+
+            const normCat = (cat || '').toLowerCase();
+            if (normCat === 'payroll') catTotals.payroll += val;
+            else if (normCat === 'frota') catTotals.frota += val;
+            else if (normCat === 'marketing') catTotals.marketing += val;
+            else if (normCat === 'tech' || normCat === 'tech & crm') catTotals.tech += val;
+            else if (normCat === 'operações' || normCat === 'operações & limpeza') catTotals.ops += val;
+            else catTotals.outros += val;
+        });
+
+        // Despesas manuais puras
+        const periodManualExpenses = (this.manualExpenses || []).filter(e => {
+            if (!e.date) return false;
+            if (e.id && e.id.startsWith('SYS-')) return false;
+
+            if (mode === 'daily') {
+                return e.date === selectedDate;
+            } else if (mode === 'weekly') {
+                return e.date >= startStr && e.date <= endStr;
+            } else if (mode === 'monthly') {
+                return e.date.startsWith(selectedMonth);
+            } else { // annual
+                return e.date.startsWith('2026');
+            }
+        });
+
+        periodManualExpenses.forEach(e => {
+            const normCat = (e.category || '').toLowerCase();
+            const val = e.value || 0;
+            if (normCat === 'payroll') catTotals.payroll += val;
+            else if (normCat === 'frota') catTotals.frota += val;
+            else if (normCat === 'marketing') catTotals.marketing += val;
+            else if (normCat === 'tech' || normCat === 'tech & crm') catTotals.tech += val;
+            else if (normCat === 'operações' || normCat === 'operações & limpeza') catTotals.ops += val;
+            else catTotals.outros += val;
+        });
+
+        return catTotals;
+    }
+
+    calculateExpensesForRange(startDate, endDate) {
+        const periodManualExpenses = (this.manualExpenses || []).filter(e => {
+            if (!e.date) return false;
+            if (e.id && e.id.startsWith('SYS-')) return false;
+            return e.date >= startDate && e.date <= endDate;
+        });
+        const totalManualPeriod = periodManualExpenses.reduce((acc, e) => acc + (e.value || 0), 0);
+
+        let totalSystemPeriod = 0;
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const current = new Date(start);
+        
+        while (current <= end) {
+            const dateStr = current.toISOString().split('T')[0];
+            const dailyFactor = 1 / 30;
+            
+            DESPESAS_DETAILED_ITEMS.forEach(item => {
+                const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${dateStr}`;
+                const override = (this.manualExpenses || []).find(e => e.id === itemId);
+                if (override) {
+                    if (override.status !== 'DELETED' && override.status !== 'Cancelado') {
+                        totalSystemPeriod += (override.value || 0);
+                    }
+                } else {
+                    totalSystemPeriod += (item.monthly * dailyFactor);
+                }
+            });
+            current.setDate(current.getDate() + 1);
+        }
+
+        return totalSystemPeriod + totalManualPeriod;
+    }
+
+    calculateCategoryExpensesForRange(startDate, endDate) {
+        const catTotals = {
+            payroll: 0,
+            frota: 0,
+            marketing: 0,
+            tech: 0,
+            ops: 0,
+            outros: 0
+        };
+
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const current = new Date(start);
+        
+        while (current <= end) {
+            const dateStr = current.toISOString().split('T')[0];
+            const dailyFactor = 1 / 30;
+            
+            DESPESAS_DETAILED_ITEMS.forEach(item => {
+                const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${dateStr}`;
+                const override = (this.manualExpenses || []).find(e => e.id === itemId);
+
+                let val = item.monthly * dailyFactor;
+                let cat = item.category;
+
+                if (override) {
+                    if (override.status === 'DELETED' || override.status === 'Cancelado') {
+                        val = 0;
+                    } else {
+                        val = override.value;
+                        cat = override.category;
+                    }
+                }
+
+                const normCat = (cat || '').toLowerCase();
+                if (normCat === 'payroll') catTotals.payroll += val;
+                else if (normCat === 'frota') catTotals.frota += val;
+                else if (normCat === 'marketing') catTotals.marketing += val;
+                else if (normCat === 'tech' || normCat === 'tech & crm') catTotals.tech += val;
+                else if (normCat === 'operações' || normCat === 'operações & limpeza') catTotals.ops += val;
+                else catTotals.outros += val;
+            });
+            current.setDate(current.getDate() + 1);
+        }
+
+        // Soma despesas manuais puras (não overrides) no intervalo
+        const periodManualExpenses = (this.manualExpenses || []).filter(e => {
+            if (!e.date) return false;
+            if (e.id && e.id.startsWith('SYS-')) return false;
+            return e.date >= startDate && e.date <= endDate;
+        });
+
+        periodManualExpenses.forEach(e => {
+            const normCat = (e.category || '').toLowerCase();
+            const val = e.value || 0;
+            if (normCat === 'payroll') catTotals.payroll += val;
+            else if (normCat === 'frota') catTotals.frota += val;
+            else if (normCat === 'marketing') catTotals.marketing += val;
+            else if (normCat === 'tech' || normCat === 'tech & crm') catTotals.tech += val;
+            else if (normCat === 'operações' || normCat === 'operações & limpeza') catTotals.ops += val;
+            else catTotals.outros += val;
+        });
+
+        return catTotals;
+    }
+
+    showDeleteConfirmModal(id, onDeleteConfirm) {
+        const oldModal = document.getElementById('deleteConfirmModal');
+        if (oldModal) oldModal.remove();
+        const oldOverlay = document.getElementById('deleteConfirmOverlay');
+        if (oldOverlay) oldOverlay.remove();
+
+        const modalDiv = document.createElement('div');
+        modalDiv.id = 'deleteConfirmModal';
+        modalDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -48%) scale(0.95);
+            width: 90%;
+            max-width: 440px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            z-index: 10000;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            font-family: var(--font-family);
+            color: var(--text-main);
+            opacity: 0;
+            transition: all 200ms cubic-bezier(0.16, 1, 0.3, 1);
+            box-sizing: border-box;
+        `;
+
+        modalDiv.innerHTML = `
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <div style="background: rgba(225, 29, 72, 0.1); color: var(--accent-rose); width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main); font-family: var(--font-family);">Excluir despesa?</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.5; font-family: var(--font-family);">Esta ação removerá permanentemente esta despesa da planilha sincronizada e do dashboard.</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--divider-color); padding-top: 16px; margin-top: 4px;">
+                <button id="btnCancelDelete" class="btn-secondary" style="height: 38px; padding: 0 16px; margin: 0; border-radius: var(--radius-sm) !important; font-size: 13px; font-weight: 600; font-family: var(--font-family);">Cancelar</button>
+                <button id="btnConfirmDelete" class="btn-primary" style="height: 38px; padding: 0 16px; margin: 0; border-radius: var(--radius-sm) !important; font-size: 13px; font-weight: 600; background: var(--accent-rose) !important; border-color: var(--accent-rose) !important; color: #fff !important; font-family: var(--font-family);">Excluir</button>
+            </div>
+        `;
+
+        const overlayDiv = document.createElement('div');
+        overlayDiv.id = 'deleteConfirmOverlay';
+        overlayDiv.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 200ms ease;
+        `;
+
+        document.body.appendChild(overlayDiv);
+        document.body.appendChild(modalDiv);
+        this.refreshLucideIcons();
+
+        // Animação de entrada
+        requestAnimationFrame(() => {
+            modalDiv.style.opacity = '1';
+            modalDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+            overlayDiv.style.opacity = '1';
+        });
+
+        const closeConfirm = () => {
+            modalDiv.style.opacity = '0';
+            modalDiv.style.transform = 'translate(-50%, -48%) scale(0.95)';
+            overlayDiv.style.opacity = '0';
+            setTimeout(() => {
+                modalDiv.remove();
+                overlayDiv.remove();
+            }, 200);
+        };
+
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                closeConfirm();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+
+        document.addEventListener('keydown', escHandler);
+
+        document.getElementById('btnCancelDelete').addEventListener('click', () => {
+            closeConfirm();
+            document.removeEventListener('keydown', escHandler);
+        });
+
+        overlayDiv.addEventListener('click', () => {
+            closeConfirm();
+            document.removeEventListener('keydown', escHandler);
+        });
+
+        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+            closeConfirm();
+            document.removeEventListener('keydown', escHandler);
+            onDeleteConfirm();
+        });
+
+        // Foco automático no botão Cancelar
+        const btnCancel = document.getElementById('btnCancelDelete');
+        if (btnCancel) btnCancel.focus();
+    }
+
+    startInlineInsertion() {
+        const tbody = document.getElementById('expensesTbody');
+        if (!tbody) return;
+
+        // Cancela qualquer linha em edição ativa antes de abrir a inserção
+        if (this.editingExpenseRowId !== null) {
+            this.saveRowEdit(this.editingExpenseRowId);
+        }
+
+        // Se já houver uma linha temporária, foca nela e impede duplicar
+        if (document.querySelector('.temp-insertion-row')) {
+            const descInput = document.getElementById('newExpDesc');
+            if (descInput) descInput.focus();
+            return;
+        }
+
+        // Se a tabela estiver vazia, remove a linha de placeholder
+        if (tbody.querySelector('td[colspan]')) {
+            tbody.innerHTML = '';
+        }
+
+        const tempRow = document.createElement('tr');
+        tempRow.className = 'temp-insertion-row';
+        
+        tempRow.innerHTML = `
+            <td>
+                <div class="custom-datepicker-wrapper">
+                    <i data-lucide="calendar" class="datepicker-icon" style="width: 12px; height: 12px;"></i>
+                    <input type="text" id="newExpDate" class="custom-flatpickr-input inline-input" placeholder="Data" style="padding-left: 32px !important; text-align: center !important; font-weight: 600;">
+                </div>
+            </td>
+            <td>
+                <div class="custom-select-wrapper">
+                    <select id="newExpCategory" class="input-select">
+                        <option value="Payroll">Payroll</option>
+                        <option value="Frota">Frota</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Tech & CRM">Tech & CRM</option>
+                        <option value="Operações">Operações</option>
+                        <option value="Administrativo">Administrativo</option>
+                        <option value="Impostos">Impostos</option>
+                        <option value="Equipamentos">Equipamentos</option>
+                        <option value="Escritório">Escritório</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                </div>
+            </td>
+            <td><input type="text" id="newExpDesc" class="inline-input" placeholder="Descrição da despesa..." style="font-weight: 700;"></td>
+            <td><input type="text" id="newExpCentro" class="inline-input" placeholder="Centro..." list="centroOptions"></td>
+            <td><input type="text" id="newExpValue" class="inline-input" placeholder="0.00"></td>
+            <td>
+                <div class="custom-select-wrapper">
+                    <select id="newExpPaidBy" class="input-select">
+                        <option value="Pix">Pix</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                        <option value="ACH">ACH</option>
+                        <option value="Check">Check</option>
+                        <option value="Cartão Crédito">Cartão Crédito</option>
+                        <option value="Cartão Débito">Cartão Débito</option>
+                        <option value="Cartão Corporativo" selected>Cartão Corporativo</option>
+                        <option value="Transferência">Transferência</option>
+                        <option value="Venmo">Venmo</option>
+                        <option value="Zelle">Zelle</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                </div>
+            </td>
+            <td>
+                <div class="custom-select-wrapper">
+                    <select id="newExpStatus" class="input-select">
+                        <option value="Pago" selected>Pago</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Agendado">Agendado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="select-arrow"></i>
+                </div>
+            </td>
+            <td><span class="origin-badge origin-manual">Manual</span></td>
+            <td class="action-cell-slot" style="display: flex; gap: 8px; justify-content: center; align-items: center; min-height: 38px;">
+                <button class="action-btn save-new-btn" onclick="window.app.saveInlineInsertion()" title="Concluir e Salvar (Enter)">
+                    <i data-lucide="check" style="width: 14px; height: 14px; color: var(--accent-emerald);"></i>
+                </button>
+                <button class="action-btn cancel-new-btn" onclick="window.app.cancelInlineInsertion()" title="Cancelar (ESC)">
+                    <i data-lucide="x" style="width: 14px; height: 14px; color: var(--accent-rose);"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.insertBefore(tempRow, tbody.firstChild);
+        this.refreshLucideIcons();
+
+        // Inicializar Flatpickr na Data
+        flatpickr('#newExpDate', {
+            dateFormat: 'Y-m-d',
+            disableMobile: true,
+            defaultDate: this.transSelectedDate || window.getUSDateString(),
+            locale: {
+                firstDayOfWeek: 0,
+                weekdays: {
+                    shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                    longhand: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+                },
+                months: {
+                    shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                }
+            }
+        });
+
+        // Formatação de valor
+        const valInput = document.getElementById('newExpValue');
+        if (valInput) {
+            valInput.addEventListener('input', (e) => {
+                let v = e.target.value;
+                v = v.replace(/[^0-9.]/g, '');
+                const parts = v.split('.');
+                if (parts.length > 2) {
+                    v = parts[0] + '.' + parts.slice(1).join('');
+                }
+                e.target.value = v;
+            });
+        }
+
+        // Posicionar foco na Descrição
+        const descInput = document.getElementById('newExpDesc');
+        if (descInput) {
+            descInput.focus();
+        }
+
+        // Adicionar keydown listener para atalhos
+        tempRow.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.saveInlineInsertion();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                this.cancelInlineInsertion();
+            }
+        });
+    }
+
+    cancelInlineInsertion() {
+        const tempRow = document.querySelector('.temp-insertion-row');
+        if (tempRow) {
+            tempRow.remove();
+            // Se o tbody ficou vazio, re-renderiza para mostrar placeholder
+            const tbody = document.getElementById('expensesTbody');
+            if (tbody && tbody.children.length === 0) {
+                this.renderSaidasExpenses();
+            }
+        }
+    }
+
+    async saveInlineInsertion() {
+        const dateInput = document.getElementById('newExpDate');
+        const catSelect = document.getElementById('newExpCategory');
+        const descInput = document.getElementById('newExpDesc');
+        const centroInput = document.getElementById('newExpCentro');
+        const valInput = document.getElementById('newExpValue');
+        const paidSelect = document.getElementById('newExpPaidBy');
+        const statusSelect = document.getElementById('newExpStatus');
+        
+        if (!dateInput || !catSelect || !descInput || !valInput) return;
+
+        const date = dateInput.value.trim();
+        const category = catSelect.value;
+        const desc = descInput.value.trim();
+        const centro = centroInput.value.trim() || 'Administrativo';
+        const rawValue = valInput.value.trim();
+        const paid_by = paidSelect.value;
+        const status = statusSelect.value;
+
+        if (!date) {
+            this.showToast("A data da despesa é obrigatória.", "error");
+            dateInput.focus();
+            return;
+        }
+
+        if (!desc) {
+            this.showToast("A descrição da despesa é obrigatória.", "error");
+            descInput.focus();
+            return;
+        }
+
+        const parsedVal = parseFloat(rawValue.replace(/[^0-9.-]/g, ''));
+        if (isNaN(parsedVal) || parsedVal <= 0) {
+            this.showToast("O valor deve ser um número positivo maior que zero.", "error");
+            valInput.focus();
+            return;
+        }
+
+        const tr = document.querySelector('.temp-insertion-row');
+        const actionCell = tr ? tr.querySelector('.action-cell-slot') : null;
+        let originalActionsHtml = '';
+        if (actionCell) {
+            originalActionsHtml = actionCell.innerHTML;
+            actionCell.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; min-height: 26px;"><div class="inline-spinner"></div></div>`;
+        }
+
+        const id = `EXP-${Date.now()}`;
+        const newExpense = {
+            id,
+            date,
+            category,
+            desc,
+            centro,
+            value: parsedVal,
+            paid_by,
+            status,
+            notes: '',
+            created_at: new Date().toISOString()
+        };
+
+        try {
+            const res = await fetch('/api/manual-expenses?action=create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expense: newExpense })
+            });
+
+            if (!res.ok) throw new Error("Erro no servidor.");
+            const data = await res.json();
+
+            if (data.useFallback) {
+                const stored = localStorage.getItem('nucleus_manual_expenses');
+                let list = stored ? JSON.parse(stored) : [];
+                list.push(newExpense);
+                localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+            }
+
+            this.manualExpenses.push({
+                ...newExpense,
+                updated_at: new Date().toISOString()
+            });
+
+            this.showToast("✓ Despesa adicionada.");
+
+            if (tr) {
+                tr.style.transition = 'all 200ms ease-in';
+                tr.style.opacity = '0';
+                tr.style.transform = 'translateY(-6px)';
+            }
+            setTimeout(() => {
+                if (tr) tr.remove();
+                this.renderClosureMetrics();
+                if (this.activeTab === 'relatorios') this.renderReportsView();
+                this.renderSaidasExpenses();
+            }, 200);
+
+            if (window.NucleusIA && typeof window.NucleusIA.buildCurrentContext === 'function') {
+                window.NucleusIA.contextData = window.NucleusIA.buildCurrentContext();
+            }
+
+        } catch (err) {
+            console.error("Erro ao salvar inline:", err);
+            this.showToast("Erro ao salvar a despesa. A alteração foi cancelada.", "error");
+            if (actionCell) actionCell.innerHTML = originalActionsHtml;
+            this.refreshLucideIcons();
+        }
+    }
+
+    async startRowEdit(id) {
+        if (this.editingExpenseRowId === id) return;
+
+        // Se já houver outra linha sendo editada, salva ela automaticamente antes de abrir a nova!
+        if (this.editingExpenseRowId !== null) {
+            await this.saveRowEdit(this.editingExpenseRowId);
+        }
+
+        // Fecha a inserção temporária se estiver aberta para não conflitar
+        this.cancelInlineInsertion();
+
+        this.editingExpenseRowId = id;
+        this.renderSaidasExpenses();
+    }
+
+    cancelRowEdit(id) {
+        if (this.editingExpenseRowId === id) {
+            this.editingExpenseRowId = null;
+            this.renderSaidasExpenses();
+        }
+    }
+
+    async saveRowEdit(id) {
+        const dateInput = document.getElementById(`editDate-${id}`);
+        const catSelect = document.getElementById(`editCategory-${id}`);
+        const descInput = document.getElementById(`editDesc-${id}`);
+        const centroInput = document.getElementById(`editCentro-${id}`);
+        const valInput = document.getElementById(`editValue-${id}`);
+        const paidSelect = document.getElementById(`editPaidBy-${id}`);
+        const statusSelect = document.getElementById(`editStatus-${id}`);
+
+        if (!dateInput || !catSelect || !descInput || !valInput || !paidSelect || !statusSelect) return;
+
+        const date = dateInput.value.trim();
+        const category = catSelect.value;
+        const desc = descInput.value.trim();
+        const centro = centroInput.value.trim() || 'Administrativo';
+        const rawValue = valInput.value.trim();
+        const paid_by = paidSelect.value;
+        const status = statusSelect.value;
+
+        if (!date) {
+            this.showToast("A data da despesa é obrigatória.", "error");
+            dateInput.focus();
+            return;
+        }
+
+        if (!desc) {
+            this.showToast("A descrição da despesa é obrigatória.", "error");
+            descInput.focus();
+            return;
+        }
+
+        const parsedVal = parseFloat(rawValue.replace(/[^0-9.-]/g, ''));
+        if (isNaN(parsedVal) || parsedVal <= 0) {
+            this.showToast("O valor deve ser um número positivo maior que zero.", "error");
+            valInput.focus();
+            return;
+        }
+
+        const expenseIndex = this.manualExpenses.findIndex(e => e.id === id || String(e.id) === String(id));
+        let isNewOverride = false;
+        let updatedExpense;
+
+        if (expenseIndex === -1 && id.startsWith('SYS-')) {
+            isNewOverride = true;
+            updatedExpense = {
+                id: id,
+                date,
+                category,
+                centro,
+                desc,
+                value: parsedVal,
+                paid_by,
+                status,
+                notes: 'Override de sistema',
+                created_at: new Date().toISOString()
+            };
+        } else if (expenseIndex !== -1) {
+            const originalExpense = this.manualExpenses[expenseIndex];
+            
+            if (originalExpense.date === date &&
+                originalExpense.category === category &&
+                originalExpense.desc === desc &&
+                originalExpense.centro === centro &&
+                originalExpense.value === parsedVal &&
+                originalExpense.paid_by === paid_by &&
+                originalExpense.status === status) {
+                this.editingExpenseRowId = null;
+                this.renderSaidasExpenses();
+                return;
+            }
+
+            updatedExpense = {
+                ...originalExpense,
+                date,
+                category,
+                desc,
+                centro,
+                value: parsedVal,
+                paid_by,
+                status,
+                updated_at: new Date().toISOString()
+            };
+        } else {
+            this.showToast("Erro ao localizar a despesa.", "error");
+            this.cancelRowEdit(id);
+            return;
+        }
+
+        const tr = document.querySelector(`tr[data-id="${id}"]`);
+        const actionCell = tr ? tr.querySelector('.action-cell-slot') : null;
+        let originalActionsHtml = '';
+        if (actionCell) {
+            originalActionsHtml = actionCell.innerHTML;
+            actionCell.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; min-height: 26px;"><div class="inline-spinner"></div></div>`;
+        }
+
+        try {
+            const actionParam = isNewOverride ? 'create' : 'update';
+            const res = await fetch(`/api/manual-expenses?action=${actionParam}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expense: updatedExpense })
+            });
+
+            if (!res.ok) throw new Error("Erro na gravação.");
+            const data = await res.json();
+
+            if (data.useFallback) {
+                const stored = localStorage.getItem('nucleus_manual_expenses');
+                let list = stored ? JSON.parse(stored) : [];
+                if (isNewOverride) {
+                    list.push(updatedExpense);
+                } else {
+                    const idx = list.findIndex(e => e.id === id || String(e.id) === String(id));
+                    if (idx !== -1) {
+                        list[idx] = updatedExpense;
+                    }
+                }
+                localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+            }
+
+            if (isNewOverride) {
+                this.manualExpenses.push({
+                    ...updatedExpense,
+                    updated_at: new Date().toISOString()
+                });
+            } else {
+                this.manualExpenses[expenseIndex] = {
+                    ...updatedExpense,
+                    updated_at: new Date().toISOString()
+                };
+            }
+
+            this.showToast("✓ Despesa salva com sucesso!");
+
+            if (tr) {
+                tr.style.transition = 'all 200ms ease-in';
+                tr.style.opacity = '0';
+                tr.style.transform = 'translateY(-6px)';
+            }
+            setTimeout(() => {
+                this.editingExpenseRowId = null;
+                this.renderClosureMetrics();
+                if (this.activeTab === 'relatorios') this.renderReportsView();
+                this.renderSaidasExpenses();
+            }, 200);
+
+            if (window.NucleusIA && typeof window.NucleusIA.buildCurrentContext === 'function') {
+                window.NucleusIA.contextData = window.NucleusIA.buildCurrentContext();
+            }
+
+        } catch (err) {
+            console.error("Erro ao salvar linha editada:", err);
+            this.showToast("Erro ao salvar despesa. Alteração cancelada.", "error");
+            if (actionCell) actionCell.innerHTML = originalActionsHtml;
+            this.refreshLucideIcons();
+        }
     }
 
     changePage(delta) {
@@ -2224,7 +3715,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Nucleus_Entradas_Faturamento_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `Nucleus_Entradas_Faturamento_${window.getUSDateString()}.csv`;
             link.click();
             this.showToast('Relatório CSV de Entradas exportado com sucesso!');
         } else {
@@ -2236,7 +3727,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `Nucleus_Saidas_Despesas_${new Date().toISOString().split('T')[0]}.csv`;
+            link.download = `Nucleus_Saidas_Despesas_${window.getUSDateString()}.csv`;
             link.click();
             this.showToast('Relatório CSV de Saídas exportado com sucesso!');
         }
@@ -2254,7 +3745,8 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const dEnd = new Date(this.repEndDate);
         const diffDays = Math.max(1, Math.ceil((dEnd - dStart) / (1000 * 60 * 60 * 24)) + 1);
         const expFactor = diffDays / 30;
-        const repExpensesTotal = DESPESAS_MONTHLY_TOTAL * expFactor;
+        
+        const repExpensesTotal = this.calculateExpensesForRange(this.repStartDate, this.repEndDate);
 
         // 2. Recalculate KPIs
         const totals = this.calculateTotals(filteredRecords);
@@ -2529,26 +4021,55 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const tbody = document.getElementById('repExpensesTableBody');
         const ctxDonut = document.getElementById('chartRepExpensesDonut');
 
-        const totalExpenses = DESPESAS_MONTHLY_TOTAL * expFactor;
+        // Calcular despesas manuais por categoria no período de relatórios
+        const manualCatTotals = {
+            'Payroll': 0,
+            'Frota': 0,
+            'Marketing': 0,
+            'Tech & CRM': 0,
+            'Operações': 0,
+            'Administrativo': 0,
+            'Impostos': 0,
+            'Equipamentos': 0,
+            'Escritório': 0,
+            'Outros': 0
+        };
 
+        const activeCatTotals = this.calculateCategoryExpensesForRange(this.repStartDate, this.repEndDate);
+        const totalExpenses = this.calculateExpensesForRange(this.repStartDate, this.repEndDate);
+
+        // Base de categorias do sistema unida com os manuais
         const categories = [
-            { label: 'Payroll (Salários & Admin)', centro: 'Mão de Obra', monthly: DESPESAS_CATEGORIES_MONTHLY.payroll, pct: '85,96%', color: '#25abb7' },
-            { label: 'Frota de Veículos (3 Carros)', centro: 'Frota', monthly: DESPESAS_CATEGORIES_MONTHLY.frota, pct: '9,53%', color: '#d97706' },
-            { label: 'Marketing & Aquisição', centro: 'Marketing', monthly: DESPESAS_CATEGORIES_MONTHLY.marketing, pct: '3,18%', color: '#138996' },
-            { label: 'Tech, CRM & Softwares', centro: 'Tech & Admin', monthly: DESPESAS_CATEGORIES_MONTHLY.tech, pct: '1,86%', color: '#6366f1' },
-            { label: 'Operações & Limpeza', centro: 'Operações', monthly: DESPESAS_CATEGORIES_MONTHLY.ops, pct: '1,79%', color: '#059669' }
+            { label: 'Payroll (Salários & Admin)', key: 'Payroll', centro: 'Mão de Obra', value: activeCatTotals.payroll, color: '#25abb7' },
+            { label: 'Frota de Veículos (3 Carros)', key: 'Frota', centro: 'Frota', value: activeCatTotals.frota, color: '#d97706' },
+            { label: 'Marketing & Aquisição', key: 'Marketing', centro: 'Marketing', value: activeCatTotals.marketing, color: '#138996' },
+            { label: 'Tech, CRM & Softwares', key: 'Tech & CRM', centro: 'Tech & Admin', value: activeCatTotals.tech, color: '#6366f1' },
+            { label: 'Operações & Limpeza', key: 'Operações', centro: 'Operações', value: activeCatTotals.ops, color: '#059669' }
         ];
+
+        if (activeCatTotals.outros > 0) {
+            categories.push({
+                label: 'Outros / Administrativo',
+                key: 'Outros',
+                centro: 'Outros',
+                value: activeCatTotals.outros,
+                color: '#a855f7'
+            });
+        }
+
+        // Ordena por maior valor
+        categories.sort((a, b) => b.value - a.value);
 
         if (tbody) {
             let html = '';
             categories.forEach(c => {
-                const scaledVal = c.monthly * expFactor;
+                const pct = totalExpenses > 0 ? ((c.value / totalExpenses) * 100).toFixed(1) : '0.0';
                 html += `
                     <tr>
                         <td style="font-weight: 700; color: var(--text-main);">${c.label}</td>
-                        <td style="color: var(--text-muted);">${c.centro}</td>
-                        <td style="font-weight: 800; color: var(--accent-rose); text-align: right;">${this.formatCurrency(scaledVal)}</td>
-                        <td style="font-weight: 700; text-align: right;">${c.pct}</td>
+                        <td style="color: var(--text-muted);">${c.centro || c.label}</td>
+                        <td style="font-weight: 800; color: var(--accent-rose); text-align: right;">${this.formatCurrency(c.value)}</td>
+                        <td style="font-weight: 700; text-align: right;">${pct}%</td>
                     </tr>
                 `;
             });
@@ -2571,7 +4092,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 data: {
                     labels: categories.map(c => c.label),
                     datasets: [{
-                        data: categories.map(c => c.monthly * expFactor),
+                        data: categories.map(c => c.value),
                         backgroundColor: categories.map(c => c.color),
                         borderWidth: 0,
                         hoverOffset: 6
@@ -2617,7 +4138,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
 
         const issueElem = document.getElementById('pdfHeaderIssueDate');
-        if (issueElem) issueElem.textContent = this.formatDateBR(new Date().toISOString().split('T')[0]);
+        if (issueElem) issueElem.textContent = this.formatDateBR(window.getUSDateString());
 
         try {
             // Apply temporary light mode for A4 document export
@@ -2753,6 +4274,1064 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         setTimeout(() => {
             toast.style.opacity = '0';
         }, 3500);
+    }
+
+    // ==========================================================================
+    // MaidPad Integration Module Methods
+    // ==========================================================================
+    
+    // Estado interno para controle do MaidPad Hub
+    maidpadActiveSubTab = 'jobs';
+    maidpadClients = [];
+    maidpadJobs = [];
+    maidpadConnected = false;
+
+    async renderMaidPadView() {
+        const container = document.getElementById('view-maidpad');
+        if (!container) return;
+
+        // Se a visualização estiver vazia, renderiza o esqueleto inicial
+        if (!container.querySelector('.maidpad-hub-grid')) {
+            container.innerHTML = `
+                <div class="container">
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <img src="nucleusLogoTransparente.png" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
+                            <div class="brand-text">
+                                <h1>MaidPad Hub</h1>
+                                <p>Sincronização de Agendamentos, Gestão de Clientes e Serviços em tempo real via API</p>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button id="btnSyncMaidPadTop" class="btn-primary" onclick="window.app.syncMaidPad()" title="Sincronizar MaidPad">
+                                <i data-lucide="refresh-cw"></i> Sincronizar Agora
+                            </button>
+                            <button class="btn-secondary" onclick="window.app.switchTab('overview')" title="Voltar">
+                                <i data-lucide="arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="maidpad-hub-grid">
+                        <!-- Lateral: Status da API e Navegação -->
+                        <div class="maidpad-sidebar">
+                            <div class="api-status-card">
+                                <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main);">Status da API</h3>
+                                <div class="status-indicator">
+                                    <div id="maidpadStatusDot" class="status-dot disconnected"></div>
+                                    <span id="maidpadStatusText">Verificando...</span>
+                                </div>
+                                <button class="btn-secondary" style="width: 100%; margin-top: 16px; font-size: 12px; padding: 8px 12px;" onclick="window.app.checkMaidPadConnection()">
+                                    <i data-lucide="activity"></i> Testar Conexão
+                                </button>
+                            </div>
+
+                            <!-- Configuração de Chave Local para Desenvolvimento/Testes -->
+                            <div class="api-status-card" style="margin-top: 12px; padding: 12px 16px;">
+                                <label class="form-label" style="font-size: 11px; margin-bottom: 6px; display: block; color: var(--text-dim);">Chave de API Local (Opcional):</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="password" id="maidpadLocalKeyInput" class="form-input" style="font-size: 11px; padding: 4px 8px; height: 28px; background: var(--bg-body); border-radius: var(--radius-sm); border: 1px solid var(--border-color); flex: 1;" placeholder="Cole a chave JWT...">
+                                    <button class="btn-primary" style="padding: 0 10px; height: 28px; border-radius: var(--radius-sm); font-size: 11px; display: flex; align-items: center; justify-content: center; margin: 0; min-width: 60px;" onclick="window.app.saveMaidPadLocalKey()" title="Salvar Chave Local">
+                                        Salvar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="api-status-card" style="padding: 12px;">
+                                <ul class="maidpad-menu-list">
+                                    <li class="maidpad-menu-item active" data-subtab="jobs" onclick="window.app.switchMaidPadSubTab('jobs')">
+                                        <i data-lucide="calendar"></i> Agendamentos Futuros
+                                    </li>
+                                    <li class="maidpad-menu-item" data-subtab="clients" onclick="window.app.switchMaidPadSubTab('clients')">
+                                        <i data-lucide="users"></i> Clientes Cadastrados
+                                    </li>
+                                    <li class="maidpad-menu-item" data-subtab="new-job" onclick="window.app.switchMaidPadSubTab('new-job')">
+                                        <i data-lucide="calendar-plus"></i> Novo Agendamento
+                                    </li>
+                                    <li class="maidpad-menu-item" data-subtab="new-client" onclick="window.app.switchMaidPadSubTab('new-client')">
+                                        <i data-lucide="user-plus"></i> Novo Cliente
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Painel Principal de Conteúdo -->
+                        <div class="maidpad-main-panel" id="maidpadMainPanel">
+                            <!-- Abas de Conteúdo serão renderizadas aqui -->
+                            
+                            <!-- SUB-TAB 1: JOBS -->
+                            <div class="maidpad-tab-content active" id="mpTab-jobs">
+                                <div class="maidpad-header-row">
+                                    <h2 class="maidpad-title">Agendamentos Futuros (MaidPad)</h2>
+                                    <span class="status-pill status-pending" id="mpJobsCount">0 Carregados</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="maidpad-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Cliente</th>
+                                                <th>Data</th>
+                                                <th>Horário</th>
+                                                <th>Frequência</th>
+                                                <th>Valor (Charge)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mpJobsTableBody">
+                                            <tr>
+                                                <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 40px 0;">
+                                                    <i data-lucide="info" style="margin-right: 8px;"></i> Clique em Sincronizar Agora para buscar os dados.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB 2: CLIENTS -->
+                            <div class="maidpad-tab-content" id="mpTab-clients">
+                                <div class="maidpad-header-row">
+                                    <h2 class="maidpad-title">Clientes Cadastrados (MaidPad)</h2>
+                                    <span class="status-pill status-paid" id="mpClientsCount">0 Carregados</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="maidpad-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nome</th>
+                                                <th>E-mail</th>
+                                                <th>Telefone</th>
+                                                <th>Frequência Pref.</th>
+                                                <th>Dia Pref.</th>
+                                                <th>Endereços</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mpClientsTableBody">
+                                            <tr>
+                                                <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px 0;">
+                                                    Nenhum cliente carregado.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- SUB-TAB 3: NEW JOB FORM -->
+                            <div class="maidpad-tab-content" id="mpTab-new-job">
+                                <div class="maidpad-header-row">
+                                    <h2 class="maidpad-title">Criar Novo Agendamento no MaidPad</h2>
+                                </div>
+                                <form id="mpNewJobForm" onsubmit="event.preventDefault(); window.app.handleCreateJob();" class="maidpad-form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">Cliente (MaidPad)*</label>
+                                        <select id="mpJobClientSelect" class="form-input" required onchange="window.app.handleNewJobClientChange()">
+                                            <option value="">Selecione um cliente...</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Endereço de Destino*</label>
+                                        <select id="mpJobAddressSelect" class="form-input" required>
+                                            <option value="">Selecione o endereço...</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Data do Serviço*</label>
+                                        <input type="date" id="mpJobDate" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Frequência*</label>
+                                        <select id="mpJobFrequency" class="form-input" required>
+                                            <option value="OneTime">Uma única vez (OneTime)</option>
+                                            <option value="Weekly">Semanal (Weekly)</option>
+                                            <option value="Every2Weeks">Quinzenal (Every2Weeks)</option>
+                                            <option value="Every4Weeks">Mensal (Every4Weeks)</option>
+                                            <option value="Daily">Diário (Daily)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Horário de Início (De)*</label>
+                                        <input type="text" id="mpJobTimeFrom" class="form-input" placeholder="Ex: 8:00 AM" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Horário de Término (Até)*</label>
+                                        <input type="text" id="mpJobTimeTo" class="form-input" placeholder="Ex: 11:00 AM" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Valor Cobrado ($)*</label>
+                                        <input type="number" step="0.01" id="mpJobCharge" class="form-input" placeholder="Ex: 150.00" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Forma de Cobrança*</label>
+                                        <select id="mpJobChargeBy" class="form-input" required>
+                                            <option value="Fixed">Fixo (Fixed)</option>
+                                            <option value="PresetHours">Horas Pré-definidas</option>
+                                            <option value="WorkedHours">Horas Trabalhadas</option>
+                                        </select>
+                                    </div>
+                                    <div class="maidpad-btn-group">
+                                        <button type="button" class="btn-secondary" onclick="window.app.switchMaidPadSubTab('jobs')">Cancelar</button>
+                                        <button type="submit" id="btnSubmitNewJob" class="btn-primary">Criar Agendamento</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- SUB-TAB 4: NEW CLIENT FORM -->
+                            <div class="maidpad-tab-content" id="mpTab-new-client">
+                                <div class="maidpad-header-row">
+                                    <h2 class="maidpad-title">Cadastrar Novo Cliente no MaidPad</h2>
+                                </div>
+                                <form id="mpNewClientForm" onsubmit="event.preventDefault(); window.app.handleCreateClient();" class="maidpad-form-grid">
+                                    <div class="maidpad-form-section">Dados Básicos</div>
+                                    <div class="form-group">
+                                        <label class="form-label">Primeiro Nome*</label>
+                                        <input type="text" id="mpClientFirstName" class="form-input" required placeholder="Ex: John">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Sobrenome*</label>
+                                        <input type="text" id="mpClientLastName" class="form-input" required placeholder="Ex: Doe">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">E-mail</label>
+                                        <input type="email" id="mpClientEmail" class="form-input" placeholder="Ex: john@example.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Aniversário</label>
+                                        <input type="date" id="mpClientBirthday" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefone Principal (Phone 1)*</label>
+                                        <input type="text" id="mpClientPhone1" class="form-input" required placeholder="Ex: 9999999999">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefone Secundário (Phone 2)</label>
+                                        <input type="text" id="mpClientPhone2" class="form-input" placeholder="Ex: 1234567890">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Referência</label>
+                                        <input type="text" id="mpClientReference" class="form-input" placeholder="Ex: Mary's Neighbor">
+                                    </div>
+
+                                    <div class="maidpad-form-section">Preferências</div>
+                                    <div class="form-group">
+                                        <label class="form-label">Frequência Preferida</label>
+                                        <select id="mpClientPrefFrequency" class="form-input">
+                                            <option value="Weekly">Semanal (Weekly)</option>
+                                            <option value="Every2Weeks">Quinzenal (Every2Weeks)</option>
+                                            <option value="OneTime">Eventual (OneTime)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Dia da Semana Preferido</label>
+                                        <select id="mpClientPrefDay" class="form-input">
+                                            <option value="Monday">Segunda-feira (Monday)</option>
+                                            <option value="Tuesday">Terça-feira (Tuesday)</option>
+                                            <option value="Wednesday">Quarta-feira (Wednesday)</option>
+                                            <option value="Thursday">Quinta-feira (Thursday)</option>
+                                            <option value="Friday">Sexta-feira (Friday)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="maidpad-form-section">Endereço Principal</div>
+                                    <div class="form-group">
+                                        <label class="form-label">Rua / Logradouro*</label>
+                                        <input type="text" id="mpAddrStreet" class="form-input" required placeholder="Ex: 123 Main St">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Complemento / Apto</label>
+                                        <input type="text" id="mpAddrComplement" class="form-input" placeholder="Ex: Apto 204">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Cidade*</label>
+                                        <input type="text" id="mpAddrCity" class="form-input" required placeholder="Ex: Newark">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Estado (UF)*</label>
+                                        <input type="text" id="mpAddrState" class="form-input" required placeholder="Ex: NJ" value="NJ">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Código Postal (ZIP Code)*</label>
+                                        <input type="text" id="mpAddrPostalCode" class="form-input" required placeholder="Ex: 07102">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Valor Cobrado neste Endereço ($)*</label>
+                                        <input type="number" step="0.01" id="mpAddrCharge" class="form-input" required placeholder="Ex: 180.00">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Equipe Designada por Padrão*</label>
+                                        <select id="mpAddrDefaultTeam" class="form-input" required>
+                                            <option value="1">TIME 1</option>
+                                            <option value="2">TIME 2</option>
+                                            <option value="3">TIME 3</option>
+                                            <option value="4">TIME 4</option>
+                                            <option value="5">TIME 5</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="maidpad-btn-group">
+                                        <button type="button" class="btn-secondary" onclick="window.app.switchMaidPadSubTab('clients')">Cancelar</button>
+                                        <button type="submit" id="btnSubmitNewClient" class="btn-primary">Criar Cliente</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.refreshLucideIcons();
+            this.renderMaidPadTables();
+        }
+
+        // Preenche o input da chave local se já existir no localStorage
+        const localKey = localStorage.getItem('maidpad_api_key') || '';
+        const keyInput = document.getElementById('maidpadLocalKeyInput');
+        if (keyInput) keyInput.value = localKey;
+
+        // Tenta testar e preencher a bolinha de status
+        this.checkMaidPadConnection();
+    }
+
+    saveMaidPadLocalKey() {
+        const keyInput = document.getElementById('maidpadLocalKeyInput');
+        if (!keyInput) return;
+
+        const val = keyInput.value.trim();
+        if (val) {
+            localStorage.setItem('maidpad_api_key', val);
+            this.showToast('Chave de API Local salva com sucesso!');
+        } else {
+            localStorage.removeItem('maidpad_api_key');
+            this.showToast('Chave de API Local removida.', 'error');
+        }
+        
+        this.checkMaidPadConnection();
+    }
+
+    async checkMaidPadConnection() {
+        const dot = document.getElementById('maidpadStatusDot');
+        const text = document.getElementById('maidpadStatusText');
+        
+        if (!dot || !text) return;
+
+        dot.className = 'status-dot checking';
+        text.textContent = 'Testando conexão...';
+
+        try {
+            const localKey = localStorage.getItem('maidpad_api_key') || '';
+            const res = await window.MaidPadSyncModule.testConnection(localKey);
+            if (res.success) {
+                dot.className = 'status-dot connected';
+                text.textContent = 'Conectado à API';
+                this.maidpadConnected = true;
+            } else {
+                dot.className = 'status-dot disconnected';
+                text.textContent = 'Desconectado (Token inválido)';
+                this.maidpadConnected = false;
+            }
+        } catch (e) {
+            dot.className = 'status-dot disconnected';
+            text.textContent = 'Erro de Rede';
+            this.maidpadConnected = false;
+        }
+    }
+
+    switchMaidPadSubTab(subTabId) {
+        this.maidpadActiveSubTab = subTabId;
+
+        // Atualiza botões do menu lateral
+        const items = document.querySelectorAll('.maidpad-menu-item');
+        items.forEach(item => {
+            if (item.getAttribute('data-subtab') === subTabId) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        // Atualiza painéis ativos
+        const contents = document.querySelectorAll('.maidpad-tab-content');
+        contents.forEach(content => {
+            if (content.id === `mpTab-${subTabId}`) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+
+        if (subTabId === 'new-job') {
+            this.populateNewJobClientsDropdown();
+        }
+    }
+
+    async syncMaidPad(silent = false) {
+        const syncBtn = document.getElementById('btnSyncMaidPadTop');
+        const syncBtnHeader = document.getElementById('btnSyncMaidPad');
+        const syncBtnSheets = document.getElementById('btnSyncSheets');
+
+        const startLoading = (btn, textMode = false) => {
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = textMode 
+                    ? `<i data-lucide="loader-2" class="spin"></i> Carregando...`
+                    : `<i data-lucide="loader-2" class="spin"></i>`;
+            }
+        };
+
+        const stopLoading = (btn, icon, text = '') => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = text 
+                    ? `<i data-lucide="${icon}"></i> ${text}`
+                    : `<i data-lucide="${icon}"></i>`;
+            }
+        };
+
+        startLoading(syncBtn, true);
+        startLoading(syncBtnHeader, false);
+        startLoading(syncBtnSheets, false);
+
+        try {
+            const localKey = localStorage.getItem('maidpad_api_key') || '';
+            const data = await window.MaidPadSyncModule.syncAllData(localKey);
+            
+            // Salva na aplicação local
+            this.currentData = data.convertedData;
+            this.maidpadClients = data.rawClients;
+            this.maidpadJobs = data.rawJobs;
+
+            // Re-renderiza todas as abas normais (overview, equipes, etc.)
+            this.renderAllViews();
+
+            // Re-renderiza as tabelas da própria aba MaidPad
+            this.renderMaidPadTables();
+
+            if (!silent) {
+                this.showToast('Dados sincronizados com sucesso da API do MaidPad!');
+            }
+        } catch (err) {
+            console.error('Erro na sincronização do MaidPad:', err);
+            if (!silent) {
+                this.showToast('Erro ao sincronizar com MaidPad. Verifique suas credenciais.', 'error');
+            }
+        } finally {
+            stopLoading(syncBtn, 'refresh-cw', 'Sincronizar Agora');
+            stopLoading(syncBtnHeader, 'refresh-cw');
+            stopLoading(syncBtnSheets, 'table');
+            this.refreshLucideIcons();
+        }
+    }
+
+    renderMaidPadTables() {
+        // Render Jobs
+        const jobsBody = document.getElementById('mpJobsTableBody');
+        const jobsCount = document.getElementById('mpJobsCount');
+        if (jobsBody) {
+            if (this.maidpadJobs.length === 0) {
+                jobsBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 40px 0;">Nenhum agendamento futuro encontrado. Clique em Sincronizar Agora.</td></tr>`;
+            } else {
+                // Mapear clientes por ID
+                const clientMap = {};
+                this.maidpadClients.forEach(c => {
+                    clientMap[c.ID] = `${c.FirstName} ${c.LastName}`.trim();
+                });
+
+                jobsBody.innerHTML = this.maidpadJobs.map(job => `
+                    <tr>
+                        <td><strong>#${job.ID}</strong></td>
+                        <td>${clientMap[job.ClientID] || `Cliente #${job.ClientID}`}</td>
+                        <td>${this.formatDateBR(job.JobDate)}</td>
+                        <td>${job.JobTimeFrom} - ${job.JobTimeTo}</td>
+                        <td><span class="status-pill status-pending" style="background: rgba(37,171,183,0.12); color: var(--primary);">${job.Frequency}</span></td>
+                        <td>${this.formatCurrency(parseFloat(job.Charge))}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+        if (jobsCount) {
+            jobsCount.textContent = `${this.maidpadJobs.length} Carregados`;
+        }
+
+        // Render Clients
+        const clientsBody = document.getElementById('mpClientsTableBody');
+        const clientsCount = document.getElementById('mpClientsCount');
+        if (clientsBody) {
+            if (this.maidpadClients.length === 0) {
+                clientsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px 0;">Nenhum cliente carregado.</td></tr>`;
+            } else {
+                clientsBody.innerHTML = this.maidpadClients.map(c => {
+                    const addressesStr = c.Addresses && c.Addresses.length > 0
+                        ? c.Addresses.map(a => `${a.Street}, ${a.City} (Time ${a.DefaultTeam || 'N/A'})`).join('<br>')
+                        : '<span style="color: var(--accent-rose);">Sem endereço</span>';
+                    
+                    return `
+                        <tr>
+                            <td><strong>#${c.ID}</strong></td>
+                            <td><strong>${c.FirstName} ${c.LastName}</strong><br><small style="color:var(--text-auxiliary)">Ref: ${c.Reference || 'Nenhuma'}</small></td>
+                            <td>${c.Email || '-'}</td>
+                            <td>${c.Phone1 || '-'}</td>
+                            <td>${c.PreferredFrequency || '-'}</td>
+                            <td>${c.PreferredDayOfWeek || '-'}</td>
+                            <td style="font-size: 11px; line-height: 1.4;">${addressesStr}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        if (clientsCount) {
+            clientsCount.textContent = `${this.maidpadClients.length} Cadastrados`;
+        }
+    }
+
+    populateNewJobClientsDropdown() {
+        const select = document.getElementById('mpJobClientSelect');
+        if (!select) return;
+
+        // Limpa e preenche
+        select.innerHTML = `<option value="">Selecione um cliente...</option>` + 
+            this.maidpadClients.map(c => `
+                <option value="${c.ID}">${c.FirstName} ${c.LastName} (#${c.ID})</option>
+            `).join('');
+    }
+
+    handleNewJobClientChange() {
+        const clientSelect = document.getElementById('mpJobClientSelect');
+        const addressSelect = document.getElementById('mpJobAddressSelect');
+        if (!clientSelect || !addressSelect) return;
+
+        const clientId = parseInt(clientSelect.value, 10);
+        if (isNaN(clientId)) {
+            addressSelect.innerHTML = `<option value="">Selecione o endereço...</option>`;
+            return;
+        }
+
+        const client = this.maidpadClients.find(c => c.ID === clientId);
+        if (client && client.Addresses && client.Addresses.length > 0) {
+            addressSelect.innerHTML = client.Addresses.map(addr => `
+                <option value="${addr.ID}">${addr.Street}, ${addr.City} ($${addr.Charge} - Time ${addr.DefaultTeam})</option>
+            `).join('');
+
+            // Preenche o valor cobrado com base no primeiro endereço selecionado
+            const firstAddr = client.Addresses[0];
+            const chargeInput = document.getElementById('mpJobCharge');
+            if (chargeInput) {
+                chargeInput.value = firstAddr.Charge;
+            }
+        } else {
+            addressSelect.innerHTML = `<option value="">Este cliente não possui endereços cadastrados</option>`;
+        }
+    }
+
+    async handleCreateClient() {
+        const btn = document.getElementById('btnSubmitNewClient');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+        }
+
+        const clientData = {
+            FirstName: document.getElementById('mpClientFirstName').value,
+            LastName: document.getElementById('mpClientLastName').value,
+            Email: document.getElementById('mpClientEmail').value,
+            Birthday: document.getElementById('mpClientBirthday').value || null,
+            Phone1: document.getElementById('mpClientPhone1').value,
+            Phone2: document.getElementById('mpClientPhone2').value || null,
+            Reference: document.getElementById('mpClientReference').value || null,
+            PreferredFrequency: document.getElementById('mpClientPrefFrequency').value,
+            PreferredDayOfWeek: document.getElementById('mpClientPrefDay').value,
+            Addresses: [
+                {
+                    Reference: "Principal",
+                    Street: document.getElementById('mpAddrStreet').value,
+                    Complement: document.getElementById('mpAddrComplement').value || null,
+                    City: document.getElementById('mpAddrCity').value,
+                    State: document.getElementById('mpAddrState').value,
+                    "Postal Code": document.getElementById('mpAddrPostalCode').value,
+                    Charge: document.getElementById('mpAddrCharge').value,
+                    ChargeBy: "Fixed",
+                    DefaultTeam: parseInt(document.getElementById('mpAddrDefaultTeam').value, 10)
+                }
+            ]
+        };
+
+        try {
+            const localKey = localStorage.getItem('maidpad_api_key') || '';
+            await window.MaidPadSyncModule.createClient(clientData, localKey);
+            this.showToast('Cliente cadastrado com sucesso no MaidPad!');
+            document.getElementById('mpNewClientForm').reset();
+            
+            // Recarrega todos os dados
+            await this.syncMaidPad();
+            
+            // Volta para a aba de clientes
+            this.switchMaidPadSubTab('clients');
+        } catch (e) {
+            console.error(e);
+            this.showToast(e.message || 'Erro ao cadastrar cliente.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Criar Cliente';
+            }
+        }
+    }
+
+    async handleCreateJob() {
+        const btn = document.getElementById('btnSubmitNewJob');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+        }
+
+        const jobData = {
+            ClientID: parseInt(document.getElementById('mpJobClientSelect').value, 10),
+            AddressID: parseInt(document.getElementById('mpJobAddressSelect').value, 10),
+            JobDate: document.getElementById('mpJobDate').value,
+            JobTimeFrom: document.getElementById('mpJobTimeFrom').value,
+            JobTimeTo: document.getElementById('mpJobTimeTo').value,
+            Frequency: document.getElementById('mpJobFrequency').value,
+            Charge: parseFloat(document.getElementById('mpJobCharge').value).toFixed(2),
+            ChargeBy: document.getElementById('mpJobChargeBy').value
+        };
+
+        try {
+            const localKey = localStorage.getItem('maidpad_api_key') || '';
+            await window.MaidPadSyncModule.createJob(jobData, localKey);
+            this.showToast('Agendamento criado com sucesso no MaidPad!');
+            document.getElementById('mpNewJobForm').reset();
+
+            // Recarrega todos os dados
+            await this.syncMaidPad();
+
+            // Volta para a aba de agendamentos
+            this.switchMaidPadSubTab('jobs');
+        } catch (e) {
+            console.error(e);
+            this.showToast(e.message || 'Erro ao criar agendamento.', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Criar Agendamento';
+            }
+        }
+    }
+    // =========================================================================
+    // 📊 MÓDULO DE DESPESAS MANUAIS (CRUD & SINCRONIZAÇÃO GOOGLE SHEETS)
+    // =========================================================================
+
+    async loadManualExpenses() {
+        try {
+            const res = await fetch('/api/manual-expenses?action=list');
+            if (!res.ok) throw new Error('Falha ao obter despesas.');
+            const data = await res.json();
+            
+            if (data.useFallback) {
+                console.log('Modo Fallback do Google Sheets ativo. Lendo do LocalStorage.');
+                const local = localStorage.getItem('nucleus_manual_expenses');
+                this.manualExpenses = local ? JSON.parse(local) : [];
+            } else {
+                this.manualExpenses = data.expenses || [];
+            }
+            
+            this.renderTransactionsModule();
+            this.renderClosureMetrics();
+            if (this.charts && typeof this.charts.trend !== 'undefined') {
+                this.renderOverviewCharts();
+            }
+        } catch (e) {
+            console.error('Erro ao sincronizar despesas manuais:', e);
+            const local = localStorage.getItem('nucleus_manual_expenses');
+            this.manualExpenses = local ? JSON.parse(local) : [];
+            this.renderTransactionsModule();
+            this.renderClosureMetrics();
+        }
+    }
+
+    getManualExpensesTotalForPeriod(periodMode, dateOrMonth) {
+        if (!this.manualExpenses || this.manualExpenses.length === 0) return 0;
+        
+        let startStr = '';
+        let endStr = '';
+        
+        if (periodMode === 'weekly') {
+            const selDateObj = new Date(dateOrMonth);
+            const dayOfWeek = selDateObj.getDay();
+            const firstDayOfWeek = new Date(selDateObj);
+            firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+            const lastDayOfWeek = new Date(firstDayOfWeek);
+            lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+            startStr = firstDayOfWeek.toISOString().split('T')[0];
+            endStr = lastDayOfWeek.toISOString().split('T')[0];
+        }
+
+        const filtered = this.manualExpenses.filter(e => {
+            if (!e.date) return false;
+            if (periodMode === 'daily') {
+                return e.date === dateOrMonth;
+            } else if (periodMode === 'weekly') {
+                return e.date >= startStr && e.date <= endStr;
+            } else if (periodMode === 'monthly') {
+                const month = dateOrMonth.substring(0, 7);
+                return e.date.startsWith(month);
+            } else {
+                return e.date.startsWith('2026');
+            }
+        });
+
+        return filtered.reduce((acc, e) => acc + (e.value || 0), 0);
+    }
+
+    openExpenseModal(id = '') {
+        const modal = document.getElementById('expenseModal');
+        const overlay = document.getElementById('modalOverlay');
+        const form = document.getElementById('expenseForm');
+        const title = document.getElementById('expenseModalTitle');
+        const submitBtn = document.getElementById('btnSubmitExpense');
+        
+        if (!modal || !overlay || !form) return;
+
+        // Inicializar Flatpickr na data do modal se não inicializado
+        if (!this.flatpickrs.expDate) {
+            this.flatpickrs.expDate = flatpickr('#expDate', {
+                dateFormat: 'Y-m-d',
+                defaultDate: this.transSelectedDate || window.getUSDateString(),
+                locale: {
+                    firstDayOfWeek: 0,
+                    weekdays: {
+                        shorthand: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                        longhand: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+                    },
+                    months: {
+                        shorthand: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        longhand: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+                    }
+                }
+            });
+        }
+
+        // Formatação em tempo real para moeda no input de valor
+        const valInput = document.getElementById('expValue');
+        if (valInput) {
+            valInput.value = '';
+            const newvalInput = valInput.cloneNode(true);
+            valInput.parentNode.replaceChild(newvalInput, valInput);
+            
+            newvalInput.addEventListener('input', (e) => {
+                let v = e.target.value;
+                v = v.replace(/[^0-9.]/g, '');
+                const parts = v.split('.');
+                if (parts.length > 2) {
+                    v = parts[0] + '.' + parts.slice(1).join('');
+                }
+                e.target.value = v;
+            });
+        }
+
+        if (id) {
+            title.textContent = 'Editar Despesa Manual';
+            submitBtn.textContent = 'Salvar Alterações';
+            const exp = this.manualExpenses.find(e => e.id === id);
+            
+            if (exp) {
+                document.getElementById('expId').value = exp.id;
+                document.getElementById('expCreatedAt').value = exp.created_at || '';
+                
+                if (this.flatpickrs.expDate) {
+                    this.flatpickrs.expDate.setDate(exp.date);
+                } else {
+                    document.getElementById('expDate').value = exp.date;
+                }
+                
+                document.getElementById('expCategory').value = exp.category;
+                document.getElementById('expCentroInput').value = exp.centro;
+                document.getElementById('expDesc').value = exp.desc;
+                document.getElementById('expValue').value = exp.value.toFixed(2);
+                document.getElementById('expPaidBy').value = exp.paid_by;
+                document.getElementById('expStatus').value = exp.status;
+                document.getElementById('expNotes').value = exp.notes || '';
+            }
+        } else {
+            title.textContent = 'Nova Despesa Manual';
+            submitBtn.textContent = 'Criar Despesa';
+            form.reset();
+            document.getElementById('expId').value = '';
+            document.getElementById('expCreatedAt').value = '';
+            if (this.flatpickrs.expDate) {
+                this.flatpickrs.expDate.setDate(this.transSelectedDate || window.getUSDateString());
+            }
+        }
+
+        modal.style.display = 'block';
+        overlay.style.display = 'block';
+        this.refreshLucideIcons();
+    }
+
+    closeExpenseModal() {
+        const modal = document.getElementById('expenseModal');
+        const overlay = document.getElementById('modalOverlay');
+        if (modal) modal.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    async saveExpense() {
+        const id = document.getElementById('expId').value;
+        const date = document.getElementById('expDate').value.trim();
+        const category = document.getElementById('expCategory').value;
+        const centro = document.getElementById('expCentroInput').value.trim() || 'Outros';
+        const desc = document.getElementById('expDesc').value.trim();
+        const valRaw = document.getElementById('expValue').value.trim();
+        const paid_by = document.getElementById('expPaidBy').value;
+        const status = document.getElementById('expStatus').value;
+        const notes = document.getElementById('expNotes').value.trim();
+        const created_at = document.getElementById('expCreatedAt').value;
+
+        if (!date) {
+            this.showToast('A data da despesa é obrigatória.', 'error');
+            return;
+        }
+        if (!desc) {
+            this.showToast('A descrição da despesa é obrigatória.', 'error');
+            return;
+        }
+        if (!category) {
+            this.showToast('A categoria da despesa é obrigatória.', 'error');
+            return;
+        }
+        
+        const value = parseFloat(valRaw);
+        if (isNaN(value) || value <= 0) {
+            this.showToast('O valor da despesa deve ser maior que zero.', 'error');
+            return;
+        }
+
+        const isNew = !id;
+        const newId = id || `EXP-${Date.now()}`;
+        
+        const expenseData = {
+            id: newId,
+            date,
+            category,
+            centro,
+            desc,
+            value,
+            paid_by,
+            status,
+            notes,
+            created_at: created_at || new Date().toISOString()
+        };
+
+        const submitBtn = document.getElementById('btnSubmitExpense');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Salvando...';
+        }
+
+        try {
+            const res = await fetch(`/api/manual-expenses?action=${isNew ? 'create' : 'update'}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ expense: expenseData })
+            });
+
+            if (!res.ok) throw new Error('Erro na gravação.');
+            const resData = await res.json();
+
+            if (resData.useFallback) {
+                this.saveExpenseLocalStorage(expenseData, isNew);
+                this.showToast(`Despesa manual ${isNew ? 'salva' : 'atualizada'} localmente.`);
+            } else {
+                this.showToast(`Despesa manual ${isNew ? 'salva' : 'atualizada'} com sucesso no Google Sheets!`);
+            }
+
+            this.closeExpenseModal();
+            await this.loadManualExpenses();
+
+        } catch (e) {
+            console.warn('Erro ao salvar no backend, usando salvamento local fallback:', e);
+            this.saveExpenseLocalStorage(expenseData, isNew);
+            this.showToast(`Despesa manual ${isNew ? 'salva' : 'atualizada'} localmente.`);
+            this.closeExpenseModal();
+            await this.loadManualExpenses();
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Salvar Despesa';
+            }
+        }
+    }
+
+    saveExpenseLocalStorage(expense, isNew) {
+        let local = localStorage.getItem('nucleus_manual_expenses');
+        let list = local ? JSON.parse(local) : [];
+
+        if (isNew) {
+            list.push(expense);
+        } else {
+            const idx = list.findIndex(e => e.id === expense.id);
+            if (idx !== -1) {
+                list[idx] = expense;
+            } else {
+                list.push(expense);
+            }
+        }
+        localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+    }
+
+    async deleteExpense(id) {
+        this.showDeleteConfirmModal(id, async () => {
+            const tr = document.querySelector(`tr[data-id="${id}"]`);
+            const actionCell = tr ? tr.querySelector('.action-cell-slot') : null;
+            let originalActionsHtml = '';
+            if (actionCell) {
+                originalActionsHtml = actionCell.innerHTML;
+                actionCell.innerHTML = `<div style="display: flex; justify-content: center; align-items: center; min-height: 26px;"><div class="inline-spinner"></div></div>`;
+            }
+
+            const isSystem = id.startsWith('SYS-');
+            const expenseIndex = this.manualExpenses.findIndex(e => e.id === id || String(e.id) === String(id));
+            
+            let targetExpense;
+            let isNewOverride = false;
+
+            if (isSystem) {
+                if (expenseIndex === -1) {
+                    isNewOverride = true;
+                    const parts = id.split('-');
+                    const category = parts[1];
+                    const descPrefix = parts[2];
+                    const item = DESPESAS_DETAILED_ITEMS.find(d => d.category === category && d.desc.substring(0,5) === descPrefix);
+
+                    let expFactor = 12;
+                    if (this.transPeriodMode === 'daily') expFactor = 1 / 30;
+                    else if (this.transPeriodMode === 'weekly') expFactor = 7 / 30;
+                    else if (this.transPeriodMode === 'monthly') expFactor = 1;
+
+                    targetExpense = {
+                        id: id,
+                        date: this.transSelectedDate,
+                        category: item ? item.category : category,
+                        centro: item ? item.centro : 'Administrativo',
+                        desc: item ? item.desc : 'Despesa do sistema',
+                        value: item ? (item.monthly * expFactor) : 0,
+                        paid_by: item ? (item.paid_by || 'Cartão') : 'Cartão',
+                        status: 'DELETED',
+                        notes: 'Exclusão de despesa do sistema',
+                        created_at: new Date().toISOString()
+                    };
+                } else {
+                    targetExpense = {
+                        ...this.manualExpenses[expenseIndex],
+                        status: 'DELETED'
+                    };
+                }
+            }
+
+            try {
+                let res;
+                if (isSystem) {
+                    const actionParam = isNewOverride ? 'create' : 'update';
+                    res = await fetch(`/api/manual-expenses?action=${actionParam}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ expense: targetExpense })
+                    });
+                } else {
+                    res = await fetch(`/api/manual-expenses?action=delete&id=${encodeURIComponent(id)}`, {
+                        method: 'POST'
+                    });
+                }
+
+                if (!res.ok) throw new Error('Erro ao deletar no servidor.');
+                const resData = await res.json();
+
+                if (resData.useFallback) {
+                    if (isSystem) {
+                        const stored = localStorage.getItem('nucleus_manual_expenses');
+                        let list = stored ? JSON.parse(stored) : [];
+                        if (isNewOverride) {
+                            list.push(targetExpense);
+                        } else {
+                            const idx = list.findIndex(e => e.id === id);
+                            if (idx !== -1) list[idx] = targetExpense;
+                        }
+                        localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+                    } else {
+                        this.deleteExpenseLocalStorage(id);
+                    }
+                }
+
+                if (isSystem) {
+                    if (isNewOverride) {
+                        this.manualExpenses.push({
+                            ...targetExpense,
+                            updated_at: new Date().toISOString()
+                        });
+                    } else {
+                        this.manualExpenses[expenseIndex] = {
+                            ...targetExpense,
+                            updated_at: new Date().toISOString()
+                        };
+                    }
+                    this.showToast('Despesa de sistema excluída do período.');
+                } else {
+                    this.manualExpenses = this.manualExpenses.filter(e => e.id !== id);
+                    this.showToast('Despesa manual removida.');
+                }
+
+                this.renderClosureMetrics();
+                if (this.activeTab === 'relatorios') this.renderReportsView();
+                this.renderSaidasExpenses();
+
+                if (window.NucleusIA && typeof window.NucleusIA.buildCurrentContext === 'function') {
+                    window.NucleusIA.contextData = window.NucleusIA.buildCurrentContext();
+                }
+
+            } catch (e) {
+                console.warn('Erro ao deletar, removendo localmente:', e);
+                if (isSystem) {
+                    const stored = localStorage.getItem('nucleus_manual_expenses') || '[]';
+                    let list = JSON.parse(stored);
+                    if (isNewOverride) {
+                        list.push(targetExpense);
+                        this.manualExpenses.push({
+                            ...targetExpense,
+                            updated_at: new Date().toISOString()
+                        });
+                    } else {
+                        const idx = list.findIndex(e => e.id === id);
+                        if (idx !== -1) list[idx] = targetExpense;
+                        this.manualExpenses[expenseIndex] = {
+                            ...targetExpense,
+                            updated_at: new Date().toISOString()
+                        };
+                    }
+                    localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+                    this.showToast('Despesa de sistema excluída localmente.');
+                } else {
+                    this.deleteExpenseLocalStorage(id);
+                    this.manualExpenses = this.manualExpenses.filter(e => e.id !== id);
+                    this.showToast('Despesa manual excluída localmente.');
+                }
+                
+                this.renderClosureMetrics();
+                if (this.activeTab === 'relatorios') this.renderReportsView();
+                this.renderSaidasExpenses();
+            } finally {
+                if (actionCell && document.body.contains(tr)) {
+                    actionCell.innerHTML = originalActionsHtml;
+                    this.refreshLucideIcons();
+                }
+            }
+        });
+    }
+
+    deleteExpenseLocalStorage(id) {
+        let local = localStorage.getItem('nucleus_manual_expenses');
+        if (local) {
+            let list = JSON.parse(local);
+            list = list.filter(e => e.id !== id);
+            localStorage.setItem('nucleus_manual_expenses', JSON.stringify(list));
+        }
     }
 }
 
