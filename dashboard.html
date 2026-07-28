@@ -584,10 +584,13 @@
                             </div>
                         </div>
                         <div class="header-actions">
-                            <button class="btn-secondary" onclick="window.app.syncGoogleSheets()" title="Sincronizar Planilha">
-                                <i data-lucide="refresh-cw"></i>
+                            <button id="btnSyncSheets" class="btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;" onclick="window.app.syncGoogleSheets()" title="Sincronizar Planilha">
+                                <i data-lucide="refresh-cw"></i> Sincronizar Planilha
                             </button>
-                            <button class="btn-secondary" onclick="window.app.logout()" title="Sair">
+                            <button class="btn-secondary btn-theme-toggle" style="height: 38px;" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
+                                <i data-lucide="moon"></i>
+                            </button>
+                            <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
                                 <i data-lucide="log-out"></i>
                             </button>
                         </div>
@@ -919,6 +922,9 @@
                             <button class="btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;" onclick="window.app.exportCSV()">
                                 <i data-lucide="file-spreadsheet"></i> Exportar CSV
                             </button>
+                            <button class="btn-secondary btn-theme-toggle" style="height: 38px;" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
+                                <i data-lucide="moon"></i>
+                            </button>
                             <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
                                 <i data-lucide="log-out"></i>
                             </button>
@@ -1113,7 +1119,155 @@
                 </div>
             </section>
 
-            <!-- TAB 4: RELATÓRIOS & ANALYTICS EXECUTIVO COMPLETO -->
+            <!-- TAB 4: MÓDULO DE PAGAMENTOS & PAYROLL [SPA_HORIZONTAL_MANDATE] -->
+            <section id="view-pagamentos" class="view-section">
+                <div class="container">
+                    
+                    <!-- Header Top Bar -->
+                    <header class="top-header glass-panel">
+                        <div class="brand-title">
+                            <img src="nucleusLogoTransparente.png" alt="Nucleus Logo" class="brand-logo-img header-logo-img">
+                            <div class="brand-text">
+                                <h1>Módulo de Pagamentos & Payroll</h1>
+                                <p>Gestão auditada de folha de pagamento de funcionários, helpers e comissões via API MaidPad</p>
+                            </div>
+                        </div>
+                        <div class="header-actions">
+                            <button id="btnSyncPayroll" class="btn-primary" style="height: 38px; padding: 0 16px; font-size: 13px;" onclick="window.app.syncPayrollFromMaidPad()" title="Sincronizar Payroll da API MaidPad">
+                                <i data-lucide="refresh-cw"></i> Sincronizar Payroll
+                            </button>
+                            <button class="btn-secondary btn-theme-toggle" style="height: 38px;" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
+                                <i data-lucide="moon"></i>
+                            </button>
+                            <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
+                                <i data-lucide="log-out"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <!-- 1. Seletor de Período Rápido (Dia / Semana / Mês / Ano) -->
+                    <div class="period-bar glass-panel" style="margin-bottom: 24px;">
+                        <div class="period-title">
+                            <i data-lucide="calendar" style="color: var(--primary);"></i> Período Rápido do Payroll
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div class="period-mode-group">
+                                <button type="button" class="payroll-mode-btn" data-mode="daily">Dia</button>
+                                <button type="button" class="payroll-mode-btn" data-mode="weekly">Semana</button>
+                                <button type="button" class="payroll-mode-btn active" data-mode="monthly">Mês</button>
+                                <button type="button" class="payroll-mode-btn" data-mode="annual">Ano</button>
+                            </div>
+
+                            <div id="payrollPeriodSubtitle" class="period-subtitle-badge">
+                                Julho / 2026
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. KPI Cards Bar (Métricas Executivas do Payroll) -->
+                    <div id="payrollSummaryCardsContainer" class="kpi-grid" style="margin-bottom: 24px;">
+                        <!-- Renderizado dinamicamente via app.js -->
+                    </div>
+
+                    <!-- 3. Barra de Filtros Completa (Período, Equipe, Funcionário - Reativação Instantânea) -->
+                    <div class="period-bar glass-panel" style="margin-bottom: 24px; padding: 18px 24px;">
+                        <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; width: 100%;">
+                            
+                            <!-- Filtro por Período: De / Até (Flatpickr) -->
+                            <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">De:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
+                                    <input type="text" id="payrollStartDateInput" class="custom-flatpickr-input" style="width: 135px !important;" placeholder="01/01/2026">
+                                </div>
+                            </div>
+
+                            <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Até:</label>
+                                <div class="custom-datepicker-wrapper">
+                                    <i data-lucide="calendar" class="datepicker-icon"></i>
+                                    <input type="text" id="payrollEndDateInput" class="custom-flatpickr-input" style="width: 135px !important;" placeholder="31/01/2026">
+                                </div>
+                            </div>
+
+                            <!-- Filtro por Equipe (Select Expandido) -->
+                            <div class="filter-group" style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Equipe:</label>
+                                <div class="custom-select-wrapper">
+                                    <select id="payrollTeamSelect" class="custom-flatpickr-input" style="min-width: 180px !important; cursor: pointer; padding-right: 32px !important;" onchange="window.app.filterPayrollTable()">
+                                        <option value="all">Todas as Equipes</option>
+                                        <option value="Time 1">Time 1</option>
+                                        <option value="Time 2">Time 2</option>
+                                        <option value="Time 3">Time 3</option>
+                                        <option value="Time 4">Time 4</option>
+                                        <option value="Time 5">Time 5</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Filtro por Funcionário / ID (Campo Amplo) -->
+                            <div class="filter-group" style="display: flex; align-items: center; gap: 8px; flex-grow: 1; min-width: 280px; max-width: 480px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Funcionário:</label>
+                                <div class="custom-datepicker-wrapper" style="width: 100%; display: flex; flex-grow: 1;">
+                                    <i data-lucide="search" class="datepicker-icon" style="color: var(--primary);"></i>
+                                    <input type="text" id="payrollSearchInput" class="custom-flatpickr-input" placeholder="Buscar por nome ou ID..." style="width: 100% !important; min-width: 260px !important; flex-grow: 1;" oninput="window.app.filterPayrollTable()">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 4. Painel da Tabela Principal de Payroll -->
+                    <div class="table-panel glass-panel" style="padding: 24px;">
+                        <div class="table-header-controls" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                                <span class="status-pill status-paid" id="payrollItemsCount" style="font-size: 12px; font-weight: 600; padding: 6px 14px;">0 Registros Encontrados</span>
+                            </div>
+
+                            <!-- Ordenação (Sort By) -->
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;"><i data-lucide="arrow-up-down" style="width: 14px; height: 14px; color: var(--primary);"></i> Ordenar por:</label>
+                                <select id="payrollSortSelect" class="custom-flatpickr-input" style="width: 210px !important; height: 38px !important; font-size: 12px !important; cursor: pointer; padding: 0 12px !important;" onchange="window.app.sortPayrollTable()">
+                                    <option value="amount_desc">Valor (Maior ➔ Menor)</option>
+                                    <option value="amount_asc">Valor (Menor ➔ Maior)</option>
+                                    <option value="date_desc">Data (Mais Recente)</option>
+                                    <option value="date_asc">Data (Mais Antiga)</option>
+                                    <option value="name_asc">Funcionário (A ➔ Z)</option>
+                                    <option value="name_desc">Funcionário (Z ➔ A)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Folha de Pagamento -->
+                        <div class="table-responsive">
+                            <table class="maidpad-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID Folha</th>
+                                        <th>Funcionário</th>
+                                        <th>Período de Apuração</th>
+                                        <th>Serviços / Itens</th>
+                                        <th>Valor Total Pago</th>
+                                        <th>Data do Pagamento</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payrollTableBody">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px 0;">
+                                            <i data-lucide="loader-2" class="spin" style="margin-right: 8px;"></i> Carregando dados da Folha de Pagamento...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- TAB 5: RELATÓRIOS & ANALYTICS EXECUTIVO COMPLETO -->
             <section id="view-relatorios" class="view-section">
                 <div class="container">
                     
@@ -1129,6 +1283,9 @@
                         <div class="header-actions">
                             <button class="btn-primary" style="height: 38px; padding: 0 18px; font-size: 13px;" onclick="window.app.exportPDF()">
                                 <i data-lucide="file-text"></i> Exportar PDF
+                            </button>
+                            <button class="btn-secondary btn-theme-toggle" style="height: 38px;" onclick="window.app.toggleTheme()" title="Alternar Modo Escuro / Modo Claro">
+                                <i data-lucide="moon"></i>
                             </button>
                             <button class="btn-secondary" style="height: 38px;" onclick="window.app.logout()" title="Sair">
                                 <i data-lucide="log-out"></i>
@@ -1488,6 +1645,9 @@
         </button>
         <button class="nav-item" data-tab="transacoes" onclick="window.app.switchTab('transacoes')">
             <i data-lucide="file-text"></i> Transações
+        </button>
+        <button class="nav-item" data-tab="pagamentos" onclick="window.app.switchTab('pagamentos')">
+            <i data-lucide="wallet"></i> Pagamentos
         </button>
         <button class="nav-item" data-tab="relatorios" onclick="window.app.switchTab('relatorios')">
             <i data-lucide="bar-chart-3"></i> Relatórios

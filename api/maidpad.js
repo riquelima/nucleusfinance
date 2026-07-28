@@ -205,6 +205,60 @@ module.exports = async (req, res) => {
             const data = await response.json();
             return res.status(200).json(data);
 
+        } else if (action === 'listAccountingJobs') {
+            const fromDate = req.query.fromDate || (req.body && req.body.fromDate);
+            const toDate = req.query.toDate || (req.body && req.body.toDate);
+            
+            let url = `${MAIDPAD_BASE_URL}/Accounting/Job`;
+            const params = [];
+            if (fromDate) params.push(`fromDate=${fromDate}`);
+            if (toDate) params.push(`toDate=${toDate}`);
+            if (params.length > 0) url += `?${params.join('&')}`;
+
+            const response = await fetchMaidpad(url, { method: 'GET' });
+            if (!response.ok) {
+                const errText = await response.text();
+                return res.status(response.status).json({ error: 'Erro ao listar Accounting Jobs do MaidPad', details: errText });
+            }
+            const data = await response.json();
+            return res.status(200).json(data);
+
+        } else if (action === 'listAccountingInvoices') {
+            const fromDate = req.query.fromDate || (req.body && req.body.fromDate);
+            const toDate = req.query.toDate || (req.body && req.body.toDate);
+            
+            let url = `${MAIDPAD_BASE_URL}/Accounting/Invoice`;
+            const params = [];
+            if (fromDate) params.push(`fromDate=${fromDate}`);
+            if (toDate) params.push(`toDate=${toDate}`);
+            if (params.length > 0) url += `?${params.join('&')}`;
+
+            const response = await fetchMaidpad(url, { method: 'GET' });
+            if (!response.ok) {
+                const errText = await response.text();
+                return res.status(response.status).json({ error: 'Erro ao listar Invoices do MaidPad', details: errText });
+            }
+            const data = await response.json();
+            return res.status(200).json(data);
+
+        } else if (action === 'listPayroll') {
+            const fromDate = req.query.fromDate || (req.body && req.body.fromDate);
+            const toDate = req.query.toDate || (req.body && req.body.toDate);
+            
+            let url = `${MAIDPAD_BASE_URL}/Accounting/Payroll`;
+            const params = [];
+            if (fromDate) params.push(`fromDate=${fromDate}`);
+            if (toDate) params.push(`toDate=${toDate}`);
+            if (params.length > 0) url += `?${params.join('&')}`;
+
+            const response = await fetchMaidpad(url, { method: 'GET' });
+            if (!response.ok) {
+                const errText = await response.text();
+                return res.status(response.status).json({ error: 'Erro ao listar Payroll do MaidPad', details: errText });
+            }
+            const data = await response.json();
+            return res.status(200).json(data);
+
         } else {
             return res.status(400).json({ error: 'Ação desconhecida ou não informada.' });
         }

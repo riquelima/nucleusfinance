@@ -174,7 +174,7 @@ body {
 
 #view-slider {
     display: flex;
-    width: 600vw; /* 6 Tabs: login, overview, equipes, transacoes, relatorios, maidpad */
+    width: 700vw; /* 7 Tabs: login, overview, equipes, transacoes, pagamentos, relatorios, maidpad */
     min-height: 100vh;
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: transform;
@@ -354,7 +354,7 @@ body {
     flex-shrink: 0;
 }
 
-.period-mode-btn, .overview-mode-btn, .trans-mode-btn, .rep-preset-btn {
+.period-mode-btn, .overview-mode-btn, .trans-mode-btn, .rep-preset-btn, .payroll-mode-btn {
     background: transparent;
     border: none;
     height: 32px;
@@ -374,11 +374,11 @@ body {
     flex-shrink: 0;
 }
 
-.period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover, .rep-preset-btn:hover {
+.period-mode-btn:hover, .overview-mode-btn:hover, .trans-mode-btn:hover, .rep-preset-btn:hover, .payroll-mode-btn:hover {
     color: var(--primary);
 }
 
-.period-mode-btn.active, .overview-mode-btn.active, .trans-mode-btn.active, .rep-preset-btn.active {
+.period-mode-btn.active, .overview-mode-btn.active, .trans-mode-btn.active, .rep-preset-btn.active, .payroll-mode-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #ffffff;
     box-shadow: 0 3px 10px rgba(37, 171, 183, 0.3);

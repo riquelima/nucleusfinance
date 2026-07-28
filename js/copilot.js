@@ -328,6 +328,41 @@ class NucleusIAEngine {
             maidpadJobsStr = 'Nenhum agendamento futuro carregado via API do MaidPad ainda.';
         }
 
+        let maidpadPayrollStr = '';
+        const payrollMonthlyMap = {};
+        if (app.payrollData && app.payrollData.length > 0) {
+            app.payrollData.forEach(p => {
+                const empName = app.payrollEmployeeNames[p.EmployeeID] || `Colaborador #${p.EmployeeID}`;
+                maidpadPayrollStr += `- Folha ID #${p.ID}: Funcionário: ${empName} (ID: ${p.EmployeeID}) | Período: ${p.FromDate} até ${p.ToDate} | Serviços: ${p.Items} | Total Pago: $${parseFloat(p.Amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2})} | Pago em: ${p.PaymentDate}\n`;
+                
+                const pDate = p.PaymentDate || p.ToDate || '';
+                if (pDate && pDate.length >= 7) {
+                    const month = pDate.substring(0, 7);
+                    if (!payrollMonthlyMap[month]) {
+                        payrollMonthlyMap[month] = { amount: 0, count: 0, uniqueEmployees: new Set() };
+                    }
+                    payrollMonthlyMap[month].amount += parseFloat(p.Amount || 0);
+                    payrollMonthlyMap[month].count += 1;
+                    payrollMonthlyMap[month].uniqueEmployees.add(p.EmployeeID);
+                }
+            });
+        } else {
+            maidpadPayrollStr = 'Nenhum dado de Payroll/Folha de pagamento carregado via API do MaidPad ainda.';
+        }
+
+        let payrollMonthlySummaryStr = '';
+        Object.keys(payrollMonthlyMap).sort().forEach(month => {
+            const mData = payrollMonthlyMap[month];
+            const [year, mNum] = month.split('-');
+            const monthNames = {
+                '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+                '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+                '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+            };
+            const mLabel = `${monthNames[mNum] || mNum} de ${year}`;
+            payrollMonthlySummaryStr += `- ${mLabel} (${month}): Total Gasto com Payroll: $${mData.amount.toLocaleString('en-US', {minimumFractionDigits: 2})} | Folhas Pagas: ${mData.count} | Colaboradores Pagos: ${mData.uniqueEmployees.size}\n`;
+        });
+
         // Calcular despesas manuais para os períodos chaves
         const hojeManualExp = manualExpenses.filter(e => e.date === todayStr);
         const hojeManualTotal = hojeManualExp.reduce((acc, e) => acc + (e.value || 0), 0);
@@ -427,6 +462,12 @@ ${maidpadClientsStr}
 
 ### Agendamentos Futuros no MaidPad:
 ${maidpadJobsStr}
+
+### Dados Auditados de Payroll (Folha de Pagamento) do MaidPad:
+${maidpadPayrollStr}
+
+### Resumo Mensal Consolidado de Payroll (Gasto Real em Dinheiro por Mês):
+${payrollMonthlySummaryStr || '- Sem dados de Payroll mensal.'}
 `;
     }
 
