@@ -71,13 +71,13 @@ class NucleusDashboardApp {
         this.overviewSelectedMonth = todayStr.substring(0, 7);
 
         // Teams Tab Period Mode
-        this.teamsPeriodMode = 'annual';
+        this.teamsPeriodMode = 'daily';
         this.teamsSelectedDate = todayStr;
         this.teamsSelectedMonth = todayStr.substring(0, 7);
 
         // Transações Module State (Sub-Tabs: Entradas vs Saídas)
         this.transActiveSubtab = 'entradas';
-        this.transPeriodMode = 'annual';
+        this.transPeriodMode = 'daily';
         this.transSelectedDate = todayStr;
         this.transSelectedMonth = todayStr.substring(0, 7);
         this.transSelectedTeam = 'ALL';
@@ -86,6 +86,13 @@ class NucleusDashboardApp {
         this.transSearchQuery = '';
         this.transCurrentPage = 1;
         this.transPageSize = 15;
+        
+        // Payroll Module State
+        this.payrollPeriodMode = 'daily';
+        this.payrollStartDate = todayStr;
+        this.payrollEndDate = todayStr;
+        this.payrollSelectedTeam = 'all';
+        this.payrollSortOrder = 'amount_desc';
         
         // Manual Expenses State
         this.manualExpenses = [];
@@ -4402,9 +4409,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
 
     payrollData = [];
     payrollFilteredData = [];
-    payrollPeriodMode = 'monthly';
-    payrollStartDate = '2026-07-01';
-    payrollEndDate = '2026-07-31';
+    payrollPeriodMode = 'daily';
+    payrollStartDate = '';
+    payrollEndDate = '';
     payrollSelectedTeam = 'all';
     payrollSortOrder = 'amount_desc';
 
