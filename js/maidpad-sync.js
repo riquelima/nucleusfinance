@@ -107,13 +107,16 @@ window.MaidPadSyncModule = {
             this.fetchJobs(apiKey, '2026-01-01', '2026-12-31')
         ]);
 
-        // Map clients by ID for rapid lookup
+        // Map clients by ID for rapid lookup and team preference
         const clientMap = {};
+        const clientPrimaryTeamMap = {};
         const addressMap = {};
 
         clients.forEach(c => {
             clientMap[c.ID] = `${c.FirstName} ${c.LastName}`.trim() || c.Reference || `Cliente #${c.ID}`;
-            if (c.Addresses && Array.isArray(c.Addresses)) {
+            if (c.Addresses && Array.isArray(c.Addresses) && c.Addresses.length > 0) {
+                // Time primário configurado no cadastro do cliente
+                clientPrimaryTeamMap[c.ID] = c.Addresses[0].DefaultTeam;
                 c.Addresses.forEach(addr => {
                     addressMap[addr.ID] = addr;
                 });
@@ -132,14 +135,14 @@ window.MaidPadSyncModule = {
         jobs.forEach(job => {
             const clientName = clientMap[job.ClientID] || `Cliente #${job.ClientID}`;
             const address = addressMap[job.AddressID] || {};
+            const primaryTeamId = clientPrimaryTeamMap[job.ClientID];
             
-            // Map DefaultTeam ID to TIME key (1 -> TIME1, etc.)
-            const defaultTeamId = address.DefaultTeam;
+            // Prioridade do Time: Time do Job -> Time Principal do Cliente -> Time Específico do Endereço
+            const defaultTeamId = job.TeamID || job.Team || job.DefaultTeam || primaryTeamId || address.DefaultTeam || 1;
             let teamKey = `TIME${defaultTeamId}`;
             
-            // Fallback if team is invalid or not in range 1-5
+            // Fallback se o time não estiver na faixa 1-5
             if (!resultData[teamKey]) {
-                // If it is not a valid team, let's distribute it evenly or fallback to TIME1
                 teamKey = 'TIME1';
             }
 
@@ -180,12 +183,17 @@ window.MaidPadSyncModule = {
                 paidBy = rawPaidBy;
             }
 
+            // Normalizar data (YYYY-MM-DD)
+            let formattedDate = (job.JobDate || '').toString().trim();
+            if (formattedDate.includes('T')) formattedDate = formattedDate.split('T')[0];
+            if (formattedDate.includes(' ')) formattedDate = formattedDate.split(' ')[0];
+
             // Build Nucleus standard record
             const record = {
-                date: job.JobDate, // format: "YYYY-MM-DD"
+                date: formattedDate, // format: "YYYY-MM-DD"
                 trans_type: "Cleaning",
                 client: clientName,
-                description: `${job.Frequency || 'OneTime'} (${job.JobTimeFrom} - ${job.JobTimeTo})`,
+                description: `${job.Frequency || 'OneTime'} (${job.JobTimeFrom || ''} - ${job.JobTimeTo || ''})`,
                 state: address.State || 'NJ',
                 status: status,
                 subtotal: charge,
@@ -194,7 +202,7 @@ window.MaidPadSyncModule = {
                 fee: 0.0,
                 total: charge,
                 paid_by: paidBy,
-                notes: `Frequência: ${job.Frequency}. Endereço: ${address.Street || ''}, ${address.City || ''}`
+                notes: `Frequência: ${job.Frequency || ''}. Endereço: ${address.Street || ''}, ${address.City || ''}`
             };
 
             resultData[teamKey].push(record);

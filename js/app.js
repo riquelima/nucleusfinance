@@ -124,6 +124,7 @@ class NucleusDashboardApp {
         if (this.isAuthenticated) {
             this.syncMaidPad(true);
             this.loadManualExpenses();
+            this.startAutoSync();
         }
 
         this.refreshLucideIcons();
@@ -4720,6 +4721,17 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             stopLoading(syncBtnSheets, 'table');
             this.refreshLucideIcons();
         }
+    }
+
+    startAutoSync(intervalMs = 60000) {
+        if (this.autoSyncTimer) clearInterval(this.autoSyncTimer);
+        // Executa a sincronização contínua e silenciosa em segundo plano a cada 60 segundos
+        this.autoSyncTimer = setInterval(() => {
+            if (this.isAuthenticated) {
+                console.log('Sincronização automática em segundo plano (MaidPad)...');
+                this.syncMaidPad(true);
+            }
+        }, intervalMs);
     }
 
     renderMaidPadTables() {

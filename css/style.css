@@ -445,6 +445,7 @@ body {
     display: inline-flex;
     align-items: center;
     height: 38px;
+    box-sizing: border-box;
 }
 
 .select-icon {
@@ -470,6 +471,7 @@ body {
     appearance: none !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
+    width: 100% !important;
     height: 38px !important;
     background-color: var(--input-bg) !important;
     border: 1px solid var(--border-color) !important;
@@ -482,7 +484,10 @@ body {
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     box-shadow: none !important;
+    box-sizing: border-box !important;
 }
 
 .custom-select-wrapper:hover .select-arrow,
