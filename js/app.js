@@ -1391,7 +1391,7 @@ class NucleusDashboardApp {
 - Lucro Líquido Operacional: $88.333,64 (Margem 18,96%)
 - Total de Agendamentos: 2.596 serviços (Ticket Médio: $179,44)
 - Equipes: Time 2 lidera faturamento ($109.315). Time 4 tem maior ticket ($188,39) e 76% das gorjetas. Time 5 tem menor ticket ($164,31).
-- Clientes Únicos: 238 (Frequência: 10,91x/ano | LTV: $1.957,23). Top 10 representa 16,51% do faturamento.
+- Clientes Únicos: 241 (Frequência: 10,77x/ano | LTV: $1.932,87). Top 10 representa 16,51% do faturamento.
 - Oportunidade: Ajustar ticket do Time 5 gera +$13.435,00/ano em lucro. Reduzir taxas financeiras economiza $1.500,00/ano.
 
 Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, de forma extremamente profissional e impactante. Use tags HTML <strong> para destacar números essenciais.`;
