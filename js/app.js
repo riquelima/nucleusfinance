@@ -118,6 +118,10 @@ class NucleusDashboardApp {
         this.checkAuthSession();
         this.initFlatpickrs();
         this.bindEvents();
+
+        // Carrega a base auditada de Payroll antes de renderizar as abas
+        this.payrollData = this.getFallbackPayrollData();
+
         this.renderAllViews();
         
         const urlParams = new URLSearchParams(window.location.search);
@@ -127,9 +131,10 @@ class NucleusDashboardApp {
         }
         this.initialized = true;
 
-        // Se o usuário estiver autenticado no carregamento da página, sincroniza silenciosamente do MaidPad por padrão
+        // Se o usuário estiver autenticado no carregamento da página, sincroniza silenciosamente do MaidPad (Jobs & Payroll) por padrão
         if (this.isAuthenticated) {
             this.syncMaidPad(true);
+            this.syncPayrollFromMaidPad(true);
             this.loadManualExpenses();
             this.startAutoSync();
         }
@@ -2323,6 +2328,38 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const periodKey = this.transPeriodMode === 'monthly' ? this.transSelectedMonth : 
                           (this.transPeriodMode === 'annual' ? '2026' : this.transSelectedDate);
 
+        let realPayrollTotal = 0;
+        if (this.payrollData && this.payrollData.length > 0) {
+            let startStr = '';
+            let endStr = '';
+            if (this.transPeriodMode === 'weekly') {
+                const selDateObj = new Date(this.transSelectedDate);
+                const dayOfWeek = selDateObj.getDay();
+                const firstDayOfWeek = new Date(selDateObj);
+                firstDayOfWeek.setDate(selDateObj.getDate() - dayOfWeek);
+                const lastDayOfWeek = new Date(firstDayOfWeek);
+                lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+                startStr = firstDayOfWeek.toISOString().split('T')[0];
+                endStr = lastDayOfWeek.toISOString().split('T')[0];
+            }
+
+            this.payrollData.forEach(p => {
+                const pDate = p.PaymentDate || p.ToDate || '';
+                if (this.transPeriodMode === 'daily' && pDate === this.transSelectedDate) {
+                    realPayrollTotal += parseFloat(p.Amount || 0);
+                } else if (this.transPeriodMode === 'weekly' && pDate >= startStr && pDate <= endStr) {
+                    realPayrollTotal += parseFloat(p.Amount || 0);
+                } else if (this.transPeriodMode === 'monthly' && pDate.startsWith(this.transSelectedMonth)) {
+                    realPayrollTotal += parseFloat(p.Amount || 0);
+                } else if (this.transPeriodMode === 'annual' && pDate.startsWith('2026')) {
+                    realPayrollTotal += parseFloat(p.Amount || 0);
+                }
+            });
+        }
+
+        const staticPayrollMonthly = 27040.00;
+        const payrollScaleFactor = realPayrollTotal > 0 ? (realPayrollTotal / staticPayrollMonthly) : expFactor;
+
         let systemItems = DESPESAS_DETAILED_ITEMS.map(item => {
             const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
             const override = (this.manualExpenses || []).find(e => e.id === itemId);
@@ -2332,17 +2369,21 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 return null;
             }
 
+            let itemValue = (item.category === 'Payroll') 
+                ? (item.monthly * payrollScaleFactor) 
+                : (item.monthly * expFactor);
+
             return {
                 id: itemId,
                 category: override ? override.category : item.category,
                 desc: override ? override.desc : item.desc,
                 centro: override ? override.centro : item.centro,
-                value: override ? override.value : (item.monthly * expFactor),
+                value: override ? override.value : itemValue,
                 date: override ? override.date : this.transSelectedDate,
                 paid_by: override ? override.paid_by : (item.paid_by || 'Cartão'),
                 status: override ? override.status : (item.status || 'PAID'),
                 origin: 'SYSTEM',
-                notes: override ? override.notes : 'Despesa rateada estimativa'
+                notes: override ? override.notes : (item.category === 'Payroll' && realPayrollTotal > 0 ? 'Sincronizado via MaidPad API' : 'Despesa rateada estimativa')
             };
         }).filter(Boolean);
 
@@ -3036,23 +3077,31 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                           (mode === 'annual' ? '2026' : selectedDate);
 
         let totalSystemPeriod = 0;
-        DESPESAS_DETAILED_ITEMS.forEach(item => {
-            // Pular Payroll estático pois usamos o real obtido via API do MaidPad
-            if (item.category === 'Payroll') return;
+        let staticPayrollPeriod = 0;
 
+        DESPESAS_DETAILED_ITEMS.forEach(item => {
             const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
             const override = (this.manualExpenses || []).find(e => e.id === itemId);
 
+            let val = item.monthly * expFactor;
             if (override) {
-                if (override.status !== 'DELETED' && override.status !== 'Cancelado') {
-                    totalSystemPeriod += (override.value || 0);
+                if (override.status === 'DELETED' || override.status === 'Cancelado') {
+                    val = 0;
+                } else {
+                    val = override.value || 0;
                 }
+            }
+
+            if (item.category === 'Payroll') {
+                staticPayrollPeriod += val;
             } else {
-                totalSystemPeriod += (item.monthly * expFactor);
+                totalSystemPeriod += val;
             }
         });
 
-        return totalSystemPeriod + totalManualPeriod + realPayrollTotal;
+        const effectivePayroll = realPayrollTotal > 0 ? realPayrollTotal : staticPayrollPeriod;
+
+        return totalSystemPeriod + totalManualPeriod + effectivePayroll;
     }
 
     calculateCategoryExpensesForPeriod(mode, selectedDate, selectedMonth) {
@@ -3092,7 +3141,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
 
         const catTotals = {
-            payroll: realPayrollTotal, // Inicializa com a folha de pagamento real da API do MaidPad
+            payroll: 0,
             frota: 0,
             marketing: 0,
             tech: 0,
@@ -3103,11 +3152,10 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const periodKey = mode === 'monthly' ? selectedMonth : 
                           (mode === 'annual' ? '2026' : selectedDate);
 
+        let staticPayrollPeriod = 0;
+
         // Itens de sistema com overrides
         DESPESAS_DETAILED_ITEMS.forEach(item => {
-            // Pular Payroll pois usamos o real
-            if (item.category === 'Payroll') return;
-
             const itemId = `SYS-${item.category}-${item.desc.substring(0,5)}-${periodKey}`;
             const override = (this.manualExpenses || []).find(e => e.id === itemId);
 
@@ -3118,19 +3166,28 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 if (override.status === 'DELETED' || override.status === 'Cancelado') {
                     val = 0;
                 } else {
-                    val = override.value;
-                    cat = override.category;
+                    val = override.value || 0;
+                    cat = override.category || cat;
                 }
             }
 
             const normCat = (cat || '').toLowerCase();
-            if (normCat === 'payroll') catTotals.payroll += val;
-            else if (normCat === 'frota') catTotals.frota += val;
-            else if (normCat === 'marketing') catTotals.marketing += val;
-            else if (normCat === 'tech' || normCat === 'tech & crm') catTotals.tech += val;
-            else if (normCat === 'operações' || normCat === 'operações & limpeza') catTotals.ops += val;
-            else catTotals.outros += val;
+            if (normCat === 'payroll') {
+                staticPayrollPeriod += val;
+            } else if (normCat === 'frota') {
+                catTotals.frota += val;
+            } else if (normCat === 'marketing') {
+                catTotals.marketing += val;
+            } else if (normCat === 'tech' || normCat === 'tech & crm') {
+                catTotals.tech += val;
+            } else if (normCat === 'operações' || normCat === 'operações & limpeza') {
+                catTotals.ops += val;
+            } else {
+                catTotals.outros += val;
+            }
         });
+
+        catTotals.payroll = realPayrollTotal > 0 ? realPayrollTotal : staticPayrollPeriod;
 
         // Despesas manuais puras
         const periodManualExpenses = (this.manualExpenses || []).filter(e => {
@@ -4620,6 +4677,8 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
                 btn.innerHTML = `<i data-lucide="refresh-cw"></i> Sincronizar Payroll`;
             }
             this.filterPayrollTable();
+            this.renderClosureMetrics();
+            this.renderSaidasExpenses();
             this.refreshLucideIcons();
         }
     }
@@ -5299,8 +5358,9 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         // Executa a sincronização contínua e silenciosa em segundo plano a cada 60 segundos
         this.autoSyncTimer = setInterval(() => {
             if (this.isAuthenticated) {
-                console.log('Sincronização automática em segundo plano (MaidPad)...');
+                console.log('Sincronização automática em segundo plano (MaidPad & Payroll)...');
                 this.syncMaidPad(true);
+                this.syncPayrollFromMaidPad(true);
             }
         }, intervalMs);
     }
