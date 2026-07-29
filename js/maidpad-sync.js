@@ -195,13 +195,37 @@ window.MaidPadSyncModule = {
             'TIME5': []
         };
 
+        // ================================================================
+        // MAPA DE OVERRIDE: ClientID -> Time correto
+        // Usado quando o DefaultTeam no MaidPad está desatualizado ou incorreto.
+        // Atualizar aqui se um cliente mudar de time.
+        // ================================================================
+        const CLIENT_TEAM_OVERRIDE = {
+            // Time 1
+            // (nenhum override necessário no momento)
+
+            // Time 2 — Kelly Field tem DefaultTeam:5 na API mas pertence ao Time 2
+            66399: 2,   // Kelly Field (12 Elizabeth Ave, Manasquan)
+
+            // Time 3
+            // (nenhum override necessário no momento)
+
+            // Time 4
+            // (nenhum override necessário no momento)
+
+            // Time 5
+            // (nenhum override necessário no momento)
+        };
+        // ================================================================
+
         jobs.forEach(job => {
             const clientName = clientMap[job.ClientID] || `Cliente #${job.ClientID}`;
             const address = addressMap[job.AddressID] || {};
             const primaryTeamId = clientPrimaryTeamMap[job.ClientID];
             
-            // Prioridade do Time: Time do Job -> Time Principal do Cliente -> Time Específico do Endereço
-            const defaultTeamId = job.TeamID || job.Team || job.DefaultTeam || primaryTeamId || address.DefaultTeam || 1;
+            // Prioridade do Time: 1) Override manual -> 2) DefaultTeam do endereço -> 3) Fallback 1
+            const overrideTeam = CLIENT_TEAM_OVERRIDE[job.ClientID];
+            const defaultTeamId = overrideTeam || job.TeamID || job.Team || job.DefaultTeam || primaryTeamId || address.DefaultTeam || 1;
             let teamKey = `TIME${defaultTeamId}`;
             
             // Fallback se o time não estiver na faixa 1-5
