@@ -890,6 +890,27 @@ class NucleusDashboardApp {
         document.getElementById('ovClientesUnicos').textContent = uniqueClients.toLocaleString('pt-BR');
         document.getElementById('ovLTVMedio').textContent = this.formatCurrency(ltvPeriod);
 
+        // Atualiza os subtítulos dinâmicos de acordo com o período selecionado
+        const periodSubTexts = {
+            daily:   { faturamento: 'Faturamento do dia',     despesas: 'Payroll, Frota, Marketing & Ops no dia',     lucro: 'Receita - Despesas do dia',     agendamentos: 'Serviços executados no dia',     clients: 'Clientes atendidos no dia',    ticket: 'Média por atendimento no dia' },
+            weekly:  { faturamento: 'Faturamento da semana',  despesas: 'Payroll, Frota, Marketing & Ops na semana',  lucro: 'Receita - Despesas da semana',  agendamentos: 'Serviços executados na semana',  clients: 'Clientes atendidos na semana', ticket: 'Média por atendimento na semana' },
+            monthly: { faturamento: 'Faturamento do mês',     despesas: 'Payroll, Frota, Marketing & Ops no mês',     lucro: 'Receita - Despesas do mês',     agendamentos: 'Serviços executados no mês',     clients: 'Clientes atendidos no mês',    ticket: 'Média por atendimento no mês' },
+            annual:  { faturamento: 'Faturamento do ano',     despesas: 'Payroll, Frota, Marketing & Ops no ano',     lucro: 'Receita - Despesas do ano',     agendamentos: 'Serviços executados no ano',     clients: 'Clientes atendidos no ano',    ticket: 'Média por atendimento no ano' }
+        };
+        const subTexts = periodSubTexts[this.overviewPeriodMode] || periodSubTexts.daily;
+        const faturamentoSub   = document.getElementById('ovFaturamentoSub');
+        const despesasSub      = document.getElementById('ovDespesasSub');
+        const lucroSub         = document.getElementById('ovLucroSub');
+        const agendamentosSub  = document.getElementById('ovAgendamentosSub');
+        const clientesSub      = document.getElementById('ovClientesUnicosSub');
+        const ticketSub        = document.getElementById('ovTicketMedioSub');
+        if (faturamentoSub)  faturamentoSub.textContent  = subTexts.faturamento;
+        if (despesasSub)     despesasSub.textContent      = subTexts.despesas;
+        if (lucroSub)        lucroSub.textContent          = subTexts.lucro;
+        if (agendamentosSub) agendamentosSub.textContent  = subTexts.agendamentos;
+        if (clientesSub)     clientesSub.textContent       = subTexts.clients;
+        if (ticketSub)       ticketSub.textContent          = subTexts.ticket;
+
         const catTotals = this.calculateCategoryExpensesForPeriod(this.overviewPeriodMode, this.overviewSelectedDate, this.overviewSelectedMonth);
         document.getElementById('expPayrollVal').textContent = this.formatCurrency(catTotals.payroll);
         document.getElementById('expFrotaVal').textContent = this.formatCurrency(catTotals.frota);
