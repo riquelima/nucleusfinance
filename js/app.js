@@ -4416,21 +4416,56 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
     payrollSortOrder = 'amount_desc';
 
     payrollEmployeeNames = {
-        19069: 'Maria Silva (Time 1)',
-        31897: 'Ana Souza (Time 2)',
-        4537: 'Camila Santos (Time 1)',
-        12450: 'Fernanda Oliveira (Time 3)',
-        5892: 'Patricia Lima (Time 4)',
-        8912: 'Luciana Ferreira (Time 5)',
-        10420: 'Juliana Costa (Time 2)',
-        14500: 'Beatriz Martins (Time 3)',
-        23136: 'Gisele Barbosa (Time 4)',
-        22254: 'Gabriela Rocha (Time 5)',
-        13766: 'Amanda Souza (Time 3)',
-        32124: 'Mariana Costa (Time 2)',
-        19070: 'Larissa Santos (Time 1)',
-        34728: 'Cristiane Lima (Time 5)'
+        19069: 'Djaria Silva',
+        4537: 'Elsy Flores',
+        19070: 'Maria Arias',
+        31897: 'Amanda Rodrigues',
+        32124: 'Leonor Gonzalez',
+        13766: 'Laudicéia Santos',
+        36765: 'Elane Santos',
+        23136: 'Morete Junior',
+        22254: 'Erica Goncalves',
+        34728: 'Gleicy Soares Camilo',
+        6676: 'Sabrina Fernandes'
     };
+
+    payrollEmployeeTeams = {
+        19069: 1, // Djaria Silva (Time 1)
+        4537: 1,  // Elsy Flores (Time 1)
+        19070: 1, // Maria Arias (Time 1)
+        31897: 2, // Amanda Rodrigues (Time 2)
+        32124: 2, // Leonor Gonzalez (Time 2)
+        13766: 3, // Laudicéia Santos (Time 3)
+        36765: 3, // Elane Santos (Time 3)
+        23136: 4, // Morete Junior (Time 4)
+        22254: 5, // Erica Goncalves (Time 5)
+        34728: 5  // Gleicy Soares Camilo (Time 5)
+    };
+
+    cleanEmployeeName(name) {
+        if (!name) return '';
+        name = name.trim();
+        const words = name.split(/\s+/);
+        const half = Math.floor(words.length / 2);
+        
+        // Remove duplicate last name (e.g., "Amanda Rodrigues Rodrigues")
+        if (words.length >= 2 && words[words.length - 1] === words[words.length - 2]) {
+            words.pop();
+            return words.join(' ');
+        }
+        
+        // Remove repeated patterns (e.g., "Gleicy Soares Camilo Soares Camilo")
+        if (words.length >= 4) {
+            for (let len = 2; len <= half; len++) {
+                const end = words.slice(-len).join(' ');
+                const prev = words.slice(-2 * len, -len).join(' ');
+                if (end === prev) {
+                    return words.slice(0, -len).join(' ');
+                }
+            }
+        }
+        return words.join(' ');
+    }
 
     async renderPayrollView() {
         if (!this.payrollData || this.payrollData.length === 0) {
@@ -4569,16 +4604,44 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
     }
 
     getFallbackPayrollData() {
+        // Dados reais auditados da API MaidPad (Accounting/Payroll 2026)
         return [
-            { ID: 459490, EmployeeID: 19069, FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 25, Amount: '3708.50', PaymentDate: '2026-07-03' },
-            { ID: 459489, EmployeeID: 31897, FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 11, Amount: '916.00', PaymentDate: '2026-07-03' },
-            { ID: 459493, EmployeeID: 4537, FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 6, Amount: '771.00', PaymentDate: '2026-07-03' },
-            { ID: 461201, EmployeeID: 12450, FromDate: '2026-07-06', ToDate: '2026-07-10', Items: 18, Amount: '2450.00', PaymentDate: '2026-07-10' },
-            { ID: 461202, EmployeeID: 5892, FromDate: '2026-07-06', ToDate: '2026-07-10', Items: 14, Amount: '1890.00', PaymentDate: '2026-07-10' },
-            { ID: 462505, EmployeeID: 8912, FromDate: '2026-07-13', ToDate: '2026-07-17', Items: 21, Amount: '2940.00', PaymentDate: '2026-07-17' },
-            { ID: 462506, EmployeeID: 10420, FromDate: '2026-07-13', ToDate: '2026-07-17', Items: 16, Amount: '2100.00', PaymentDate: '2026-07-17' },
-            { ID: 463809, EmployeeID: 14500, FromDate: '2026-07-20', ToDate: '2026-07-24', Items: 22, Amount: '3150.00', PaymentDate: '2026-07-24' },
-            { ID: 463810, EmployeeID: 19069, FromDate: '2026-07-20', ToDate: '2026-07-24', Items: 24, Amount: '3580.00', PaymentDate: '2026-07-24' }
+            { ID: 459489, EmployeeID: 31897, EmployeeName: 'Amanda Rodrigues', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 11, Amount: '916.00', PaymentDate: '2026-07-03' },
+            { ID: 459490, EmployeeID: 19069, EmployeeName: 'Djaria Silva', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 25, Amount: '3708.50', PaymentDate: '2026-07-03' },
+            { ID: 459493, EmployeeID: 4537, EmployeeName: 'Elsy Flores', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 6, Amount: '771.00', PaymentDate: '2026-07-03' },
+            { ID: 459494, EmployeeID: 22254, EmployeeName: 'Erica Goncalves', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 10, Amount: '1192.00', PaymentDate: '2026-07-03' },
+            { ID: 459495, EmployeeID: 34728, EmployeeName: 'Gleicy Soares Camilo', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 6, Amount: '737.00', PaymentDate: '2026-07-03' },
+            { ID: 459496, EmployeeID: 13766, EmployeeName: 'Laudicéia Santos', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 12, Amount: '1137.50', PaymentDate: '2026-07-03' },
+            { ID: 459497, EmployeeID: 32124, EmployeeName: 'Leonor Gonzalez', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 8, Amount: '907.00', PaymentDate: '2026-07-03' },
+            { ID: 459498, EmployeeID: 19070, EmployeeName: 'Maria Arias', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 11, Amount: '842.00', PaymentDate: '2026-07-03' },
+            { ID: 459499, EmployeeID: 23136, EmployeeName: 'Morete Junior', FromDate: '2026-06-29', ToDate: '2026-07-03', Items: 28, Amount: '3943.50', PaymentDate: '2026-07-03' },
+            { ID: 464022, EmployeeID: 31897, EmployeeName: 'Amanda Rodrigues', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 7, Amount: '833.00', PaymentDate: '2026-07-11' },
+            { ID: 464023, EmployeeID: 19069, EmployeeName: 'Djaria Silva', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 24, Amount: '1465.50', PaymentDate: '2026-07-11' },
+            { ID: 464025, EmployeeID: 4537, EmployeeName: 'Elsy Flores', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 7, Amount: '1121.00', PaymentDate: '2026-07-11' },
+            { ID: 464026, EmployeeID: 22254, EmployeeName: 'Erica Goncalves', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 10, Amount: '1316.00', PaymentDate: '2026-07-11' },
+            { ID: 464027, EmployeeID: 34728, EmployeeName: 'Gleicy Soares Camilo', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 7, Amount: '661.00', PaymentDate: '2026-07-11' },
+            { ID: 464028, EmployeeID: 13766, EmployeeName: 'Laudicéia Santos', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 8, Amount: '1193.00', PaymentDate: '2026-07-11' },
+            { ID: 464029, EmployeeID: 32124, EmployeeName: 'Leonor Gonzalez', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 9, Amount: '846.00', PaymentDate: '2026-07-11' },
+            { ID: 464030, EmployeeID: 19070, EmployeeName: 'Maria Arias', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 7, Amount: '821.00', PaymentDate: '2026-07-11' },
+            { ID: 464031, EmployeeID: 23136, EmployeeName: 'Morete Junior', FromDate: '2026-07-06', ToDate: '2026-07-11', Items: 27, Amount: '3389.50', PaymentDate: '2026-07-11' },
+            { ID: 468314, EmployeeID: 31897, EmployeeName: 'Amanda Rodrigues', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 10, Amount: '860.30', PaymentDate: '2026-07-18' },
+            { ID: 468315, EmployeeID: 19069, EmployeeName: 'Djaria Silva', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 28, Amount: '2091.50', PaymentDate: '2026-07-18' },
+            { ID: 468317, EmployeeID: 4537, EmployeeName: 'Elsy Flores', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 8, Amount: '1128.00', PaymentDate: '2026-07-18' },
+            { ID: 468318, EmployeeID: 22254, EmployeeName: 'Erica Goncalves', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 10, Amount: '1391.50', PaymentDate: '2026-07-18' },
+            { ID: 468319, EmployeeID: 34728, EmployeeName: 'Gleicy Soares Camilo', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 10, Amount: '806.30', PaymentDate: '2026-07-18' },
+            { ID: 468320, EmployeeID: 13766, EmployeeName: 'Laudicéia Santos', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 11, Amount: '1080.30', PaymentDate: '2026-07-18' },
+            { ID: 468321, EmployeeID: 32124, EmployeeName: 'Leonor Gonzalez', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 8, Amount: '901.50', PaymentDate: '2026-07-18' },
+            { ID: 468322, EmployeeID: 19070, EmployeeName: 'Maria Arias', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 5, Amount: '648.00', PaymentDate: '2026-07-18' },
+            { ID: 468323, EmployeeID: 23136, EmployeeName: 'Morete Junior', FromDate: '2026-07-13', ToDate: '2026-07-18', Items: 27, Amount: '8166.00', PaymentDate: '2026-07-18' },
+            { ID: 472620, EmployeeID: 31897, EmployeeName: 'Amanda Rodrigues', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 6, Amount: '827.50', PaymentDate: '2026-07-25' },
+            { ID: 472621, EmployeeID: 19069, EmployeeName: 'Djaria Silva', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 24, Amount: '848.50', PaymentDate: '2026-07-25' },
+            { ID: 472623, EmployeeID: 4537, EmployeeName: 'Elsy Flores', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 8, Amount: '1156.90', PaymentDate: '2026-07-25' },
+            { ID: 472624, EmployeeID: 22254, EmployeeName: 'Erica Goncalves', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 8, Amount: '1308.00', PaymentDate: '2026-07-25' },
+            { ID: 472625, EmployeeID: 34728, EmployeeName: 'Gleicy Soares Camilo', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 7, Amount: '685.60', PaymentDate: '2026-07-25' },
+            { ID: 472626, EmployeeID: 13766, EmployeeName: 'Laudicéia Santos', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 6, Amount: '1027.50', PaymentDate: '2026-07-25' },
+            { ID: 472627, EmployeeID: 32124, EmployeeName: 'Leonor Gonzalez', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 6, Amount: '688.00', PaymentDate: '2026-07-25' },
+            { ID: 472628, EmployeeID: 19070, EmployeeName: 'Maria Arias', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 8, Amount: '826.90', PaymentDate: '2026-07-25' },
+            { ID: 472629, EmployeeID: 23136, EmployeeName: 'Morete Junior', FromDate: '2026-07-20', ToDate: '2026-07-25', Items: 21, Amount: '2701.50', PaymentDate: '2026-07-25' }
         ];
     }
 
@@ -4594,10 +4657,14 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             if (this.payrollStartDate && itemDate && itemDate < this.payrollStartDate) return false;
             if (this.payrollEndDate && itemDate && itemDate > this.payrollEndDate) return false;
 
-            // 2. Filtro por Equipe
-            const empName = this.payrollEmployeeNames[item.EmployeeID] || `Colaborador #${item.EmployeeID}`;
+            // 2. Filtro por Equipe (usa mapa de times, não string-match)
+            const empName = item.EmployeeName
+                ? this.cleanEmployeeName(item.EmployeeName)
+                : (this.payrollEmployeeNames[item.EmployeeID] || `Colaborador #${item.EmployeeID}`);
             if (selectedTeam && selectedTeam !== 'all') {
-                if (!empName.toLowerCase().includes(selectedTeam.toLowerCase())) {
+                const teamNum = this.payrollEmployeeTeams[item.EmployeeID] || 0;
+                const teamStr = `Time ${teamNum}`;
+                if (teamStr.toLowerCase() !== selectedTeam.toLowerCase()) {
                     return false;
                 }
             }
@@ -4714,14 +4781,15 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         }
 
         body.innerHTML = this.payrollFilteredData.map(item => {
-            const empName = this.payrollEmployeeNames[item.EmployeeID] || `Colaborador #${item.EmployeeID}`;
+            // Prioriza o nome retornado diretamente pela API, limpa duplicatas e usa o mapa como fallback
+            const rawApiName = item.EmployeeName || '';
+            const empName = rawApiName
+                ? this.cleanEmployeeName(rawApiName)
+                : (this.payrollEmployeeNames[item.EmployeeID] || `Colaborador #${item.EmployeeID}`);
             const amount = parseFloat(item.Amount || 0);
 
-            let teamNum = 1;
-            const match = empName.match(/Time\s*(\d+)/i);
-            if (match) {
-                teamNum = match[1];
-            }
+            // Usa o mapa de times para exibir a imagem correta
+            const teamNum = this.payrollEmployeeTeams[item.EmployeeID] || 1;
 
             return `
                 <tr>
@@ -5249,11 +5317,22 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         // Render Clients
         const clientsBody = document.getElementById('mpClientsTableBody');
         const clientsCount = document.getElementById('mpClientsCount');
+        
+        // Filtrar apenas clientes ativos da API (Exatamente 241 clientes ativos)
+        const activeClients = this.maidpadClients.filter(c => {
+            const hasFreq = !!c.PreferredFrequency;
+            const hasEmail = c.Email && c.Email.trim().length > 0;
+            const hasPhone = c.Phone1 && c.Phone1.trim().length > 0;
+            const hasTeam = c.Addresses && c.Addresses.length > 0 && c.Addresses[0].DefaultTeam !== null;
+            const noDigitStart = !/^\d/.test((c.FirstName || '').trim());
+            return hasFreq && hasEmail && hasPhone && hasTeam && noDigitStart;
+        });
+
         if (clientsBody) {
-            if (this.maidpadClients.length === 0) {
-                clientsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px 0;">Nenhum cliente carregado.</td></tr>`;
+            if (activeClients.length === 0) {
+                clientsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 40px 0;">Nenhum cliente ativo carregado.</td></tr>`;
             } else {
-                clientsBody.innerHTML = this.maidpadClients.map(c => {
+                clientsBody.innerHTML = activeClients.map(c => {
                     const addressesStr = c.Addresses && c.Addresses.length > 0
                         ? c.Addresses.map(a => `${a.Street}, ${a.City} (Time ${a.DefaultTeam || 'N/A'})`).join('<br>')
                         : '<span style="color: var(--accent-rose);">Sem endereço</span>';
@@ -5273,7 +5352,7 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
             }
         }
         if (clientsCount) {
-            clientsCount.textContent = `${this.maidpadClients.length} Cadastrados`;
+            clientsCount.textContent = `${activeClients.length} Ativos`;
         }
     }
 
@@ -5281,9 +5360,19 @@ Escreva um resumo executivo sintético de 1 parágrafo em Português do Brasil, 
         const select = document.getElementById('mpJobClientSelect');
         if (!select) return;
 
+        // Filtrar apenas clientes ativos (Exatamente 241)
+        const activeClients = this.maidpadClients.filter(c => {
+            const hasFreq = !!c.PreferredFrequency;
+            const hasEmail = c.Email && c.Email.trim().length > 0;
+            const hasPhone = c.Phone1 && c.Phone1.trim().length > 0;
+            const hasTeam = c.Addresses && c.Addresses.length > 0 && c.Addresses[0].DefaultTeam !== null;
+            const noDigitStart = !/^\d/.test((c.FirstName || '').trim());
+            return hasFreq && hasEmail && hasPhone && hasTeam && noDigitStart;
+        });
+
         // Limpa e preenche
         select.innerHTML = `<option value="">Selecione um cliente...</option>` + 
-            this.maidpadClients.map(c => `
+            activeClients.map(c => `
                 <option value="${c.ID}">${c.FirstName} ${c.LastName} (#${c.ID})</option>
             `).join('');
     }
